@@ -1,160 +1,195 @@
-@import url('../../../colors.css');
-
-/* Styles de base du header */
-.header {
-  background: none;
-  border-bottom: 1px solid var(--border-light);
+@import url("../../../colors.css");
+/* === GLOBAL === */
+.header-pro {
+  font-family: 'Inter', sans-serif;
+}
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
 }
 
-/* Styles des éléments de navigation */
-.nav-item-header {
+/* === TOPBAR === */
+.topbar {
+  background: var(--bg-header);
+  font-size: 0.85rem;
+}
+.topbar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.topbar ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+  padding: 8px 0;
+  margin: 0;
+}
+.topbar a {
   position: relative;
-  display: inline-block;
-  padding-bottom: 5px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-white);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
 }
 
-.nav-item-header::after {
-  content: '';
+.topbar a:hover {
+  color: var(--color-white); /* bleu clair élégant */
+}
+
+/* ===== Hover Underline Animation ===== */
+.topbar a::after {
+  content: "";
   position: absolute;
   left: 0;
-  bottom: 0;
-  height: 2px;
-  width: 0;
-  background-color: var(--color-white);
-  transition: width 0.5s ease-in-out;
-}
-
-.nav-item-header:hover::after {
+  bottom: -2px;
   width: 100%;
+  height: 1.4px;
+  background: var(--color-white);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
 }
 
-/* Styles de la barre de recherche */
-.search-input {
-  background: var(--bg-element-white);
-  border: 1px solid var(--border-light) !important;
-  transition: var(--transition-fast);
+.topbar a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
-.search-input:focus {
-  border-color: var(--text-light-gray) !important;
-  box-shadow: 0 0 0 3px var(--gray-10);
-}
-
-.search-button {
-  color: var(--text-gray) !important;
-  transition: var(--transition-fast);
-}
-
-.search-button:hover {
-  color: var(--text-dark) !important;
-}
-
-/* Styles des badges et boutons utilisateur */
-.points-badge {
-  background: var(--bg-element-light);
-  color: var(--text-dark);
-  border: 1px solid var(--border-light);
-}
-
-.user-button {
-  background: var(--bg-element-white);
-  border: 1px solid var(--border-light);
-  transition: var(--transition-fast);
-}
-
-.user-button:hover {
-  background: var(--bg-element-hover);
-  border-color: var(--border-medium);
-}
-
-/* Styles du bouton de connexion */
-.connect-button {
-  background: var(--bg-button-dark);
+.socials li {
   color: var(--color-white);
-  border: none;
-  transition: var(--transition-fast);
-}
-
-.connect-button:hover {
-  background: var(--bg-button-darker);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--shadow-medium);
-}
-
-/* Styles de l'avatar utilisateur */
-.user-avatar {
-  background: var(--bg-element-light);
-  border: 1px solid var(--border-light);
-  color: var(--text-gray);
-}
-
-/* Styles du logo */
-.logo-placeholder {
-  background: var(--bg-element-light);
-  border: 1px solid var(--border-light);
-  color: var(--text-light-gray);
-}
-
-/* Styles du sélecteur de langue */
-.language-selector {
-  position: relative;
-  margin: 0 15px;
-}
-
-.custom-select {
-  position: relative;
-  display: inline-block;
-}
-
-.language-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background: var(--bg-element-white);
-  border: 0.5px solid var(--border-light);
-  border-radius: 50px;
-  padding: 10px 40px 10px 20px;
-  font-size: 14px;
-  color: var(--text-dark);
   cursor: pointer;
-  transition: var(--transition-normal);
-  font-weight: 500;
-  min-width: 160px;
-  box-shadow: 0 2px 5px var(--shadow-light);
+  transition: color 0.2s;
+}
+.socials li:hover {
+  scale: 2.1;
+  transition: all 0.5s ease-in-out;
+}
+
+/* === MAIN HEADER === */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+}
+.logo img {
+  height: 70px;
+}
+
+/* Search */
+.search {
+  flex: 1;
+  max-width: 750px;
   position: relative;
-  top: 0;
+  margin: 0 30px;
 }
-
-.language-select option {
-  background: var(--bg-element-white);
-  color: var(--text-dark);
-  padding: 10px;
-  font-weight: normal;
-  border-radius: 8px;
-}
-
-.language-select:hover {
-  border-color: var(--purple-20);
-  box-shadow: 0 4px 8px var(--shadow-light);
-  transform: translateY(-1px);
-}
-
-.language-select:focus {
+.search input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 50px;
+  font-size: 0.95rem;
   outline: none;
-  border-color: var(--purple-80);
-  box-shadow: 0 0 0 3px var(--purple-20);
 }
-
-.select-icon {
+.search input:focus {
+  border-color: var(--purple-80);
+  box-shadow: 0px 0px 5px var(--shadow-purple);
+}
+.search-icon {
   position: absolute;
-  right: 15px;
   top: 50%;
+  right: 20px;
   transform: translateY(-50%);
   color: var(--text-gray);
-  pointer-events: none;
-  transition: var(--transition-fast);
 }
 
-.custom-select:hover .select-icon {
-  color: var(--text-purple);
+/* Actions */
+.actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.lang {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-weight: 100;
+}
+.login-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 50px;
+  background: var(--purple-100);
+  color: var(--color-white);
+  font-weight: 100;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.login-btn:hover {
+  background: var(--purple-80);
+}
+.user-btn {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* === MENU === */
+.menu {
+  display: flex;
+  justify-content: center;
+  gap: 130px;
+  padding: 0 0 12px 0;
+  border-bottom: 1px solid var(--text-light-gray);
+}
+.menu a {
+  color: #444;
+  font-weight: 500;
+  text-decoration: none;
+  padding-bottom: 6px;
+  transition: 0.3s;
+}
+.menu a:hover {
+  color: #6a11cb;
+  border-bottom: 2px solid #6a11cb;
+}
+
+/* === THEMES === */
+.themes {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 25px 0;
+}
+.theme-card {
+  padding: 4px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.theme-card:hover {
+  scale: 1.1;
+}
+.img-card{
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #000;
 }
