@@ -1,12 +1,54 @@
 :root {
-  /*sections*/
+  /* Thème principal */
+  --color-white: #fff;
+  --color-black: #000;
+
+  /* Couleurs de fond */
   --bg-header: rgb(134, 20, 168);
-  /*bg par couleur*/
   --bg-purple: rgb(134, 20, 168);
-  /*couleur unique*/
-  --color-white: #fff !important;
+  --bg-light: #fafafa;
+
+  /* Couleurs de texte */
+  --text-dark: #374151;
+  --text-gray: #6b7280;
+  --text-light-gray: #9ca3af;
+  --text-purple: rgb(134, 20, 168);
+
+  /* Couleurs de bordure */
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+
+  /* Couleurs de fond d'éléments */
+  --bg-element-light: #f3f4f6;
+  --bg-element-white: #ffffff;
+  --bg-element-hover: #f9fafb;
+  --bg-button-dark: #374151;
+  --bg-button-darker: #1f2937;
+
+  /* Gradients */
+  --gradient-purple: linear-gradient(135deg, #6a0dad, #9b30ff, #ff00ff);
+
+  /* Transparences */
+  --white-60: rgba(20, 20, 20, 0.6);
+  --purple-20: rgba(155, 48, 255, 0.414);
+  --purple-80: rgba(155, 48, 255, 0.8);
+  --pink-100: rgba(255, 0, 255, 1);
+  --orange-20: rgba(253, 162, 43, 0.775);
+  --gray-10: rgba(156, 163, 175, 0.1);
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-medium: rgba(0, 0, 0, 0.15);
+
+  /* Animations */
+  --transition-normal: all 0.3s ease-in-out;
+  --transition-fast: all 0.2s ease;
+  --transition-color: color 0.3s ease;
 }
 
+/* Classes utilitaires */
 .link-white {
   color: var(--color-white);
+}
+
+.text-purple {
+  color: var(--text-purple);
 }

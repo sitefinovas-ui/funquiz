@@ -1,8 +1,12 @@
 @import url('../../../colors.css');
+
+/* Styles de base du header */
 .header {
-  background: var(--background-header);
+  background: none;
+  border-bottom: 1px solid var(--border-light);
 }
 
+/* Styles des éléments de navigation */
 .nav-item-header {
   position: relative;
   display: inline-block;
@@ -22,4 +26,135 @@
 
 .nav-item-header:hover::after {
   width: 100%;
+}
+
+/* Styles de la barre de recherche */
+.search-input {
+  background: var(--bg-element-white);
+  border: 1px solid var(--border-light) !important;
+  transition: var(--transition-fast);
+}
+
+.search-input:focus {
+  border-color: var(--text-light-gray) !important;
+  box-shadow: 0 0 0 3px var(--gray-10);
+}
+
+.search-button {
+  color: var(--text-gray) !important;
+  transition: var(--transition-fast);
+}
+
+.search-button:hover {
+  color: var(--text-dark) !important;
+}
+
+/* Styles des badges et boutons utilisateur */
+.points-badge {
+  background: var(--bg-element-light);
+  color: var(--text-dark);
+  border: 1px solid var(--border-light);
+}
+
+.user-button {
+  background: var(--bg-element-white);
+  border: 1px solid var(--border-light);
+  transition: var(--transition-fast);
+}
+
+.user-button:hover {
+  background: var(--bg-element-hover);
+  border-color: var(--border-medium);
+}
+
+/* Styles du bouton de connexion */
+.connect-button {
+  background: var(--bg-button-dark);
+  color: var(--color-white);
+  border: none;
+  transition: var(--transition-fast);
+}
+
+.connect-button:hover {
+  background: var(--bg-button-darker);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+/* Styles de l'avatar utilisateur */
+.user-avatar {
+  background: var(--bg-element-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-gray);
+}
+
+/* Styles du logo */
+.logo-placeholder {
+  background: var(--bg-element-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-light-gray);
+}
+
+/* Styles du sélecteur de langue */
+.language-selector {
+  position: relative;
+  margin: 0 15px;
+}
+
+.custom-select {
+  position: relative;
+  display: inline-block;
+}
+
+.language-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: var(--bg-element-white);
+  border: 0.5px solid var(--border-light);
+  border-radius: 50px;
+  padding: 10px 40px 10px 20px;
+  font-size: 14px;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  font-weight: 500;
+  min-width: 160px;
+  box-shadow: 0 2px 5px var(--shadow-light);
+  position: relative;
+  top: 0;
+}
+
+.language-select option {
+  background: var(--bg-element-white);
+  color: var(--text-dark);
+  padding: 10px;
+  font-weight: normal;
+  border-radius: 8px;
+}
+
+.language-select:hover {
+  border-color: var(--purple-20);
+  box-shadow: 0 4px 8px var(--shadow-light);
+  transform: translateY(-1px);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: var(--purple-80);
+  box-shadow: 0 0 0 3px var(--purple-20);
+}
+
+.select-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-gray);
+  pointer-events: none;
+  transition: var(--transition-fast);
+}
+
+.custom-select:hover .select-icon {
+  color: var(--text-purple);
 }
