@@ -1,0 +1,25 @@
+@import url('../../../colors.css');
+.header {
+  background: var(--background-header);
+}
+
+.nav-item-header {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+.nav-item-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background-color: var(--color-white);
+  transition: width 0.5s ease-in-out;
+}
+
+.nav-item-header:hover::after {
+  width: 100%;
+}

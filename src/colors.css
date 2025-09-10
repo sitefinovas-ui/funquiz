@@ -1,0 +1,12 @@
+:root {
+  /*sections*/
+  --bg-header: rgb(134, 20, 168);
+  /*bg par couleur*/
+  --bg-purple: rgb(134, 20, 168);
+  /*couleur unique*/
+  --color-white: #fff !important;
+}
+
+.link-white {
+  color: var(--color-white);
+}
