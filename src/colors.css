@@ -5,11 +5,12 @@
 
   /* Couleurs de fond */
   --bg-header: rgb(88, 8, 113);
-  --bg-purple: rgb(71, 4, 92);
-  --bg-light: #fafafa;
+  --bg-purple: rgb(190, 91, 220);
+  --bg-light: #ffffff;
 
   /* Couleurs de texte */
   --text-dark: #374151;
+  --text-light: #ffffff;
   --text-gray: #6b7280;
   --text-light-gray: #ebebeb;
   --text-purple: rgb(134, 20, 168);
@@ -31,6 +32,7 @@
   /* Transparences */
   --white-60: rgba(20, 20, 20, 0.6);
   --purple-20: rgba(155, 48, 255, 0.414);
+  --purple-40: #b597f9;
   --purple-80: rgba(155, 48, 255, 0.8);
   --purple-100: rgb(88, 8, 113);
   --pink-100: rgba(255, 0, 255, 1);
@@ -39,6 +41,9 @@
   --shadow-light: rgba(0, 0, 0, 0.1);
   --shadow-medium: rgba(0, 0, 0, 0.15);
   --shadow-purple: rgba(106, 17, 203, 0.2);
+
+  --opacity-50: rgba(255, 255, 255, 0);
+  --opacity-100: rgb(255, 255, 255);
 
   /* Animations */
   --transition-normal: all 0.3s ease-in-out;
