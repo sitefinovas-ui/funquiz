@@ -1,54 +1,107 @@
 :root {
-  /* Thème principal */
+  /* Couleurs de base */
   --color-white: #fff;
   --color-black: #000;
-
+  --color-transparent: transparent;
+  
+  /* Palette de couleurs principales */
+  --purple-light: #b597f9;
+  --purple-medium: rgb(190, 91, 220);
+  --purple-dark: rgb(134, 20, 168);
+  --purple-darker: rgb(88, 8, 113);
+  --pink: rgb(255, 0, 255);
+  --orange: rgba(253, 162, 43, 0.775);
+  --blue-light: #3b82f6;
+  --blue-purple: #8b5cf6;
+  --slate-dark: #1e293b;
+  --slate-light: #f8fafc;
+  --gray-light: #e2e8f0;
+  
   /* Couleurs de fond */
-  --bg-header: rgb(88, 8, 113);
-  --bg-purple: rgb(190, 91, 220);
   --bg-light: #ffffff;
-
-  /* Couleurs de texte */
-  --text-dark: #374151;
-  --text-light: #ffffff;
-  --text-gray: #6b7280;
-  --text-light-gray: #ebebeb;
-  --text-purple: rgb(134, 20, 168);
-
-  /* Couleurs de bordure */
-  --border-light: #e5e7eb;
-  --border-medium: #d1d5db;
-
-  /* Couleurs de fond d'éléments */
   --bg-element-light: #f3f4f6;
   --bg-element-white: #ffffff;
   --bg-element-hover: #f9fafb;
+  --bg-header: var(--purple-darker);
+  --bg-purple: var(--purple-medium);
+  
+  /* Couleurs de texte */
+  --text-dark: #374151;
+  --text-light: var(--color-white);
+  --text-gray: #6b7280;
+  --text-light-gray: #ebebeb;
+  --text-purple: var(--purple-dark);
+  --text-slate: var(--slate-dark);
+  
+  /* Couleurs de bordure */
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+  
+  /* Couleurs de boutons */
   --bg-button-dark: #374151;
   --bg-button-darker: #1f2937;
-
-  /* Gradients */
-  --gradient-purple: linear-gradient(135deg, #6a0dad, #9b30ff, #ff00ff);
-
-  /* Transparences */
+  --bg-button-light: var(--color-white);
+  --bg-button-hover: var(--color-white);
+  
+  /* Transparences et opacités */
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-10: rgba(255, 255, 255, 0.1);
+  --white-20: rgba(255, 255, 255, 0.2);
   --white-60: rgba(20, 20, 20, 0.6);
+  --black-10: rgba(0, 0, 0, 0.1);
+  --black-15: rgba(0, 0, 0, 0.15);
+  --black-20: rgba(0, 0, 0, 0.2);
+  --black-25: rgba(0, 0, 0, 0.25);
+  --black-30: rgba(0, 0, 0, 0.3);
+  --black-40: rgba(0, 0, 0, 0.4);
+  --black-80: rgba(0, 0, 0, 0.8);
   --purple-20: rgba(155, 48, 255, 0.414);
-  --purple-40: #b597f9;
+  --purple-40: var(--purple-light);
   --purple-80: rgba(155, 48, 255, 0.8);
-  --purple-100: rgb(88, 8, 113);
-  --pink-100: rgba(255, 0, 255, 1);
-  --orange-20: rgba(253, 162, 43, 0.775);
+  --purple-100: var(--purple-darker);
+  --pink-100: var(--pink);
+  --orange-20: var(--orange);
   --gray-10: rgba(156, 163, 175, 0.1);
-  --shadow-light: rgba(0, 0, 0, 0.1);
-  --shadow-medium: rgba(0, 0, 0, 0.15);
+  
+  /* Ombres */
+  --shadow-light: var(--black-10);
+  --shadow-medium: var(--black-15);
+  --shadow-dark: var(--black-25);
+  --shadow-darker: var(--black-40);
   --shadow-purple: rgba(106, 17, 203, 0.2);
-
-  --opacity-50: rgba(255, 255, 255, 0);
+  
+  /* Opacités pour gradients */
+  --opacity-0: rgba(255, 255, 255, 0);
+  --opacity-50: rgba(255, 255, 255, 0.5);
   --opacity-100: rgb(255, 255, 255);
-
+  
+  /* Gradients */
+  --gradient-purple: linear-gradient(135deg, var(--purple-darker), rgba(155, 48, 255, 1), var(--pink));
+  --gradient-white: linear-gradient(135deg, var(--color-white) 0%, var(--slate-light) 100%);
+  --gradient-title: linear-gradient(135deg, var(--color-white) 0%, var(--gray-light) 100%);
+  --gradient-blue: linear-gradient(135deg, var(--blue-light) 0%, var(--blue-purple) 100%);
+  --gradient-overlay: linear-gradient(
+    to top,
+    var(--black-80) 0%,
+    var(--black-40) 40%,
+    var(--black-10) 70%,
+    var(--color-transparent) 100%
+  );
+  --gradient-particle: radial-gradient(circle at 30% 20%, var(--white-10) 0%, var(--color-transparent) 50%);
+  
   /* Animations */
   --transition-normal: all 0.3s ease-in-out;
   --transition-fast: all 0.2s ease;
+  --transition-medium: all 0.4s cubic-bezier(0.1, 0, 0.1, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-color: color 0.3s ease;
+  --transition-opacity: opacity 0.3s ease;
+  --transition-transform: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Animations timing */
+  --animation-timing-fast: 0.6s ease-out;
+  --animation-timing-normal: 0.8s ease-out;
+  --animation-timing-slow: 1s ease-out;
 }
 
 /* Classes utilitaires */
@@ -58,4 +111,16 @@
 
 .text-purple {
   color: var(--text-purple);
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.bg-gradient-purple {
+  background: var(--gradient-purple);
+}
+
+.bg-gradient-white {
+  background: var(--gradient-white);
 }

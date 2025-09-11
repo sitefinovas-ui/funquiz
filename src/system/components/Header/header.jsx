@@ -11,7 +11,7 @@ const Header = () => {
   return (
     <header className="header-pro">
       {/* --- TOPBAR --- */}
-      <div className="topbar">
+      <div className="topbar p-0 m-0">
         <div className="container">
           <ul className="links">
             <li><Link to="/">Confidentialité</Link></li>
