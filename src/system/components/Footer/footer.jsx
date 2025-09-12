@@ -3,7 +3,7 @@ import "./Footer.css";
 
 const Footer = () => {
   return (
-    <footer className="gradient-footer shadow-5 text-white py-5">
+    <footer className="gradient-footer text-white py-5">
       <div className="container">
         <div className="row g-4">
           {/* Company Info */}
