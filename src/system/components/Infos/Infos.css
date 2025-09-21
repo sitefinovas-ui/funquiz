@@ -16,14 +16,15 @@
 }
 
 /* Effet de gradient pour l'image */
-.img_left::after {
+.imgLeft::after {
   content: '';
   position: absolute;
   top: 0;
-  right: 0;
+  right: 0px;
   width: 40%;
   height: 100%;
-  background: linear-gradient(to right, var(--opacity-50), var(--opacity-100));
+  background: linear-gradient(to right, var(--opacity-50), var(--opacity-102));
+  z-index: 9999;
 }
 
 /* Styles pour les boutons et éléments interactifs */
@@ -65,8 +66,14 @@
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Animation d'ombre qui bouge pour le container-pop-up */
@@ -76,24 +83,29 @@
 
 @keyframes shadowDance {
   0% {
-    box-shadow: 0 0 30px var(--purple-80), 
-               0 0 60px var(--purple-20);
+    box-shadow:
+      0 0 30px var(--purple-80),
+      0 0 60px var(--purple-20);
   }
   25% {
-    box-shadow: 15px 15px 30px var(--orange-20), 
-               -5px -5px 60px rgba(113, 52, 8, 0.4);
+    box-shadow:
+      15px 15px 30px var(--orange-20),
+      -5px -5px 60px rgba(113, 52, 8, 0.4);
   }
   50% {
-    box-shadow: -15px 15px 30px rgba(18, 107, 224, 0.7), 
-               15px -15px 60px rgba(168, 20, 101, 0.4);
+    box-shadow:
+      -15px 15px 30px rgba(18, 107, 224, 0.7),
+      15px -15px 60px rgba(168, 20, 101, 0.4);
   }
   75% {
-    box-shadow: 15px -15px 30px var(--purple-80), 
-               -15px 15px 60px var(--purple-20);
+    box-shadow:
+      15px -15px 30px var(--purple-80),
+      -15px 15px 60px var(--purple-20);
   }
   100% {
-    box-shadow: -15px -15px 30px rgba(34, 171, 112, 0.7), 
-               15px 15px 60px rgba(20, 156, 168, 0.4);
+    box-shadow:
+      -15px -15px 30px rgba(34, 171, 112, 0.7),
+      15px 15px 60px rgba(20, 156, 168, 0.4);
   }
 }
 
@@ -104,9 +116,15 @@
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 var(--purple-80); }
-  70% { box-shadow: 0 0 0 10px rgba(155, 48, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(155, 48, 255, 0); }
+  0% {
+    box-shadow: 0 0 0 0 var(--purple-80);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(155, 48, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(155, 48, 255, 0);
+  }
 }
 
 /* Animation du logo */
@@ -115,9 +133,15 @@
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 /* Effet de lueur pour le texte */
@@ -140,9 +164,15 @@
 }
 
 @keyframes subtlePulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Effet de survol pour les liens */
@@ -173,8 +203,14 @@
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Overlay avec gradient pour l'image */
@@ -197,7 +233,12 @@
 }
 
 @keyframes slideUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-

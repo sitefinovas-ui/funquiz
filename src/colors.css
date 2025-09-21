@@ -1,53 +1,77 @@
 :root {
-  /* Couleurs de base */
+  /* ===== COULEURS DE BASE ===== */
   --color-white: #fff;
   --color-black: #000;
   --color-transparent: transparent;
-  
-  /* Palette de couleurs principales */
+
+  /* ===== PALETTE PRINCIPALE ===== */
+  /* Violets */
+  --purple-lighter: #d1b3ff; /* Couleur des liens footer */
   --purple-light: #b597f9;
   --purple-medium: rgb(190, 91, 220);
   --purple-dark: rgb(134, 20, 168);
   --purple-darker: rgb(88, 8, 113);
-  --pink: rgb(255, 0, 255);
-  --orange: rgba(253, 162, 43, 0.775);
+  --purple-deep: #350558; /* Gradient footer */
+  --purple-royal: #230539; /* Gradient footer */
+
+  /* Roses */
+  --pink: rgb(243, 19, 176); /* #ff00ff */
+  --pink-dark: #d100d1; /* Bouton hover footer */
+
+  /* Bleus */
   --blue-light: #3b82f6;
   --blue-purple: #8b5cf6;
+
+  /* Oranges */
+  --orange: rgba(253, 162, 43, 0.775);
+  --yellow: #fdd632;
+  --yellow-dark: #704803;
+  /* Gris et ardoises */
   --slate-dark: #1e293b;
   --slate-light: #f8fafc;
   --gray-light: #e2e8f0;
-  
-  /* Couleurs de fond */
+  --gray-medium: #6b7280;
+  --gray-dark: #374151;
+  --gray-darker: #1f2937;
+
+  /* ===== COULEURS DE FOND ===== */
   --bg-light: #ffffff;
   --bg-element-light: #f3f4f6;
   --bg-element-white: #ffffff;
   --bg-element-hover: #f9fafb;
   --bg-header: var(--purple-darker);
   --bg-purple: var(--purple-medium);
-  
-  /* Couleurs de texte */
-  --text-dark: #374151;
+
+  /* ===== COULEURS DE TEXTE ===== */
+  --text-dark: var(--gray-dark);
   --text-light: var(--color-white);
-  --text-gray: #6b7280;
+  --text-gray: var(--gray-medium);
   --text-light-gray: #ebebeb;
   --text-purple: var(--purple-dark);
   --text-slate: var(--slate-dark);
-  
-  /* Couleurs de bordure */
+
+  /* ===== COULEURS DE BORDURE ===== */
   --border-light: #e5e7eb;
   --border-medium: #d1d5db;
-  
-  /* Couleurs de boutons */
-  --bg-button-dark: #374151;
-  --bg-button-darker: #1f2937;
+  --border-white-30: rgba(255, 255, 255, 0.3); /* Bordure input newsletter */
+
+  /* ===== COULEURS DE BOUTONS ===== */
+  --bg-button-dark: var(--gray-dark);
+  --bg-button-darker: var(--gray-darker);
   --bg-button-light: var(--color-white);
   --bg-button-hover: var(--color-white);
-  
-  /* Transparences et opacités */
+  --bg-button-pink: var(--pink);
+  --bg-button-pink-hover: var(--pink-dark);
+
+  /* ===== TRANSPARENCES ===== */
   --white-05: rgba(255, 255, 255, 0.05);
   --white-10: rgba(255, 255, 255, 0.1);
+  --white-15: rgba(255, 255, 255, 0.15); /* Background social links */
   --white-20: rgba(255, 255, 255, 0.2);
+  --white-25: rgba(255, 255, 255, 0.25);
+  --white-30: rgba(255, 255, 255, 0.3);
   --white-60: rgba(20, 20, 20, 0.6);
+
   --black-10: rgba(0, 0, 0, 0.1);
   --black-15: rgba(0, 0, 0, 0.15);
   --black-20: rgba(0, 0, 0, 0.2);
@@ -55,31 +79,49 @@
   --black-30: rgba(0, 0, 0, 0.3);
   --black-40: rgba(0, 0, 0, 0.4);
   --black-80: rgba(0, 0, 0, 0.8);
+
   --purple-20: rgba(155, 48, 255, 0.414);
   --purple-40: var(--purple-light);
   --purple-80: rgba(155, 48, 255, 0.8);
   --purple-100: var(--purple-darker);
+
   --pink-100: var(--pink);
+
   --orange-20: var(--orange);
+
   --gray-10: rgba(156, 163, 175, 0.1);
-  
-  /* Ombres */
+
+  /* ===== OMBRES ===== */
   --shadow-light: var(--black-10);
   --shadow-medium: var(--black-15);
   --shadow-dark: var(--black-25);
   --shadow-darker: var(--black-40);
   --shadow-purple: rgba(106, 17, 203, 0.2);
-  
-  /* Opacités pour gradients */
+  --shadow-footer: 0px -4px 15px rgba(0, 0, 0, 0.3);
+  --shadow-text: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-social: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-social-hover: 0 6px 10px rgba(0, 0, 0, 0.4);
+  --shadow-button: 0 10px 25px var(--black-20), 0 0 0 1px var(--white-10);
+  --shadow-button-hover: 0 15px 35px var(--black-30), 0 0 0 1px var(--white-20);
+  --shadow-grid: 0 25px 50px -12px var(--shadow-dark), 0 0 0 1px var(--white-05);
+  --shadow-grid-hover: 0 35px 60px -12px var(--shadow-darker), 0 0 0 1px var(--white-10);
+
+  /* ===== OPACITÉS POUR GRADIENTS ===== */
   --opacity-0: rgba(255, 255, 255, 0);
-  --opacity-50: rgba(255, 255, 255, 0.5);
-  --opacity-100: rgb(255, 255, 255);
-  
-  /* Gradients */
-  --gradient-purple: linear-gradient(135deg, var(--purple-darker), rgba(155, 48, 255, 1), var(--pink));
+  --opacity-50: rgba(253, 253, 253, 0.001);
+  --opacity-102: rgb(255, 255, 255);
+
+  /* ===== GRADIENTS ===== */
+  --gradient-purple: linear-gradient(
+    135deg,
+    var(--purple-darker),
+    rgba(155, 48, 255, 1),
+    var(--pink)
+  );
   --gradient-white: linear-gradient(135deg, var(--color-white) 0%, var(--slate-light) 100%);
   --gradient-title: linear-gradient(135deg, var(--color-white) 0%, var(--gray-light) 100%);
   --gradient-blue: linear-gradient(135deg, var(--blue-light) 0%, var(--blue-purple) 100%);
+  --gradient-footer: linear-gradient(145deg, var(--purple-deep), var(--purple-royal));
   --gradient-overlay: linear-gradient(
     to top,
     var(--black-80) 0%,
@@ -87,9 +129,13 @@
     var(--black-10) 70%,
     var(--color-transparent) 100%
   );
-  --gradient-particle: radial-gradient(circle at 30% 20%, var(--white-10) 0%, var(--color-transparent) 50%);
-  
-  /* Animations */
+  --gradient-particle: radial-gradient(
+    circle at 30% 20%,
+    var(--white-10) 0%,
+    var(--color-transparent) 50%
+  );
+
+  /* ===== TRANSITIONS ===== */
   --transition-normal: all 0.3s ease-in-out;
   --transition-fast: all 0.2s ease;
   --transition-medium: all 0.4s cubic-bezier(0.1, 0, 0.1, 1);
@@ -97,14 +143,45 @@
   --transition-color: color 0.3s ease;
   --transition-opacity: opacity 0.3s ease;
   --transition-transform: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Animations timing */
+
+  /* ===== ANIMATIONS TIMING ===== */
   --animation-timing-fast: 0.6s ease-out;
   --animation-timing-normal: 0.8s ease-out;
   --animation-timing-slow: 1s ease-out;
+
+  /* Musique africaine & internationale */
+  --music-primary: rgba(137, 43, 226, 0.57); /* Violet électrique */
+  --music-accent: rgba(255, 0, 255, 0.8); /* Fuchsia */
+
+  /* Football & autres sports */
+  --sports-primary: rgba(50, 205, 50, 0.526); /* Vert dynamique */
+  --sports-accent: rgba(255, 215, 0, 0.8); /* Jaune vif */
+
+  /* Gastronomie & boissons locales */
+  --food-primary: rgba(255, 140, 0, 0.499); /* Orange épicé */
+  --food-accent: rgba(255, 99, 71, 0.8); /* Rouge tomate */
+
+  /* Culture & Histoire */
+  --history-primary: rgba(139, 69, 19, 0.537); /* Brun antique */
+  --history-accent: rgba(218, 165, 32, 0.8); /* Doré */
+
+  /* Proverbes & expressions africaines */
+  --proverbs-primary: rgba(30, 59, 138, 0.551); /* Bleu profond */
+  --proverbs-accent: rgba(245, 245, 220, 0.8); /* Blanc cassé */
+
+  /* Culture Pop & Vie quotidienne */
+  --pop-primary: rgba(255, 20, 145, 0.482); /* Rose néon */
+  --pop-primary-p: rgb(255, 20, 145); /* Rose néon */
+  --pop-accent: rgba(64, 224, 208, 0.8); /* Bleu turquoise */
+
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: #a0a9c0;
 }
 
-/* Classes utilitaires */
+/* ===== CLASSES UTILITAIRES ===== */
 .link-white {
   color: var(--color-white);
 }
