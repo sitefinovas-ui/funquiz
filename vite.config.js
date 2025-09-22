@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/', // <-- Important pour GitHub Pages
+  base: '/dev_front/', // <-- Important pour GitHub Pages
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: 30,
+    port: 3000,
   },
 })
