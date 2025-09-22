@@ -1,5 +1,7 @@
 import Header from "../Header/header.jsx";
 import Footer from "../Footer/footer.jsx";
+import Wel from "../Infos/Info.jsx"
+import Cookie from "../Cookie/cookie.jsx"
 import ListThematic from "../list-thematic/listThematic.jsx";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
@@ -20,6 +22,8 @@ export default function Layout() {
       <main>
         <Outlet />
       </main>
+      <Wel />
+      <Cookie />
       <Footer />
 
       {/* Rendu dynamique du pop-up actif */}
