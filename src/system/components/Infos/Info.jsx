@@ -1,7 +1,7 @@
-import './infos.css';
+import './Infos.css';
 
 import Wall from '../../../assets/10740576.jpg';
-import Logo from '../../../assets/logo_funquiz.svg';
+import Logo from '../../../assets/Log.png';
 
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -41,12 +41,17 @@ const Info = () => {
             overflow: 'hidden',
           }}
         >
-          <div className="gradient-overlay"></div>
+          <div className="gradient-overlay">
+            <div style={{width:'270px', top:'100px', right:'100px'}} className="position-absolute overflow-hidden">
+              <img src={Logo} className=' w-100 h-100 z-3' alt="logo funquiz" />
+            </div>
+          </div>
           <img
             src={Wall}
             className="w-100 h-100 object-fit-cover animate-pulse"
             alt="image de fond"
           />
+          
         </div>
 
         <div
