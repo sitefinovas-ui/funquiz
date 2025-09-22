@@ -291,7 +291,7 @@ section.show {
   animation: fadeIn 0.4s ease-in-out;
 }
 
-.btn-add {
+.btn-add, .btn-add-md {
   background: linear-gradient(135deg, #91096f, #ca1e1e);
   border: none;
   color: #fff;
@@ -447,7 +447,12 @@ section.show {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
-
+.btn-add-md {
+  width: 70%;
+  padding: 10px;
+  height: 100%;
+  border-radius: 50px;
+}
 .user-name {
   font-weight: 600;
   font-size: 1rem;

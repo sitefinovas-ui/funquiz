@@ -15,7 +15,6 @@ import { MdGamepad } from "react-icons/md";
 import { FaUserPlus, FaGift, FaInfo, FaPlus } from "react-icons/fa";
 import { SlActionRedo } from "react-icons/sl";
 
-import listThematic from '../../components/list-thematic/listThematic.jsx'
 
 const Home = () => {
   const navigate = useNavigate();
@@ -230,12 +229,18 @@ const Home = () => {
 
       {/* TOP section */}
       <section className="section top">
-        <div className="title-top text-center text-light my-4">
+        <div className="title-top d-flex flex-column align-items-center justify-content-center text-center text-light my-4">
           <h2 className="fs-custom text-light fw-bold">Classement des joueurs</h2>
           <div className="divider mx-auto text-center text-light my-2"></div>
           <p className="text-light fw-100">
             Découvrez le top des joueurs et défiez vos<br/> amis pour entrer dans le classement !
           </p>
+          <button
+          onClick={() => navigate('/raking')}
+          className="btn-add-md d-block d-lg-none "
+          aria-label="View rankings">
+           Voir les classement <FaPlus size={27} />
+          </button>
         </div>
 
         <div className="bubbles-container d-flex gap-4 position-relative">
@@ -274,7 +279,7 @@ const Home = () => {
           
           <button
           onClick={() => navigate('/raking')}
-          className="btn-add position-absolute end-0 me-5"
+          className="btn-add d-none d-lg-block position-absolute end-0 me-5"
           aria-label="View rankings">
             <FaPlus size={27} />
           </button>

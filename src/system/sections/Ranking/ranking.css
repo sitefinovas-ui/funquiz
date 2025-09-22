@@ -3,9 +3,7 @@
     background-size: cover;
     flex-direction: row;
 }
-.card-cus-raking{
-    width: 250px;
-}
+
 
 .user-animation {
     animation: user-gradient 1.5s ease-in-out infinite;
@@ -31,6 +29,11 @@
     color: azure;
     text-align: center;
 }
+.text-muted-custom-desk {
+  width: 50%;
+  color: rgba(240, 255, 255, 0.517);
+}
+
 /* === Animation cercle doré autour de l'avatar === */
 .b-2 {
   position: relative;
@@ -90,4 +93,27 @@
   animation: confetti linear forwards;
 }
 /* ===------------------------ */
-
+.j-2, .j-3{
+  width: 150px;
+}
+.j-1 {
+  width: 190px;
+}
+@media (max-width: 576px) {
+  .fs-custom-raking {
+    font-size: 4rem;
+  }
+  .text-muted-custom-desk {
+    font-size: 14px;
+    width: 300px;
+  }
+  .j-2, .j-3{
+  width: 100px;
+  }
+  .j-1 {
+    width: 150px;
+  }
+  .fs-custom-raking-name{
+    font-size: 15px;
+  }
+}

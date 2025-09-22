@@ -8,9 +8,9 @@ const Thematic = ({closePopup })=> {
 
             <div className="position-relative w-100">
 
-                <div style={{top:'0px'}} className="text-dark p-5 start-0 end-0  bg-white position-absolute ">
+                <div style={{top:'-10px'}} className="text-dark p-5 start-0 end-0  bg-white position-absolute ">
                     <div className="d-flex align-items-center justify-content-between mx-5">
-                        <h2 style={{fontSize:'60px'}} className="fw-bold">Toutes les thématiques</h2>
+                        <h2  className="title-selec-quiz fw-bold">Toutes les thématiques</h2>
                         <button onClick={closePopup } className="border-0 btn-close"></button>
                     </div>
                    <div className="dropdown-menu-large w-100">

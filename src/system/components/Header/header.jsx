@@ -123,14 +123,14 @@ const Header = ({openPopup}) => {
               <nav className="flex-1">
                 <ul className="d-flex align-items-center justify-content-center gap-3 list-unstyled m-0">
                   <li>
-                    <Link to="/" className="btn-mb-header text-decoration-none">
+                    <button onClick={()=>navigate('/')} className="btn-mb-header text-decoration-none">
                       <SiHomeassistant /> <span className="title-header">Accueil</span>
-                    </Link>
+                    </button>
                   </li>
                   <li>
-                    <Link to="/step" className="btn-mb-header text-decoration-none">
+                    <button onClick={() => openPopup("thematic")} className="btn-mb-header text-decoration-none">
                       <SiNintendogamecube /> <span className="title-header">Quiz</span>
-                    </Link>
+                    </button>
                   </li>
                 </ul>
               </nav>
@@ -144,14 +144,14 @@ const Header = ({openPopup}) => {
               <nav className="flex-1">
                 <ul className="d-flex align-items-center justify-content-center gap-3 list-unstyled m-0">
                   <li>
-                    <Link to="/contact" className="btn-mb-header text-decoration-none">
+                    <button onClick={()=>navigate('/contact')} className="btn-mb-header text-decoration-none">
                       <IoMdMail /> <span className="title-header">Contact</span>
-                    </Link>
+                    </button>
                   </li>
                   <li>
-                    <Link to="/profile" className="btn-mb-header text-decoration-none">
+                    <button onClick={()=>navigate('/profil')}  className="btn-mb-header text-decoration-none">
                       <MdAccountCircle /> <span className="title-header">Profil</span>
-                    </Link>
+                    </button>
                   </li>
                 </ul>
               </nav>

@@ -1,14 +1,24 @@
-.backdrop-blur{
-    backdrop-filter: blur(10px);
-    z-index: 9999009999999;
+/* ===========================
+   GLOBAL / BASE
+=========================== */
+.backdrop-blur {
+  backdrop-filter: blur(10px);
+  z-index: 9999009999999;
 }
+
 .dropdown-menu-large {
   position: relative;
   display: inline-block;
   font-family: Arial, sans-serif;
-
 }
 
+.title-selec-quiz {
+  font-size: 5rem;
+}
+
+/* ===========================
+   BUTTON
+=========================== */
 .dropdown-btn {
   background: linear-gradient(135deg, #ff8c00, #ff2e63);
   border: none;
@@ -26,6 +36,9 @@
   box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
 }
 
+/* ===========================
+   DROPDOWN CONTENT
+=========================== */
 .dropdown-content {
   position: absolute;
   top: 110%;
@@ -71,7 +84,9 @@
   padding-left: 5px;
 }
 
-/* Animation */
+/* ===========================
+   ANIMATIONS
+=========================== */
 @keyframes dropdown-slide {
   from {
     opacity: 0;
@@ -83,11 +98,63 @@
   }
 }
 
-/* Responsive */
+/* ===========================
+   RESPONSIVE DESIGN
+=========================== */
+
+/* Tablette (≤ 992px) */
+@media (max-width: 992px) {
+  .dropdown-content {
+    grid-template-columns: repeat(2, 1fr); /* 2 colonnes */
+    gap: 20px;
+    padding: 20px;
+  }
+  .dropdown-column {
+    text-align: center;
+  }
+  .dropdown-column h4 {
+    font-size: 16px;
+  }
+}
+
+/* Mobile (≤ 768px) */
 @media (max-width: 768px) {
+  .title-selec-quiz {
+  font-size: 2rem;
+  padding: 0 50px 0 0;
+}
+
   .dropdown-content {
     width: 100%;
     grid-template-columns: 1fr;
     padding: 15px;
+    height: 550px;
+    overflow-y: auto;
+  }
+}
+
+/* Petit mobile (≤ 576px) */
+@media (max-width: 576px) {
+  .dropdown-content {
+    grid-template-columns: 1fr; /* une seule colonne */
+    padding: 10px;
+    gap: 15px;
+  }
+  .dropdown-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .dropdown-column h4 {
+    font-size: 18px;
+    margin-top: 10px;
+    color: #ff2ed2;
+  }
+  .dropdown-column ul li a {
+    font-size: 14px;
   }
 }

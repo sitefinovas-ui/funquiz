@@ -13,66 +13,67 @@ const Ranking = () => {
 
             <div style={{height: '17rem'}} className=" d-flex align-items-center justify-content-center container-raking  w-100 mb-5">
 
-                <img src={rocket} width={250} style={{left: '300px'}} className='ms-5' alt="icon rocket" />
+                <img src={rocket} width={250} style={{left: '300px'}} className='ms-5 d-none d-lg-block' alt="icon rocket" />
                 <div className="container d-flex w-50 flex-column align-items-center justify-content-center">
                     <h1 className='fs-custom-raking'>Classement</h1>
-                    <p className="text-muted-custom text-center fs-5 w-50">
+                    <p className="text-muted-custom-desk  text-center">
                     Retrouvez ici le classement des meilleurs joueurs, mis à jour en temps réel en fonction de leurs performances.
                     </p>
                 </div>
-                <img src={userRaking} width={250} style={{right: '300px'}} className='me-5' alt=" icon user raking" />
+                <img src={userRaking} width={250} style={{right: '300px'}} className='me-5 d-none d-lg-block' alt=" icon user raking" />
             </div>
 
-            <div className="ranking-content w-100 d-flex align-items-center justify-content-center">
-                <div className="card-cus-raking align-items-center justify-content-center d-flex flex-column ">
+            <div className="ranking-content gap-4 w-100 d-flex align-items-center justify-content-center">
+
+                <div className="j-2 align-items-center justify-content-center d-flex flex-column ">
                     <span></span>
-                    <div style={{width:'150px'}} className="user-animation rounded-circle overflow-hidden">
+                    <div className="user-animation rounded-circle overflow-hidden">
                     <img src="https://i.pinimg.com/736x/6f/a3/6a/6fa36aa2c367da06b2a4c8ae1cf9ee02.jpg" className='w-100 h-100 objectif-fit-cover' alt="" />
                     </div>
-                    <h2 className='text-capitalize text-light mt-4'>joueur 2</h2>
+                    <h2 className='text-capitalize text-light fs-custom-raking-name mt-4'>joueur 2</h2>
                     <span className='text-light fw-bold'> 90.000 
                         <img src={piece} width={29} alt="" />
                     </span>
                 </div>
 
-                <div className="position-relative">
-  {/* Confettis */}
-  {[...Array(20)].map((_, i) => (
-    <span
-      key={i}
-      className="confetti"
-      style={{
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${2 + Math.random() * 3}s`,
-        animationDelay: `${Math.random() * 2}s`,
-      }}
-    />
-  ))}
+                <div className=" position-relative">
+                  {/* Confettis */}
+                  {[...Array(20)].map((_, i) => (
+                    <span
+                      key={i}
+                      className="confetti"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        animationDuration: `${2 + Math.random() * 3}s`,
+                        animationDelay: `${Math.random() * 2}s`,
+                      }}
+                    />
+                  ))}
 
-  {/* Carte joueur */}
-  <div className="card-cus-raking align-items-center justify-content-center d-flex flex-column ">
-    <span></span>
-    <div style={{width:'200px'}} className="user-animation rounded-circle overflow-hidden b-2 ">
-      <img 
-        src="https://i.pinimg.com/736x/6f/a3/6a/6fa36aa2c367da06b2a4c8ae1cf9ee02.jpg" 
-        className='w-100 h-100 objectif-fit-cover' 
-        alt="joueur" 
-      />
-    </div>
-    <h2 className='text-capitalize text-light mt-4 felicitation-card'>Joueur 1</h2>
-    <span className='text-light fw-bold'> 100.000 
-      <img src={piece} width={29} alt="pièce" />
-    </span>
-  </div>
+                  {/* Carte joueur */}
+                  <div className="card-cus-raking align-items-center justify-content-center d-flex flex-column ">
+                    <span></span>
+                    <div  className="user-animation j-1 rounded-circle overflow-hidden b-2 ">
+                      <img 
+                        src="https://i.pinimg.com/736x/6f/a3/6a/6fa36aa2c367da06b2a4c8ae1cf9ee02.jpg" 
+                        className='w-100 h-100 objectif-fit-cover' 
+                        alt="joueur" 
+                      />
+                    </div>
+                    <h2 className='text-capitalize text-light mt-4 felicitation-card fs-custom-raking-name'>Joueur 1</h2>
+                    <span className='text-light fw-bold'> 100.000 
+                      <img src={piece} width={29} alt="pièce" />
+                    </span>
+                  </div>
                 </div>
 
 
-                <div className="card-cus-raking align-items-center justify-content-center d-flex flex-column ">
+                <div className="align-items-center justify-content-center d-flex flex-column ">
                     <span></span>
-                    <div style={{width:'150px'}} className="user-animation rounded-circle overflow-hidden">
+                    <div className="j-3 user-animation rounded-circle overflow-hidden">
                         <img src="https://i.pinimg.com/736x/6f/a3/6a/6fa36aa2c367da06b2a4c8ae1cf9ee02.jpg" className='w-100 h-100 objectif-fit-cover' alt="" />
                     </div>
-                    <h2 className='text-capitalize text-light mt-4'>joueur 3</h2>
+                    <h2 className='text-capitalize text-light mt-4 fs-custom-raking-name'>joueur 3</h2>
                     <span className='text-light fw-bold'> 50.000 
                         <img src={piece} width={29} alt="" />
                     </span>
