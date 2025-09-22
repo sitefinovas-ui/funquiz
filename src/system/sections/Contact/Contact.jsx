@@ -1,4 +1,4 @@
-import './contact.css';
+import './Contact.css';
 import { useEffect } from 'react';
 
 export default function Contact() {
