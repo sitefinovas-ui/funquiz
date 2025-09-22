@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import piece from './../../../assets/icons/piece.png'
 import rocket from './../../../assets/icons/rocket.svg'
 import userRaking from './../../../assets/icons/user-raking.svg'
