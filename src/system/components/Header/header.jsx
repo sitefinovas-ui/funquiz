@@ -11,7 +11,7 @@ import { MdAccountCircle } from "react-icons/md";
 import Logo from '../../../assets/Log.png'
 import piece from '../../../assets/icons/piece.png';
 
-const Header = () => {
+const Header = ({openPopup}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isGame = location.pathname === '/step';
@@ -20,7 +20,7 @@ const Header = () => {
   return (
     <>
       {!isGame && (
-        <div className="position-relative">
+        <div className="position-relative z-3">
           {/* === Header Desktop === */}
           <header className="d-none d-lg-block">
             <div
@@ -32,14 +32,14 @@ const Header = () => {
                 <nav className="nav-header">
                   <ul className="d-flex align-items-center gap-5 list-unstyled m-0">
                     <li>
-                      <Link to="/" className="text-white text-decoration-none">
+                      <button onClick={()=>navigate('/')} className=" btn-header-custom text-white text-decoration-none">
                         <SiHomeassistant /> Accueil
-                      </Link>
+                      </button>
                     </li>
                     <li>
-                      <Link to="/" className="text-white text-decoration-none">
+                      <button onClick={() => openPopup("thematic")} className=" btn-header-custom text-white text-decoration-none">
                         <SiNintendogamecube /> Quiz
-                      </Link>
+                      </button>
                     </li>
                   </ul>
                 </nav>

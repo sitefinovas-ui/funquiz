@@ -101,6 +101,36 @@
   transform: translateY(-3px) scale(1.05);
   box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
 }
+.btn-header-custom {
+  position: relative;
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.btn-header-custom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 1.5px;
+  background: #fff;
+  transition: width 0.4s ease-in-out;
+}
+
+.btn-header-custom:hover::after {
+  width: 100%;
+}
+
+.btn-header-custom:hover {
+  transform: scale(1.01);
+  transition: transform 0.3s ease-in-out;
+}
 
 @keyframes gradientMove {
   0% { background-position: 0% 50%; }

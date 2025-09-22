@@ -1,6 +1,7 @@
 /* ====== HEADER ====== */
-.header-contact {
-  background: url('../../../assets/wall-contact.png') center/cover no-repeat;
+.header-contact-cus {
+  background: url('../../../assets/icons/wall_quiz_3.png');
+  background-size: cover;
   width: 100%;
   height: 300px;
   position: relative;

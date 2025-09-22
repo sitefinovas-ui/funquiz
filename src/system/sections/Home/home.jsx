@@ -15,6 +15,7 @@ import { MdGamepad } from "react-icons/md";
 import { FaUserPlus, FaGift, FaInfo, FaPlus } from "react-icons/fa";
 import { SlActionRedo } from "react-icons/sl";
 
+import listThematic from '../../components/list-thematic/listThematic.jsx'
 
 const Home = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ const Home = () => {
 
   return (
     <div className='home pb-5 d-flex flex-column align-items-center'>
-
+  
       {/* HERO */}
       <section className="section container hero position-relative">
         <div className=" w-100 d-flex flex-column align-items-center justify-content-center mt-4">
@@ -129,6 +130,13 @@ const Home = () => {
             </div>
           </div>
 
+    <button 
+      onClick={() => navigate('/game')}
+      className='btn-commencer d-flex gap-3'
+    >
+      <MdGamepad className='p-0 m-0' size={20} />
+      Commencer
+    </button>
           <div className="card-thematic t-four overflow-hidden position-absolute">
             <div className=" d-flex mt-2 justify-content-between align-items-center">
               <h3 className="name-thematic d-flex flex-column text-white fs-3">Culture <span style={{fontSize: '12px'}} className=' text-light text-opacity-50 fw-normal '>+2734 questions</span></h3>

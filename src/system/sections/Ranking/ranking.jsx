@@ -9,7 +9,7 @@ const Ranking = () => {
     document.title = "FUNQUIZ | Classement";
   }, []);
     return (
-        <div className="w-100 vh-100 overflow-hidden" >
+        <div className="w-100 h-100 mb-5 overflow-hidden" >
 
             <div style={{height: '17rem'}} className=" d-flex align-items-center justify-content-center container-raking  w-100 mb-5">
 

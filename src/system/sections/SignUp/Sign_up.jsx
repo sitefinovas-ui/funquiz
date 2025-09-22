@@ -96,7 +96,7 @@ const SignUp = () => {
   // Rendu
   // ----------------------------
   return (
-    <div className="container d-flex flex-column justify-content-center align-items-center w-100 vh-100">
+    <div className="container d-flex flex-column justify-content-center align-items-center w-100 h-100">
       
       {/* Header */}
       
@@ -117,7 +117,7 @@ const SignUp = () => {
                 <span className="cursor"> .</span>
                 </p>
             </div>
-            <div className="bulle position-relative w-100">
+            <div className="bulle  position-relative w-100">
                 <img className='floating-icon icon-1' width={100} src={Fb} alt="" />
                 <img className='floating-icon icon-2' width={100} src={Qz} alt="" />
                 <img className='floating-icon icon-3' width={100} src={Ins} alt="" />
@@ -125,7 +125,7 @@ const SignUp = () => {
         </div>
 
         {/* Formulaire */}
-        <div className="signUp-container p-4 p-md-5">
+        <div className="signUp-container z-2 p-4 p-md-5">
 
           {/* Indicateur de carte */}
           <div className="card-indicator">
@@ -308,17 +308,7 @@ const SignUp = () => {
         
           </form>
 
-          {/* Séparateur */}
-          <div className="divider">
-            <span>ou s'identifier avec</span>
-          </div>
-
-          {/* Auth sociale */}
-          <div className="row g-2 mb-4">
-            <button type="button" className="btn d-flex align-items-center justify-content-center bg-white btn-social w-100">
-              Continuer avec <FcGoogle className="ms-1" />oogle
-            </button>
-          </div>
+       
 
           {/* Footer */}
           <div className="text-center">

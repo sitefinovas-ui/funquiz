@@ -17,6 +17,42 @@ section.show {
     font-size: 4.5rem;
   }
 }
+.btn-commencer {
+  padding: 12px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #560455, #ff9900);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(231, 51, 255, 0.5);
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-commencer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: skewX(-25deg);
+  transition: all 0.5s ease-in-out;
+}
+
+.btn-commencer:hover::before {
+  left: 125%;
+}
+
+.btn-commencer:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 204, 51, 0.7);
+}
+
 
 .font-bold {
   text-transform: none;

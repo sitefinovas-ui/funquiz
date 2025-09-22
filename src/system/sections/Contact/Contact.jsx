@@ -9,7 +9,7 @@ export default function Contact() {
     <div className="contact-custom text-light vw-100 gap-3 d-flex flex-column">
       
       {/* === HEADER CONTACT === */}
-      <div className="header-contact d-flex flex-column justify-content-center align-items-center text-center">
+      <div className="header-contact-cus d-flex flex-column justify-content-center align-items-center text-center">
         <h1 className="fs-custom-contact">Contact</h1>
         <p className="subtitle-contact">Un souci, une idée ou juste envie de papoter ? On est là !</p>
       </div>
