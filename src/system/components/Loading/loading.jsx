@@ -9,7 +9,7 @@ export default function LoadingPopup() {
     // Le pop-up disparaît après 3 secondes
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 3000);
+    }, 7000);
 
     return () => clearTimeout(timer);
   }, []);
