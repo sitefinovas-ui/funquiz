@@ -1,0 +1,192 @@
+/* === GLOBAL === */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f8fafc;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+/* === PROGRESS BAR === */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  z-index: 1000;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* === CONTAINER === */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* === HEADER === */
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.main-title {
+  font-size: 2.2rem;
+  color: #1e3a8a;
+  margin-bottom: 1rem;
+}
+
+.main-subtitle {
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+/* === CONTENT SECTIONS === */
+.content-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-header-main {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.section-icon-main {
+  font-size: 1.5rem;
+}
+
+.section-title-main {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.section-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.content-paragraph {
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+/* === FOOTER === */
+.footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding: 2rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.update-date {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 1.8rem;
+  }
+
+  .section-content {.terms-app {
+  font-family: sans-serif;
+  background: #f9fafb;
+  color: #374151;
+}
+
+/* Progress bar */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  z-index: 1000;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.3s ease;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+.header p {
+  color: #6b7280;
+}
+
+.content-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.section-icon {
+  font-size: 2rem;
+}
+.section-content p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.footer {
+  margin-top: 2rem;
+  text-align: center;
+  padding: 1rem 0;
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+/* ✅ Responsive */
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  .content-section {
+    padding: 1rem;
+  }
+  .section-icon {
+    font-size: 1.5rem;
+  }
+}
+
+    padding: 1rem;
+  }
+
+  .section-title-main {
+    font-size: 1.1rem;
+  }
+}

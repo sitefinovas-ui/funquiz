@@ -138,7 +138,7 @@ const Login = () => {
               <div className="d-flex justify-content-center gap-3 flex-wrap">
                 <a href="#" className="link-custom">Conditions d'utilisation</a>
                 <span className="text-muted-custom">•</span>
-                <a href="#" className="link-custom">Privacy Policy</a>
+                <a href="/" className="link-custom">Accueil</a>
               </div>
             </div>
           </div>

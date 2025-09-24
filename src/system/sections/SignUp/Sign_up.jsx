@@ -18,8 +18,8 @@ const SignUp = () => {
   }, []);
 
   const [email, setEmail] = useState('julien@gmail.com');
-  const [firstName, setFirstName] = useState('Sabrina');
-  const [lastName, setLastName] = useState('Mendy');
+  const [firstName, setFirstName] = useState('Julien');
+  const [lastName, setLastName] = useState('Ramos');
   const [number, setNumber] = useState('+225 0702030104');
   const [dateOfBirth, setDateOfBirth] = useState('01/09/2002');
   const [password, setPassword] = useState('');
@@ -96,7 +96,7 @@ const SignUp = () => {
   // Rendu
   // ----------------------------
   return (
-    <div className="container d-flex flex-column justify-content-center align-items-center w-100 h-100">
+    <div className="container d-flex flex-column justify-content-center align-items-center w-100 vh-100">
       
       {/* Header */}
       
@@ -106,7 +106,7 @@ const SignUp = () => {
       <div className="bg-effect"></div>
 
       {/* Conteneur principal */}
-      <div style={{ minWidth: "100%", margin: '100px auto' }} className="signUp ">
+      <div style={{ minWidth: "100%" }} className="signUp ">
         
         {/* Panneau gauche */}
         <div className="wall-inscription d-none d-lg-block position-relative">
@@ -318,7 +318,7 @@ const SignUp = () => {
             <div className="d-flex justify-content-center gap-3 flex-wrap">
               <a href="#" className="link-custom">Conditions d'utilisation</a>
               <span className="text-muted-custom">•</span>
-              <a href="#" className="link-custom">Privacy Policy</a>
+              <a href="/" className="link-custom">Accueil</a>
             </div>
           </div>
 

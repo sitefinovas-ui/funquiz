@@ -3,7 +3,7 @@ import { FaFacebook, FaTwitter, FaTiktok, FaYoutube } from 'react-icons/fa';
 
 import './footer.css';
 
-const Footer = () => {
+const Footer = ({openPopup}) => {
   const location = useLocation();
   const isGame = location.pathname === '/step';
   const isLogin = location.pathname === '/login';
@@ -45,7 +45,7 @@ const Footer = () => {
                 <h3 className="footer-title">Liens rapides</h3>
                 <ul className="footer-links">
                   <li><Link to="/">Accueil</Link></li>
-                  <li><Link to="/quiz">Quiz</Link></li>
+                  <li><Link to="/#" onClick={() => openPopup("thematic")}>Quiz</Link></li>
                   <li><Link to="/classements">Classements</Link></li>
                   <li><Link to="/a-propos">À propos</Link></li>
                   <li><Link to="/contact">Contact</Link></li>
@@ -76,10 +76,10 @@ const Footer = () => {
                   <div className="input-group">
                     <input
                       type="email"
-                      className="form-control newsletter-input"
+                      className="form-control rounded-pill newsletter-input"
                       placeholder="Votre email"
                     />
-                    <button className="btn btn-subscribe text-white" type="submit">
+                    <button className="btn rounded-pill ms-3 btn-subscribe text-white" type="submit">
                       S'inscrire
                     </button>
                   </div>

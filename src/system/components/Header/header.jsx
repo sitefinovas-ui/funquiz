@@ -15,11 +15,13 @@ const Header = ({openPopup}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isGame = location.pathname === '/step';
+  const isLogin = location.pathname === '/login';
+  const isSignUp = location.pathname === '/sign-up';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <>
-      {!isGame && (
+      {!isGame && !isSignUp && !isLogin && (
         <div className="position-relative z-3">
           {/* === Header Desktop === */}
           <header className="d-none d-lg-block">
@@ -82,7 +84,7 @@ const Header = ({openPopup}) => {
                   </button>
                 )}
 
-                <select className="form-select bg-transparent text-white border-0 w-auto">
+                <select style={{backgroundColor:'var(--purple-select-from)'}} className="form-select text-white border-0 w-auto">
                   <option value="fr">🇫🇷 Français</option>
                   <option value="en">🇬🇧 English</option>
                   <option value="es">🇪🇸 Español</option>

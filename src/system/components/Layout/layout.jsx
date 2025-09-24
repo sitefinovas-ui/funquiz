@@ -1,32 +1,34 @@
+import { Outlet } from "react-router-dom";
+import { usePopup } from "../../configurations/Context/PopupContext.jsx";
+
 import Header from "../Header/header.jsx";
 import Footer from "../Footer/footer.jsx";
-import Wel from "../Infos/Info.jsx"
-import Cookie from "../Cookie/cookie.jsx"
+import Wel from "../Infos/Info.jsx";
+import Cookie from "../Cookie/cookie.jsx";
 import ListThematic from "../list-thematic/listThematic.jsx";
-import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import DeleteUser from "../DeleteUser/delete-user.jsx";
 
 export default function Layout() {
-  const [activePopup, setActivePopup] = useState(null);
+  const { activePopup, setActivePopup, closePopup } = usePopup();
 
-  const closePopup = () => setActivePopup(null);
-
-  // Objet pour mapper l'id à son composant
   const popupComponents = {
     thematic: <ListThematic closePopup={closePopup} />,
+    deleteUser: <DeleteUser closePopup={closePopup} />,
   };
 
   return (
     <div className="bg-custom-app">
       <Header openPopup={setActivePopup} />
+
       <main>
         <Outlet />
       </main>
+
       <Wel />
       <Cookie />
-      <Footer />
+      <Footer openPopup={setActivePopup} />
 
-      {/* Rendu dynamique du pop-up actif */}
+      {/* Pop-up dynamique */}
       {activePopup && popupComponents[activePopup]}
     </div>
   );

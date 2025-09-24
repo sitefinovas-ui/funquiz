@@ -24,7 +24,7 @@ const QuizComponent = () => {
 
             <button 
                 onClick={() => setVisible(true)}
-                className="rounded-pill position-absolute top-0 start-0 p-2 m-5 btn-quiz border-0 bg-transparent overflow-hidden"
+                className="rounded-pill position-absolute z-3 top-0 start-0 p-2 m-5 btn-quiz border-0 bg-transparent overflow-hidden"
             >
                 <img 
                     src={btnclose} 

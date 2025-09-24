@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { PopupProvider } from "./system/configurations/Context/PopupContext.jsx";
 import Layout from "./system/components/Layout/layout.jsx";
 
 import Raking from "./system/sections/Ranking/ranking.jsx"
@@ -16,7 +17,7 @@ import './App.css';
 
 function App() {
   return (
-    <>
+    <PopupProvider>
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
@@ -29,10 +30,9 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/profil" element={<Profil />}/>
         </Route>
-
         <Route path="*" element={<Notfound />} />
       </Routes>
-    </>
+    </PopupProvider>
   );
 }
 
