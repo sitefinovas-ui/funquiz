@@ -1,6 +1,23 @@
 import './listThematic.css'
+import { useState, useEffect } from 'react'
+import thematicService from '../../configurations/Services/thematicServices.js'
 
 const Thematic = ({closePopup })=> {
+    const [thematics, setThematics] = useState([])
+
+    useEffect(() => {
+        const fetchThematics = async () => {
+            try {
+                const data = await thematicService.getAllThematics();
+                setThematics(data);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des thématiques :", error);
+            }
+        };
+
+        fetchThematics();
+    }, []);
+
 
     return (
         <>
@@ -16,101 +33,33 @@ const Thematic = ({closePopup })=> {
                    <div className="dropdown-menu-large w-100">
                     {/* Mega menu */}
                         <div className="dropdown-content w-100">
-                        <div className="dropdown-column">
-                            <div className="image-container" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                        {thematics.map((thematic) => (
+                        <div key={thematic.thematic_id} className="dropdown-column">
+                            <div className="image-container rounded-circle overflow-hidden mb-3" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: `${thematic.color_code}`}}>
                                 <img 
-                                    src="https://i.pinimg.com/736x/7c/6c/28/7c6c286c09515026c6d415af78957deb.jpg"  
+                                    src={thematic.icon_url}  
                                     className='rounded-circle w-100 h-100 object-fit-cover' 
                                     alt="Thematic category" 
                                 />
                             </div>
-                            <h4>🎵 Musique</h4>
+                            <h4>{thematic.thematic_title}</h4>
                             <ul>
-                            <li><a href="#">Option 1A</a></li>
-                            <li><a href="#">Option 1B</a></li>
-                            <li><a href="#">Option 1C</a></li>
-                            </ul>
-                        </div>
+                               <ul className="list-unstyled">
+                                {Array.isArray(thematic.sub_thematics) && thematic.sub_thematics.length > 0 ? (
+                                    thematic.sub_thematics.map((sub) => (
+                                    <li className='hover-custom' key={sub.sub_thematic_id}>
+                                        <a href="#" className="text-decoration-none ">
+                                        {sub.title}
+                                        </a>
+                                    </li>
+                                    ))
+                                ) : (
+                                    <li className="text-muted fst-italic small">Aucune sous-thématique</li>
+                                )}
+                                </ul>
 
-                        <div className="dropdown-column">
-                             <div className="image-container" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <img 
-                                    src="https://i.pinimg.com/736x/7c/6c/28/7c6c286c09515026c6d415af78957deb.jpg"  
-                                    className='rounded-circle w-100 h-100 object-fit-cover' 
-                                    alt="Thematic category" 
-                                />
-                            </div>
-                            <h4>🍽️ Gastronomie</h4>
-                            <ul>
-                            <li><a href="#">Option 2A</a></li>
-                            <li><a href="#">Option 2B</a></li>
-                            <li><a href="#">Option 2C</a></li>
                             </ul>
-                        </div>
-
-                        <div className="dropdown-column">
-                             <div className="image-container" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <img 
-                                    src="https://i.pinimg.com/736x/7c/6c/28/7c6c286c09515026c6d415af78957deb.jpg"  
-                                    className='rounded-circle w-100 h-100 object-fit-cover' 
-                                    alt="Thematic category" 
-                                />
-                            </div>
-                            <h4>🎭 Culture</h4>
-                            <ul>
-                            <li><a href="#">Option 3A</a></li>
-                            <li><a href="#">Option 3B</a></li>
-                            <li><a href="#">Option 3C</a></li>
-                            </ul>
-                        </div>
-
-                        <div className="dropdown-column">
-                             <div className="image-container" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <img 
-                                    src="https://i.pinimg.com/736x/7c/6c/28/7c6c286c09515026c6d415af78957deb.jpg"  
-                                    className='rounded-circle w-100 h-100 object-fit-cover' 
-                                    alt="Thematic category" 
-                                />
-                            </div>
-                            <h4>🏡 Vie Quotidienne</h4>
-                            <ul>
-                            <li><a href="#">Option 4A</a></li>
-                            <li><a href="#">Option 4B</a></li>
-                            <li><a href="#">Option 4C</a></li>
-                            </ul>
-                        </div>
-
-                        <div className="dropdown-column">
-                             <div className="image-container" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <img 
-                                    src="https://i.pinimg.com/736x/7c/6c/28/7c6c286c09515026c6d415af78957deb.jpg"  
-                                    className='rounded-circle w-100 h-100 object-fit-cover' 
-                                    alt="Thematic category" 
-                                />
-                            </div>
-                            <h4>🌍 Langue</h4>
-                            <ul>
-                            <li><a href="#">Français</a></li>
-                            <li><a href="#">Anglais</a></li>
-                            <li><a href="#">Espagnol</a></li>
-                            </ul>
-                        </div>
-
-                        <div className="dropdown-column">
-                             <div className="image-container" style={{width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <img 
-                                    src="https://i.pinimg.com/736x/7c/6c/28/7c6c286c09515026c6d415af78957deb.jpg"  
-                                    className='rounded-circle w-100 h-100 object-fit-cover' 
-                                    alt="Thematic category" 
-                                />
-                            </div>
-                            <h4>⚽ Sport</h4>
-                            <ul>
-                            <li><a href="#">Option 6A</a></li>
-                            <li><a href="#">Option 6B</a></li>
-                            <li><a href="#">Option 6C</a></li>
-                            </ul>
-                        </div>
+                        </div>))}
                         </div>
                     </div>
 

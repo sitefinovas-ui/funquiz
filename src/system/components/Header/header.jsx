@@ -1,6 +1,8 @@
 import './header.css';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import useAuth from '../../configurations/Context/useAuth';
+import pointService from '../../configurations/Services/pointService';
 import { SiHomeassistant, SiNintendogamecube } from 'react-icons/si';
 import { FaSearch } from 'react-icons/fa';
 import { GrInfo } from 'react-icons/gr';
@@ -10,18 +12,76 @@ import { MdAccountCircle } from "react-icons/md";
 
 import Logo from '../../../assets/Log.png'
 import piece from '../../../assets/icons/piece.png';
+import { useTranslation } from 'react-i18next';
 
 const Header = ({openPopup}) => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const isGame = location.pathname === '/step';
   const isLogin = location.pathname === '/login';
   const isSignUp = location.pathname === '/sign-up';
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isDash = location.pathname.startsWith("/dashboard");
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+
+  // Points dynamiques depuis le service pointService
+  const [points, setPoints] = useState(0);
+
+  // Gestion de la langue sélectionnée (local state, à globaliser selon besoin)
+  const [lang, setLang] = useState('fr');
+  const handleLangChange = (e) => {
+    setLang(e.target.value);
+    i18n.changeLanguage(e.target.value);
+    localStorage.setItem('lang', e.target.value);
+  };
+
+  // Persistance de la langue au chargement
+  useEffect(() => {
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) {
+      setLang(savedLang);
+      i18n.changeLanguage(savedLang);
+    }
+  }, [i18n]);
+  useEffect(() => {
+    let ignore = false;
+    const fetchPoints = async () => {
+      if (user && user.user_id) {
+        try {
+          const data = await pointService.getUserPoints(user.user_id);
+          // total_points peut être string, on force en nombre
+          let pts = 0;
+          if (data && data.total_points !== undefined) {
+            pts = Number(data.total_points);
+            if (isNaN(pts)) pts = 0;
+          }
+          if (!ignore) setPoints(pts);
+        } catch {
+          if (!ignore) setPoints(user.total_points || 0);
+        }
+      }
+    };
+    fetchPoints();
+    return () => { ignore = true; };
+  }, [user]);
+  // Gestion du champ recherche
+  const [search, setSearch] = useState('');
+  const searchInputRef = useRef();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (search.trim()) {
+      // Redirige vers une page de résultats ou popup (à adapter selon ton app)
+      navigate(`/search?query=${encodeURIComponent(search)}`);
+    } else if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
 
   return (
     <>
-      {!isGame && !isSignUp && !isLogin && (
+      {!isGame && !isDash && !isSignUp && !isLogin && (
         <div className="position-relative z-3">
           {/* === Header Desktop === */}
           <header className="d-none d-lg-block">
@@ -35,25 +95,29 @@ const Header = ({openPopup}) => {
                   <ul className="d-flex align-items-center gap-5 list-unstyled m-0">
                     <li>
                       <button onClick={()=>navigate('/')} className=" btn-header-custom text-white text-decoration-none">
-                        <SiHomeassistant /> Accueil
+                        <SiHomeassistant /> {t('header.home')}
                       </button>
                     </li>
                     <li>
-                      <button onClick={() => openPopup("thematic")} className=" btn-header-custom text-white text-decoration-none">
-                        <SiNintendogamecube /> Quiz
+                      <button onClick={() => openPopup("thematic") } className=" btn-header-custom text-white text-decoration-none">
+                        <SiNintendogamecube /> {t('header.quiz')}
                       </button>
                     </li>
                   </ul>
                 </nav>
 
                 {/* Search bar */}
-                <form className="search-bar d-flex align-items-center position-relative">
-                  <input
-                    type="text"
-                    className="search-input w-100 px-4 py-3 rounded-pill"
-                    placeholder="Rechercher un quiz..."
-                  />
-                  <button type="submit" className="search-btn position-absolute">
+                <form className="search-bar d-flex align-items-center position-relative" onSubmit={handleSearch} role="search" aria-label="Recherche">
+                    <input
+                      type="text"
+                      className="search-input w-100 px-4 py-3 rounded-pill"
+                      placeholder={t('header.searchPlaceholder')}
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      ref={searchInputRef}
+                      aria-label={t('header.searchAria')}
+                    />
+                  <button type="submit" className="search-btn position-absolute" aria-label={t('header.searchBtnAria')}>
                     <FaSearch />
                   </button>
                 </form>
@@ -63,52 +127,72 @@ const Header = ({openPopup}) => {
               <div style={{width:'100px'}} className="logo d-flex align-items-center justify-content-center">
 
                 <img src={Logo} className='w-100 h-100' alt="" />
-                <h1 className='fw-bold text-light'>FunQuiz</h1>
+                <h1 className='fw-bold text-light'>{t('header.logo')}</h1>
               </div>
 
               {/* Actions */}
               <div className="d-flex gap-3 align-items-center justify-content-center">
-                <button onClick={() => navigate('/terms')} className="info-btn">
+                <button onClick={() => navigate('/terms')} className="info-btn" aria-label={t('header.termsAria')}>
                   <GrInfo size={26} className="icon text-white" />
                 </button>
 
                 {isAuthenticated && (
-                  <button className="btn d-flex align-items-center bg-secondary text-white bg-opacity-25 rounded-pill">
+                  <button className="btn d-flex align-items-center bg-secondary text-light bg-opacity-25 rounded-pill" tabIndex={-1} aria-label={`Vous avez ${points} points`} disabled>
                     <img
                       src={piece}
                       width={30}
                       className="object-fit-cover"
-                      alt="pièces"
+                      alt="points"
                     />
-                    <span className="p-1">100.000</span>
+                    <span className="p-1">{points.toLocaleString('fr-FR')}</span>
                   </button>
                 )}
 
-                <select style={{backgroundColor:'var(--purple-select-from)'}} className="form-select text-white border-0 w-auto">
-                  <option value="fr">🇫🇷 Français</option>
-                  <option value="en">🇬🇧 English</option>
-                  <option value="es">🇪🇸 Español</option>
+                <select
+                  value={lang}
+                  onChange={handleLangChange}
+                  style={{backgroundColor:'var(--purple-select-from)'}}
+                  className="form-select text-white border-0 w-auto"
+                  aria-label={t('header.langAria')}
+                >
+                  <option value="fr">🇫🇷 {t('header.lang.fr')}</option>
+                  <option value="en">🇬🇧 {t('header.lang.en')}</option>
+                  <option value="es">🇪🇸 {t('header.lang.es')}</option>
                 </select>
 
                 {isAuthenticated ? (
                   <button
                     style={{ width: '70px', height: '70px' }}
-                    onClick={() => navigate('/profile')}
+                    onClick={() => navigate('/profil')}
                     className="rounded-5 overflow-hidden border border-white"
+                    aria-label={t('header.profile')}
                   >
-                    <img
-                      src="https://img.freepik.com/photos-premium/image-photorealiste-hyper-realiste-fond-blanc-ai-generee-par-freepik_643360-530895.jpg?semt=ais_hybrid&w=740&q=80"
-                      className="object-fit-cover w-100"
-                      alt="profil"
-                    />
+                    {(() => {
+                      let apiUrl = import.meta.env.VITE_API_URL || '';
+                      if (apiUrl.endsWith('/api')) apiUrl = apiUrl.slice(0, -4);
+                      let avatarPath = user.avatar || user.avatar_url || '';
+                      if (avatarPath && avatarPath.startsWith('/uploads/')) {
+                        avatarPath = `${apiUrl}${avatarPath}`;
+                      }
+                      const fallback = "https://img.freepik.com/photos-premium/image-photorealiste-hyper-realiste-fond-blanc-ai-generee-par-freepik_643360-530895.jpg?semt=ais_hybrid&w=740&q=80";
+                      return (
+                        <img
+                          src={avatarPath && avatarPath !== '' ? avatarPath : fallback}
+                          className="object-fit-cover w-100"
+                          alt="profil"
+                          onError={e => { e.target.onerror = null; e.target.src = fallback; }}
+                        />
+                      );
+                    })()}
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => navigate('/login')}
                     className="rounded-5 py-2 px-3 btn-wall-custom border-0 text-white"
+                    aria-label={t('header.login')}
                   >
-                    Se connecter
+                    {t('header.login')}
                   </button>
                 )}
               </div>
@@ -126,12 +210,12 @@ const Header = ({openPopup}) => {
                 <ul className="d-flex align-items-center justify-content-center gap-3 list-unstyled m-0">
                   <li>
                     <button onClick={()=>navigate('/')} className="btn-mb-header text-decoration-none">
-                      <SiHomeassistant /> <span className="title-header">Accueil</span>
+                      <SiHomeassistant /> <span className="title-header">{t('header.home')}</span>
                     </button>
                   </li>
                   <li>
                     <button onClick={() => openPopup("thematic")} className="btn-mb-header text-decoration-none">
-                      <SiNintendogamecube /> <span className="title-header">Quiz</span>
+                      <SiNintendogamecube /> <span className="title-header">{t('header.quiz')}</span>
                     </button>
                   </li>
                 </ul>
@@ -147,12 +231,12 @@ const Header = ({openPopup}) => {
                 <ul className="d-flex align-items-center justify-content-center gap-3 list-unstyled m-0">
                   <li>
                     <button onClick={()=>navigate('/contact')} className="btn-mb-header text-decoration-none">
-                      <IoMdMail /> <span className="title-header">Contact</span>
+                      <IoMdMail /> <span className="title-header">{t('header.contact')}</span>
                     </button>
                   </li>
                   <li>
                     <button onClick={()=>navigate('/profil')}  className="btn-mb-header text-decoration-none">
-                      <MdAccountCircle /> <span className="title-header">Profil</span>
+                      <MdAccountCircle /> <span className="title-header">{t('header.profile')}</span>
                     </button>
                   </li>
                 </ul>

@@ -7,6 +7,7 @@ import Wel from "../Infos/Info.jsx";
 import Cookie from "../Cookie/cookie.jsx";
 import ListThematic from "../list-thematic/listThematic.jsx";
 import DeleteUser from "../DeleteUser/delete-user.jsx";
+import Opinion from "../Opinion/opinion.jsx"
 
 export default function Layout() {
   const { activePopup, setActivePopup, closePopup } = usePopup();
@@ -14,6 +15,7 @@ export default function Layout() {
   const popupComponents = {
     thematic: <ListThematic closePopup={closePopup} />,
     deleteUser: <DeleteUser closePopup={closePopup} />,
+    opinion: <Opinion closePopup={closePopup} />,
   };
 
   return (

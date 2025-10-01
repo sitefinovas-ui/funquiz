@@ -1,49 +1,113 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // ← Remplace par ton ID GA4
+const CONSENT_DURATION_DAYS = 10; 
 
 export default function CookieBanner() {
-  const [show, setShow] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
 
-  // Fonction pour lire un cookie
+  // Lire un cookie
   const getCookie = (name) => {
-    const cname = name + '=';
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
+    const nameEQ = name + '=';
+    const ca = document.cookie.split(';');
     for (let c of ca) {
-      c = c.trim();
-      if (c.indexOf(cname) === 0) {
-        return c.substring(cname.length, c.length);
-      }
+      while (c.charAt(0) === ' ') c = c.substring(1);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
     }
-    return '';
+    return null;
   };
 
+  // Écrire un cookie
+  const setCookie = (name, value, days = 365) => {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+  };
+
+  // Calculer si le consentement a expiré
+  const isConsentExpired = () => {
+    const dateStr = getCookie('cookieConsentDate');
+    if (!dateStr) return true;
+
+    const consentDate = new Date(dateStr);
+    const now = new Date();
+    const diffInDays = (now - consentDate) / (1000 * 60 * 60 * 24);
+    return diffInDays >= CONSENT_DURATION_DAYS;
+  };
+
+  // Charger GA dynamiquement après consentement
+  const loadGoogleAnalytics = () => {
+    if (window.gtag) return;
+
+    const script = document.createElement('script');
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+    script.async = true;
+    document.head.appendChild(script);
+
+    script.onload = () => {
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', GA_MEASUREMENT_ID);
+    };
+  };
+
+  // Vérifier consentement + expiration
   useEffect(() => {
-    const cookie = getCookie('cookieConsent');
-    if (!cookie) {
-      setShow(true);
+    const consent = getCookie('cookieConsent');
+
+    if (consent === 'true' && !isConsentExpired()) {
+      loadGoogleAnalytics();
+    } else if (consent === 'false' && !isConsentExpired()) {
+      setShowBanner(false); // Refus encore valable
+    } else {
+      setShowBanner(true); // Pas de consentement OU expiré
     }
   }, []);
 
-  const handleClose = () => {
-    setShow(false);
+  // L'utilisateur accepte
+  const handleAccept = () => {
+    const now = new Date().toISOString();
+    setCookie('cookieConsent', 'true', CONSENT_DURATION_DAYS);
+    setCookie('cookieConsentDate', now, CONSENT_DURATION_DAYS);
+    setShowBanner(false);
+    loadGoogleAnalytics();
   };
 
-  if (!show) return null;
+  // L'utilisateur refuse
+  const handleDecline = () => {
+    const now = new Date().toISOString();
+    setCookie('cookieConsent', 'false', CONSENT_DURATION_DAYS);
+    setCookie('cookieConsentDate', now, CONSENT_DURATION_DAYS);
+    setShowBanner(false);
+  };
+
+  // Ne rien afficher si la bannière ne doit pas être visible
+  if (!showBanner || isDashboard) return null;
 
   return (
     <div
-      id="lawmsg"
-      className="alert alert-info alert-dismissible h6 fade show fixed-bottom m-0"
+      className="alert alert-info alert-dismissible h6 fade show fixed-bottom m-0 text-center"
       role="alert"
+      style={{ zIndex: 9999 }}
     >
-      &nbsp; Nous utilisons des cookies sur ce site pour vous distinguer des autres utilisateurs.
-      &nbsp; Nous utilisons ces données pour améliorer votre expérience et pour la publicité ciblée.
-      &nbsp; En continuant à utiliser ce site, vous consentez à notre utilisation des cookies.
-      &nbsp; Pour plus d'informations, veuillez consulter notre&nbsp;
-      <a href="https://info.profilesonly.com" target="_blank" rel="noreferrer">
-        Politique de Cookies
+      Ce site utilise des cookies pour améliorer votre expérience. Les cookies analytiques sont utilisés uniquement avec votre consentement.{' '}
+      <a href="/politique-de-cookies" target="_blank" rel="noreferrer">
+        En savoir plus
       </a>
-      .<button className="btn btn-close btn-sm ms-3" type="button" onClick={handleClose}></button>
+      <div className="mt-2">
+        <button className="btn btn-primary btn-sm me-2" onClick={handleAccept}>
+          Accepter
+        </button>
+        <button className="btn btn-outline-secondary btn-sm" onClick={handleDecline}>
+          Refuser
+        </button>
+      </div>
     </div>
   );
 }

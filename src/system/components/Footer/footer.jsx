@@ -1,28 +1,67 @@
+
 import { Link, useLocation } from 'react-router-dom';
 import { FaFacebook, FaTwitter, FaTiktok, FaYoutube } from 'react-icons/fa';
-
+import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
 import './footer.css';
+import Newsletter from '../../configurations/Services/newsletterServices.js';
 
 const Footer = ({openPopup}) => {
+  const token = localStorage.getItem('token');
+  const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+  const user_id_token = payload?.user_id;
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+
+
   const location = useLocation();
+  const { t } = useTranslation();
   const isGame = location.pathname === '/step';
   const isLogin = location.pathname === '/login';
   const isSignUp = location.pathname === '/sign-up';
+  const isDash = location.pathname.startsWith("/dashboard");
   const isTerms = location.pathname === '/terms';
+
+    const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
+
+  if (!user_id_token) {
+    setMessage("Merci pour votre inscription !");
+    setTimeout(() => setMessage(""), 5000); // disparaît après 5 secondes
+    setLoading(false);
+    return;
+  }
+
+  try {
+    await Newsletter.addNewsletter(email, user_id_token);
+    setMessage("Merci pour votre inscription !");
+    setEmail("");
+    setTimeout(() => setMessage(""), 5000); // disparaît après 5 secondes
+  } catch (error) {
+    console.error("Error subscribing to newsletter:", error);
+    setMessage("Une erreur est survenue. Veuillez réessayer.");
+    setTimeout(() => setMessage(""), 5000); // disparaît après 5 secondes
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <>
-      {!isGame && !isLogin && !isSignUp && (
+      {!isGame && !isDash &&  !isLogin && !isSignUp && (
         <footer className="footer-funquiz pt-5">
           {!isTerms && (
           <div className="container">
             <div className="row g-4">
               {/* === À propos FunQuiz === */}
               <div className="col-lg-4 col-md-6">
-                <h3 className="footer-title logo-title">FunQuiz</h3>
+                <h3 className="footer-title logo-title">{t('footer.funquiz')}</h3>
                 <p className="mb-4">
-                  Testez vos connaissances et amusez-vous avec nos quiz interactifs ! Restez connectés
-                  pour ne rien manquer.
+                  {t('footer.description')}
                 </p>
                 <div className="social-links mb-4">
                   <a href="#">
@@ -42,21 +81,21 @@ const Footer = ({openPopup}) => {
 
               {/* === Liens rapides === */}
               <div className="col-lg-2 col-md-6">
-                <h3 className="footer-title">Liens rapides</h3>
+                <h3 className="footer-title">{t('footer.quick_links')}</h3>
                 <ul className="footer-links">
-                  <li><Link to="/">Accueil</Link></li>
-                  <li><Link to="/#" onClick={() => openPopup("thematic")}>Quiz</Link></li>
-                  <li><Link to="/classements">Classements</Link></li>
-                  <li><Link to="/a-propos">À propos</Link></li>
-                  <li><Link to="/contact">Contact</Link></li>
-                  <li><Link to="/login">Se connecter</Link></li>
-                  <li><Link to="/sign-up">S'inscrire</Link></li>
+                  <li><Link to="/">{t('footer.home')}</Link></li>
+                  <li><Link to="/#" onClick={() => openPopup("thematic")}>{t('footer.quiz')}</Link></li>
+                  <li><Link to="/classements">{t('footer.ranking')}</Link></li>
+                  <li><Link to="/a-propos">{t('footer.about')}</Link></li>
+                  <li><Link to="/contact">{t('footer.contact')}</Link></li>
+                  <li><Link to="/login">{t('footer.login')}</Link></li>
+                  <li><Link to="/sign-up">{t('footer.signup')}</Link></li>
                 </ul>
               </div>
 
               {/* === Support === */}
               <div className="col-lg-2 col-md-6">
-                <h3 className="footer-title">Support</h3>
+                <h3 className="footer-title">{t('footer.support')}</h3>
                 <ul className="footer-links">
                   <li><Link to="/faq">FAQ</Link></li>
                   <li><Link to="/communaute">Communauté</Link></li>
@@ -72,18 +111,23 @@ const Footer = ({openPopup}) => {
                 <p className="mb-4">
                   Recevez les derniers quiz et astuces directement dans votre boîte mail !
                 </p>
-                <form className="mb-4">
-                  <div className="input-group">
+                <div className="mb-4">
+                  <form onSubmit={handleSubmit} className="input-group">
                     <input
                       type="email"
                       className="form-control rounded-pill newsletter-input"
                       placeholder="Votre email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
                     />
-                    <button className="btn rounded-pill ms-3 btn-subscribe text-white" type="submit">
+                    <button disabled={loading} className="btn rounded-pill ms-3 btn-subscribe text-white" type="submit">
                       S'inscrire
                     </button>
-                  </div>
-                </form>
+                  </form>
+                  {message && <div className=" text-light position-asolute bottom-0">{message}</div>}
+                </div>
                 <p className="small">
                   En vous inscrivant, vous acceptez notre{' '}
                   <Link to="/politique-de-confidentialite">politique de confidentialité</Link>.

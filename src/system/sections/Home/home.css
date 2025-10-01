@@ -101,32 +101,26 @@ section.show {
 
 /* --- COULEURS PERSONNALISÉES --- */
 .t-one {
-  background: linear-gradient(180deg, #1eff8e 0%, #046030 100%);
   box-shadow: 0 0 30px rgba(30, 255, 142, 0.8);
 }
 
 .t-two {
-  background: linear-gradient(180deg, #4facfe 0%, #0052d4 100%);
   box-shadow: 0 0 30px rgba(79, 172, 254, 0.8);
 }
 
 .t-three {
-  background: linear-gradient(180deg, #ff6a00 0%, #ee0979 100%);
   box-shadow: 0 0 30px rgba(255, 106, 0, 0.8);
 }
 
 .t-four {
-  background: linear-gradient(180deg, #f7971e 0%, #ffd200 100%);
   box-shadow: 0 0 30px rgba(255, 210, 0, 0.8);
 }
 
 .t-five {
-  background: linear-gradient(180deg, #8e2de2 0%, #4a00e0 100%);
   box-shadow: 0 0 30px rgba(142, 45, 226, 0.8);
 }
 
 .t-six {
-  background: linear-gradient(180deg, #ff512f 0%, #dd2476 100%);
   box-shadow: 0 0 30px rgba(255, 81, 47, 0.8);
 }
 
@@ -352,6 +346,13 @@ section.show {
 }
 
 /* Effet de bordure discrète */
+.card-opinion {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  overflow: visible;
+}
+
 .card-opinion::before {
   content: "";
   position: absolute;
@@ -363,7 +364,7 @@ section.show {
 
 /* Hover professionnel */
 .card-opinion:hover {
-  transform: translateY(-6px);
+  transform: translateY(-6px) scale(1.02);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
 }
 
@@ -380,6 +381,7 @@ section.show {
   color: #d0d0d0;
   font-size: 0.95rem;
   line-height: 1.6;
+  margin: 0;
 }
 
 /* Accent discret (gaming vibes) */
@@ -388,7 +390,34 @@ section.show {
   font-weight: 600;
 }
 
+.comment-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 2 lignes max */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
 
+/* Gestion du texte limité */
+.card-opinion .comment-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;   /* Limite à 2 lignes visibles */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Quand on hover, le texte s’affiche en entier */
+.card-opinion:hover .comment-text {
+  -webkit-line-clamp: unset; /* affiche tout le texte */
+}
+
+
+.user-img-container {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 40px;
+}
 .user-img {
   border: 2px solid #f1f1f1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);

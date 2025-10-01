@@ -1,0 +1,27 @@
+ {
+    "header": {
+      "home": "Accueil",
+      "quiz": "Quiz",
+      "contact": "Contact",
+      "profile": "Profil",
+      "login": "Connexion",
+      "logo": "FunQuiz",
+      "lang.fr": "Français",
+      "lang.en": "Anglais",
+      "lang.es": "Espagnol",
+      "searchPlaceholder": "Rechercher un quiz..."
+    },
+    "footer": {
+      "funquiz": "FunQuiz",
+      "description": "Testez vos connaissances et amusez-vous avec nos quiz interactifs ! Restez à l'écoute pour ne rien manquer.",
+      "quick_links": "Liens rapides",
+      "home": "Accueil",
+      "quiz": "Quiz",
+      "ranking": "Classement",
+      "about": "À propos",
+      "contact": "Contact",
+      "login": "Connexion",
+      "signup": "S'inscrire",
+      "support": "Support"
+    }
+  }

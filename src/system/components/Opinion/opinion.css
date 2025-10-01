@@ -1,0 +1,196 @@
+/* Overlay sombre */
+.opinion-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow-y: auto;
+  z-index: 999;
+}
+
+/* Popup central pro */
+.opinion-popup {
+  width: 90%;
+  max-width: 800px;
+  background: #1e1e2f;
+  border-radius: 15px;
+  padding: 2.5rem;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Titre */
+.opinion-title {
+  color: #fff;
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* Btn close */
+.btn-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.8rem;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Toggle btn */
+.toggle-form-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-toggle {
+  padding: 0.6rem 2.5rem;
+  border-radius: 25px;
+  border: none;
+  background-color: #6b0077;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-toggle.active {
+  background-color: #6b0077;
+  transform: scale(1.05);
+}
+
+/* Formulaire */
+.opinion-form {
+  background: #2a2a3e;
+  padding: 2rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+}
+
+.form-control, .form-select {
+  width: 100%;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: #3b3b52;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+.form-control:focus, .form-select:focus {
+  outline: none;
+  box-shadow: 0 0 8px #4a90e2;
+}
+
+/* Submit */
+.btn-submit {
+  width: 100%;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 25px;
+  background-color: #6b0077;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-submit:hover {
+  background-color: #880a96;
+  transform: scale(1.02);
+}
+
+/* Liste des commentaires */
+.comments-list {
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Scrollbar */
+.comments-list::-webkit-scrollbar {
+  width: 8px;
+}
+.comments-list::-webkit-scrollbar-thumb {
+  background: #4a90e2;
+  border-radius: 4px;
+}
+
+/* Commentaire */
+.comment-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #2a2a3e;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.comment-item:hover {
+  background: #3b3b52;
+}
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.comment-content {
+  flex: 1;
+}
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+}
+.user-name {
+  color: #fff;
+  font-weight: 600;
+}
+.comment-date {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+.comment-text {
+  color: #ddd;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+
+/* Conteneur du champ de recherche */
+.search-container {
+  width: 100%;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Champ de recherche */
+.search-container input {
+  width: 90%;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  color: #fff;
+  border-radius: 25px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+/* Focus sur le champ */
+.search-container input:focus {
+  border-color: #ff07a8; /* jaune pour correspondre au surlignage */
+  box-shadow: 0 0 10px rgba(255, 7, 222, 0.5);
+}
+
+/* Placeholder */
+.search-container input::placeholder {
+  color: #ffffff61;
+  font-style: italic;
+}

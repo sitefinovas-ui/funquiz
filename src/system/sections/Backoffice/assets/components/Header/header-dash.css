@@ -1,0 +1,146 @@
+
+        .sidebar-pro {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-header {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          min-height: 80px;
+        }
+
+        .logo-icon {
+          transition: transform 0.2s ease;
+        }
+
+        .collapse-btn:hover {
+          color: #ffffff !important;
+        }
+
+        .collapse-btn:hover .logo-icon {
+          transform: scale(1.05);
+        }
+
+        .nav-section-title {
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-size: 0.7rem;
+        }
+
+        .nav-pro .nav-link-pro {
+          color: #9ca3af;
+          transition: all 0.2s ease;
+          border: 1px solid transparent;
+          font-weight: 500;
+          font-size: 0.9rem;
+        }
+
+        .nav-pro .nav-link-pro:hover {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+          transform: translateX(2px);
+        }
+
+        .nav-pro .nav-link-pro.active {
+          color: #ffffff;
+          background: #2563eb;
+          border-color: #3b82f6;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-pro .nav-link-pro.active .nav-icon {
+          color: #ffffff;
+        }
+
+        .nav-icon {
+          font-size: 18px;
+          width: 20px;
+          text-align: center;
+          color: #6b7280;
+          transition: color 0.2s ease;
+        }
+
+        .nav-text {
+          font-size: 0.9rem;
+          transition: all 0.2s ease;
+        }
+
+        .avatar-wrapper {
+          width: 40px;
+          height: 40px;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          overflow: hidden;
+        }
+
+        .sidebar-footer {
+          background: rgba(0, 0, 0, 0.2);
+        }
+
+        .collapsed .nav-link-pro {
+          justify-content: center;
+          padding-left: 0.75rem !important;
+          padding-right: 0.75rem !important;
+        }
+
+        .collapsed .nav-icon {
+          font-size: 20px;
+        }
+
+        .btn-primary {
+          background: #2563eb;
+          border-color: #2563eb;
+          font-size: 0.9rem;
+        }
+
+        .btn-primary:hover {
+          background: #1d4ed8;
+          border-color: #1d4ed8;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-outline-light {
+          font-size: 0.9rem;
+          border-color: rgba(255, 255, 255, 0.2);
+          color: #9ca3af;
+        }
+
+        .btn-outline-light:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.3);
+          color: #ffffff;
+        }
+
+        .dropdown-menu-dark {
+          background: #1f2937;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-item {
+          font-size: 0.9rem;
+        }
+
+        .badge {
+          font-size: 0.7rem;
+          font-weight: 600;
+        }
+
+        /* Scrollbar */
+        .sidebar-pro::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .sidebar-pro::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .sidebar-pro::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 2px;
+        }
+
+        .sidebar-pro::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+        

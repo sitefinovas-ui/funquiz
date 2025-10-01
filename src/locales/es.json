@@ -1,0 +1,27 @@
+{
+    "header": {
+      "home": "Inicio",
+      "quiz": "Quiz",
+      "contact": "Contacto",
+      "profile": "Perfil",
+      "login": "Iniciar sesión",
+      "logo": "FunQuiz",
+      "lang.fr": "Francés",
+      "lang.en": "Inglés",
+      "lang.es": "Español",
+      "searchPlaceholder": "Buscar un quiz..."
+    },
+    "footer": {
+      "funquiz": "FunQuiz",
+      "description": "¡Pon a prueba tus conocimientos y diviértete con nuestros cuestionarios interactivos! Mantente atento para no perderte nada.",
+      "quick_links": "Enlaces rápidos",
+      "home": "Inicio",
+      "quiz": "Quiz",
+      "ranking": "Clasificación",
+      "about": "Acerca de",
+      "contact": "Contacto",
+      "login": "Iniciar sesión",
+      "signup": "Registrarse",
+      "support": "Soporte"
+    }
+  }

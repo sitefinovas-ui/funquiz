@@ -180,6 +180,8 @@
   --border-color: rgba(255, 255, 255, 0.1);
   --text-primary: #ffffff;
   --text-secondary: #a0a9c0;
+
+  --bg-sidebar-dash: #3b0436;
 }
 
 /* ===== CLASSES UTILITAIRES ===== */
