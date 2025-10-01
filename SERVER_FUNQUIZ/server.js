@@ -1,33 +1,92 @@
 import express from "express";
-import cors from 'cors';
+import cors from "cors";
 import dotenv from "dotenv";
-import createError from 'http-errors'; // <-- import http-errors
+import createError from "http-errors";
 import { connectDB } from "./config/db.js";
-import { logger } from "./middleware/logger.js"
+import { logger } from "./middleware/logger.js";
 
-import authRoutes from './routes/authRoute.js'
+import authRoutes from "./routes/authRoute.js";
+import quizRoutes from "./routes/quizRoute.js";
+import faqRoutes from "./routes/faqRoute.js";
+import commentRoutes from "./routes/commentRoute.js";
+import newsletterRoutes from "./routes/newsletterRoute.js";
+import messageRoutes from "./routes/messageRoute.js"
+
+import { fileURLToPath } from "url";
+import path from "path";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
-const IP = process.env.IP;
+const PORT = process.env.PORT || 5100;
+const IP = process.env.IP || "0.0.0.0";
+
+// Helpers pour chemins en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware JSON
 app.use(express.json());
 app.use(logger);
-app.use(cors({
-  origin: [
-    'http://localhost:3001', // Frontend
-    'https://accounts.google.com',
-    'https://googleusercontent.com'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:30",
+      "http://localhost:31",
+      "https://accounts.google.com",
+      "https://googleusercontent.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
+// -----------------------------
+// Middleware : rendre "uploads" public
+// -----------------------------
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// -----------------------------
+// Middleware global : ajouter BASE_URL aux *_url
+// -----------------------------
+function addBaseUrlRecursively(obj, baseUrl) {
+  if (!obj) return;
+  if (Array.isArray(obj)) {
+    obj.forEach((item) => addBaseUrlRecursively(item, baseUrl));
+    return;
+  }
+  if (typeof obj === "object") {
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (typeof val === "string" && (key === "icon_url" || key.endsWith("_url"))) {
+        if (val && !val.startsWith("http")) {
+          obj[key] = `${baseUrl}${val}`;
+        }
+      } else if (typeof val === "object") {
+        addBaseUrlRecursively(val, baseUrl);
+      }
+    }
+  }
+}
+
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = (data) => {
+    try {
+      const baseUrl = process.env.BASE_URL;
+      addBaseUrlRecursively(data, baseUrl);
+    } catch (err) {
+      console.error("❌ Erreur lors du patch des URLs :", err);
+    }
+    return originalJson(data);
+  };
+  next();
+});
+
+// -----------------------------
 // Routes
-app.use('/api', authRoutes);
+// -----------------------------
+app.use("/api", authRoutes, quizRoutes, faqRoutes, commentRoutes, newsletterRoutes, messageRoutes);
 
 // Route test API
 app.get("/", (req, res) => {
@@ -45,13 +104,13 @@ app.use((req, res, next) => {
 // Middleware global d'erreur
 // -----------------------------
 app.use((err, req, res, next) => {
-  console.error('❌ Erreur détectée :', err.message);
+  console.error("❌ Erreur détectée :", err.message);
 
   res.status(err.status || 500).json({
-    status: 'error',
+    status: "error",
     statusCode: err.status || 500,
-    message: err.message || 'Erreur serveur interne',
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    message: err.message || "Erreur serveur interne",
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 });
 
@@ -60,20 +119,22 @@ const startServer = async () => {
   try {
     await connectDB();
     const server = app.listen(PORT, IP, () => {
-      console.log(`🚀 Serveur lancé sur http://${IP}:${PORT}/`);
+      console.log(
+        `🚀 Serveur lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`
+      );
     });
 
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE') {
+    server.on("error", (error) => {
+      if (error.code === "EADDRINUSE") {
         console.error(`❌ Le port ${PORT} est déjà utilisé.`);
         process.exit(1);
       } else {
-        console.error('❌ Erreur serveur :', error);
+        console.error("❌ Erreur serveur :", error);
         process.exit(1);
       }
     });
   } catch (error) {
-    console.error('❌ Erreur de connexion à la base de données :', error);
+    console.error("❌ Erreur de connexion à la base de données :", error);
     process.exit(1);
   }
 };

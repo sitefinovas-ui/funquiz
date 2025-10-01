@@ -1,5 +1,9 @@
+import { getUserPoints } from '../controllers/authController.js';
+
 import express from 'express';
-import multer from 'multer'
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { 
   signup, 
   login, 
@@ -9,36 +13,47 @@ import {
   resetUserPassword, 
   updateUserProfile,
   updateUserAdmin, 
-  deleteUser,
+  deleteUserWithFeedback,
   uploadUserFile,
-  deleteUserFile
-
+  deleteUserFile,
+  logout,
+  me
 } from '../controllers/authController.js';
 import { authenticateToken, authorizeRole } from '../middleware/authentification.js';
-import fs from 'fs';
-import path from 'path';
+
+
+
 
 const router = express.Router();
 
-// -----------------------------
-// 1️⃣ Récupérer tous les utilisateurs
-// -----------------------------
-router.post('/auth/signup', signup); //ok
-router.post('/auth/login', login); //ok
-router.post('/auth/google', googleAuth); //ok
+// =============================
+// Authentification & Utilisateur
+// =============================
+router.post('/auth/signup', signup); // Inscription
+router.post('/auth/login', login); // Connexion
+router.post('/auth/google', googleAuth); // Connexion Google
+router.post('/auth/logout', logout); // Déconnexion
+router.get('/auth/me', authenticateToken, me); // Récupérer l'utilisateur courant
 
-router.get('/auth/all', allUsers); //ok
-router.post('/auth/password/request-reset', requestResetPasswordController, authenticateToken); //ok
-router.post('/auth/password/reset', resetUserPassword, authenticateToken); //ok
-router.put('/auth/update/profil', updateUserProfile, authenticateToken); //{"user_id": 12, "name": "Nouveau nom", "email": "nouveau@mail.com"} ok
-router.put('/auth/update/admin', updateUserAdmin, authenticateToken, authorizeRole(['admin'])); //{ "user_id": 12, "role": "admin", "status": 0} ok
-router.delete('/auth/delete', deleteUser, authenticateToken);
+// =============================
+// Gestion Utilisateurs/Admin
+// =============================
+router.get('/auth/all', allUsers); // Tous les utilisateurs
+router.put('/auth/update/profil', updateUserProfile, authenticateToken); // Modifier profil utilisateur
+router.put('/auth/update/admin', updateUserAdmin, authenticateToken, authorizeRole(['admin'])); // Modifier profil admin
+router.post('/auth/delete', authenticateToken, deleteUserWithFeedback); // Suppression utilisateur
 
+// =============================
+// Mot de passe
+// =============================
+router.post('/auth/password/request-reset', requestResetPasswordController, authenticateToken); // Demander reset
+router.post('/auth/password/reset', resetUserPassword, authenticateToken); // Réinitialiser
 
+// -----------------
+// Multer configuration
+// -----------------
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads');
-  },
+  destination: (req, file, cb) => cb(null, 'uploads/users'), // dossier de sauvegarde
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `avatar-${Date.now()}${ext}`);
@@ -46,12 +61,16 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'image/webp') cb(null, true);
-  else cb(new Error('Seulement les fichiers .webp sont autorisés'), false);
+  const allowedTypes = ['image/webp', 'image/png', 'image/jpeg'];
+  if (allowedTypes.includes(file.mimetype)) cb(null, true);
+  else cb(new Error('Seuls les fichiers .webp, .png et .jpg sont autorisés'), false);
 };
 
 const upload = multer({ storage, fileFilter });
 
+// -----------------
+// Route upload
+// -----------------
 router.post('/auth/user/upload', upload.single('file'), uploadUserFile);
 router.delete('/auth/user/delete', deleteUserFile);
 

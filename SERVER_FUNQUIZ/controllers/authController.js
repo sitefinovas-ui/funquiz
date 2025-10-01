@@ -1,3 +1,4 @@
+
 import { 
   registerUser, 
   loginUser, 
@@ -9,7 +10,8 @@ import {
   updateUserFile,
   getUserFile,
   updateUserFields,
-  getUserById
+  getUserById,
+  createFeedback
 } from '../models/authModel.js';
 import { mailInscription, mailConnected, sendResetCodeEmail, mailAccountDeleted, mailUpdateProfile } from '../utils/mail.js';
 import jwt from 'jsonwebtoken';
@@ -22,6 +24,10 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Retourne l'utilisateur courant à partir du token (pour /auth/me)
+export const me = (req, res) => {
+  res.status(200).json(req.user);
+};
 // -----------------------------
 // 1️⃣ Récupérer tous les utilisateurs
 // -----------------------------
@@ -39,9 +45,33 @@ export const allUsers = async (req, res) => {
 // -----------------------------
 export const signup = async (req, res) => {
   try {
+    // Enregistre l'utilisateur
     const user = await registerUser(req.body);
+
+    // Envoie un mail de bienvenue
     await mailInscription(user.email, user.first_name);
-    res.status(201).json({ message: 'Utilisateur inscrit', user });
+
+    // Crée un token JWT
+    const token = jwt.sign(
+      {
+        user_id: user.user_id,
+        email: user.email,
+        avatar: user.avatar_url,
+        number: user.number,
+        name: user.name,
+        firstname: user.first_name,
+        role: user.role
+      },
+      JWT_SECRET,
+      { expiresIn: '1h' } 
+    );
+
+    res.status(201).json({
+      message: 'Utilisateur inscrit',
+      token,
+      user
+    });
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -53,7 +83,30 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await loginUser(email, password);
+    let user;
+    try {
+      user = await loginUser(email, password);
+    } catch (err) {
+      // Gestion spécifique du mot de passe incorrect
+      if (err.message && (err.message.toLowerCase().includes('password') || err.message.toLowerCase().includes('mot de passe'))) {
+        return res.status(400).json({
+          error: 'Mot de passe incorrect',
+          type: 'erreur'
+        });
+      }
+      // Gestion utilisateur non trouvé
+      if (err.message && (err.message.toLowerCase().includes('user') || err.message.toLowerCase().includes('utilisateur'))) {
+        return res.status(400).json({
+          error: "Utilisateur non trouvé",
+          type: 'erreur'
+        });
+      }
+      // Autre erreur
+      return res.status(400).json({
+        error: err.message,
+        type: 'erreur'
+      });
+    }
 
     const token = jwt.sign(
       { 
@@ -71,9 +124,17 @@ export const login = async (req, res) => {
 
     await mailConnected(user.email, user.first_name, req.ip);
 
-    res.status(200).json({ message: 'Connexion réussie', token, user: { user_id: user.user_id } });
+    res.status(200).json({ 
+      message: 'Connexion réussie', 
+      type: 'succès',
+      token, 
+      user: { user_id: user.user_id } 
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ 
+      error: error.message,
+      type: 'erreur'
+    });
   }
 };
 
@@ -212,19 +273,22 @@ export const updateUserAdmin = async (req, res) => {
 // -----------------------------
 // 7️⃣ Suppression soft
 // -----------------------------
-export const deleteUser = async (req, res) => {
+export const deleteUserWithFeedback = async (req, res) => {
   try {
-    const { user_id, email, first_name } = req.body;
-    if (!user_id || !email || !first_name) {
-      return res.status(400).json({ error: 'user_id, email et first_name sont requis' });
-    }
+    const { user_id, reason, comment } = req.body;
 
+    if (!reason) return res.status(400).json({ error: 'La raison est obligatoire' });
+
+    // 1️⃣ Enregistrer le feedback
+    await createFeedback({ user_id, reason, comment });
+
+    // 2️⃣ Supprimer l'utilisateur (soft delete)
     await deleteUserSoft(user_id);
-    await mailAccountDeleted(email, first_name);
 
-    res.status(200).json({ message: 'Compte supprimé (soft delete) et email envoyé' });
+    res.status(200).json({ message: 'Votre compte a été supprimé et votre feedback enregistré.' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('❌ deleteUserWithFeedback:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -233,29 +297,30 @@ export const uploadUserFile = async (req, res) => {
   try {
     const { user_id } = req.body;
     if (!user_id) throw new Error('user_id requis');
-
     if (!req.file) throw new Error('Aucun fichier envoyé');
 
-    // Chemin du fichier sauvegardé
-    const filePath = `/uploads/${req.file.filename}`;
+    // Chemin du nouveau fichier sauvegardé
+    const filePath = `/uploads/users/${req.file.filename}`;
 
     // Supprimer ancien fichier si existant
     const oldFile = await getUserFile(user_id);
-    if (oldFile) {
-      const oldPath = path.join('public', oldFile);
+    if (oldFile && oldFile.startsWith('/uploads/users')) {
+      const oldPath = path.join('uploads/users', path.basename(oldFile)); // chemin réel
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 
     // Mettre à jour la BDD
     await updateUserFile(user_id, filePath);
 
-    res.status(200).json({ message: 'Fichier uploadé avec succès', filePath });
+    // Répondre avec l'URL complète
+    const avatarUrl = `http://${process.env.IP}:${process.env.PORT}${filePath}`;
+    res.status(200).json({ message: 'Fichier uploadé avec succès', avatar_url: avatarUrl });
+
   } catch (error) {
     console.error('❌ uploadUserFile:', error);
     res.status(400).json({ error: error.message });
   }
 };
-
 // Supprimer avatar
 export const deleteUserFile = async (req, res) => {
   try {
@@ -280,5 +345,25 @@ export const deleteUserFile = async (req, res) => {
   } catch (error) {
     console.error('❌ deleteUserFile:', error);
     res.status(400).json({ error: error.message });
+  }
+};
+
+export const logout = (req, res) => {
+  // Si tu utilises des cookies, tu peux les effacer ici
+  res.clearCookie('token', message='Déconnexion réussie', httpOnly=true, secure=true, sameSite='None');
+};
+
+// -----------------------------
+// 8️⃣ Récupérer les points d'un utilisateur
+// -----------------------------
+export const getUserPoints = async (req, res) => {
+  try {
+    const user_id = req.params.id;
+    if (!user_id) return res.status(400).json({ error: 'user_id requis' });
+    const [rows] = await import('../config/db.js').then(m => m.default.query('SELECT total_points FROM user_points WHERE user_id = ?', [user_id]));
+    if (!rows[0]) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    res.status(200).json({ user_id, total_points: rows[0].total_points });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

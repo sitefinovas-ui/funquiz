@@ -134,8 +134,6 @@ export const resetPassword = async (code, newPassword) => {
     throw new Error(error.message);
   }
 };
-
-
 // -----------------------------
 // 6️⃣ Modifier un champ utilisateur
 // -----------------------------
@@ -164,7 +162,6 @@ export const updateUserFields = async (user_id, fields, allowedFields) => {
     throw new Error(error.message);
   }
 };
-
 // -----------------------------
 // 7️⃣ Suppression soft
 // -----------------------------
@@ -178,6 +175,20 @@ export const deleteUserSoft = async (user_id) => {
   }
 };
 
+// Création du feedback
+export const createFeedback = async ({ user_id, reason, comment }) => {
+  try {
+    await db.query(
+      'INSERT INTO user_feedbacks (user_id, reason, comment) VALUES (?, ?, ?)',
+      [user_id, reason, comment]
+    );
+    console.log('✅ Feedback créé avec succès', { user_id, reason, comment });
+    return true;
+  } catch (error) {
+    console.error('❌ createFeedback:', error);
+    throw new Error(error.message);
+  }
+};
 
 // Met à jour le chemin du fichier pour l'utilisateur
 export const updateUserFile = async (user_id, filePath) => {

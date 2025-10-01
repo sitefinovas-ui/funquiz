@@ -125,7 +125,6 @@ export const mailAccountDeleted = async (email, first_name) => {
         return { success: false, message: error.message };
     }
 };
-
 // -----------------------------
 // Fonction d’envoi mail mise à jour profil
 // -----------------------------
@@ -165,5 +164,112 @@ export const mailUpdateProfile = async ( email, first_name) => {
 
   }
 };
+// -----------------------------
+// Fonction d’envoi inscription newsletter
+// -----------------------------
+export const mailNewsletterSubscription = async (email) => {
+  try {
+    const emailContent = {
+      from: `"FunQuiz 📰" <no-reply@funquiz.com>`,
+        to: email,
+        subject: 'Bienvenue dans la newsletter FunQuiz! 🎉' ,
+        html: `
+        <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+          <div style="background-color:#1c1c1c;padding:20px;text-align:center;">
+            <h1 style="color:#fff;margin:0;">Bienvenue dans la newsletter FunQuiz!</h1>
+          </div> 
+            <div style="padding:20px;">
+                <h2>Bonjour,</h2>
+                <p>Merci de vous être abonné à notre newsletter. Vous recevrez bientôt les dernières nouvelles et mises à jour de FunQuiz.</p>
+                <p>Nous sommes ravis de vous compter parmi nos abonnés !</p>
+                <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee;">
+                    <p style="color:#666;margin:0;">🚀 L'équipe FunQuiz</p>
+                    </div>
+            </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(emailContent);
+    return { success: true, message: 'Email d’inscription à la newsletter envoyé avec succès' };
+  } catch (error) {
+    console.error('❌ Erreur mailNewsletterSubscription:', error);
+    return { success: false, message: error.message };
+  }
+};
+// -----------------------------
+// Fonction d’envoi désinscription newsletter
+// -----------------------------
+export const mailNewsletterUnsubscription = async (email) => {
+  try {
+    const emailContent = {
+      from: `"FunQuiz 📰" <no-reply@funquiz.com>`,
+        to: email,  
+        subject: 'Vous êtes désabonné de la newsletter FunQuiz 😢',
+        html: `
+        <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+          <div style="background-color:#1c1c1c;padding:20px;text-align:center;">
+            <h1 style="color:#fff;margin:0;">Désabonnement de la newsletter FunQuiz</h1>
+          </div>
+            <div style="padding:20px;">
+                <h2>Bonjour,</h2>
+                <p>Vous avez été désabonné de notre newsletter. Nous sommes désolés de vous voir partir !</p>
+                <p>Si vous changez d'avis, vous pouvez toujours vous réabonner à tout moment.</p>
+                <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee;">
+                    <p style="color:#666;margin:0;">🚀 L'équipe FunQuiz</p>
+                    </div>
+            </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(emailContent);
+    return { success: true, message: 'Email de désinscription à la newsletter envoyé avec succès' };
+  } catch (error) {
+    console.error('❌ Erreur mailNewsletterUnsubscription:', error);
+    return { success: false, message: error.message };
+  }
+};
+// -----------------------------
+// Fonction d’envoi désinscription newsletter
+// -----------------------------
+export const mailMessage = async (email, name) => {
+  try {
+    const emailContent = {
+      from: `"FunQuiz 📰" <no-reply@funquiz.com>`,
+      to: email,
+      subject: 'Nous avons bien reçu votre message',
+      html: `
+        <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+          <div style="background-color:#1c1c1c;padding:20px;text-align:center;">
+            <h1 style="color:#fff;margin:0;">Merci pour votre message !</h1>
+          </div>
+          <div style="padding:20px;">
+            <h2>Bonjour ${name},</h2>
+            <p>Nous avons bien reçu votre message et notre équipe reviendra vers vous rapidement.</p>
+            <p>Merci pour votre confiance et votre participation sur FunQuiz !</p>
+            <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee;">
+              <p style="color:#666;margin:0;">🚀 L'équipe FunQuiz</p>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(emailContent);
+    return { success: true, message: 'Email de confirmation envoyé avec succès' };
+  } catch (error) {
+    console.error('❌ Erreur mailMessage:', error);
+    return { success: false, message: error.message };
+  }
+};
+
+
+
+
+
+
+
+
 
 
