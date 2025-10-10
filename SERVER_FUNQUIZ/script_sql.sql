@@ -236,3 +236,72 @@ LEFT JOIN quiz_user_achievements ua ON u.user_id = ua.user_id
 LEFT JOIN achievements a ON ua.achievement_id = a.achievement_id
 WHERE u.is_active = TRUE
 GROUP BY u.user_id, u.name, u.first_name, u.email;
+
+-- ✅ 1. Table : Conditions Générales d’Utilisation (CGU)
+CREATE TABLE IF NOT EXISTS cgu (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+  date_updated DATETIME ON UPDATE CURRENT_TIMESTAMP,
+  status ENUM('draft', 'published') DEFAULT 'draft'
+);
+
+-- ✅ 2. Table : Politique de confidentialité
+CREATE TABLE IF NOT EXISTS privacy_policy (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+  date_updated DATETIME ON UPDATE CURRENT_TIMESTAMP,
+  status ENUM('draft', 'published') DEFAULT 'draft'
+);
+
+-- ✅ 3. Table : Politique des cookies
+CREATE TABLE IF NOT EXISTS cookies_policy (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+  date_updated DATETIME ON UPDATE CURRENT_TIMESTAMP,
+  status ENUM('draft', 'published') DEFAULT 'draft'
+);
+
+-- ✅ 4. Table : À propos (About)
+CREATE TABLE IF NOT EXISTS about (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  subtitle VARCHAR(255),
+  description TEXT NOT NULL,
+  mission TEXT,
+  vision TEXT,
+  contact_email VARCHAR(255),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ✅ 5. Table : Formulaire de contact (Contact)
+
+#	Nom	Type	Interclassement	Attributs	Null	Valeur par défaut	Commentaires	Extra	Action
+	1	id  Primaire	int			Non	Aucun(e)		AUTO_INCREMENT	 Modifier Modifier	 Supprimer Supprimer	
+ 	2	service	varchar(100)	utf8mb4_general_ci		Non	Aucun(e)			 Modifier Modifier	 Supprimer Supprimer	
+ 	3	email	varchar(150)	utf8mb4_general_ci		Non	Aucun(e)			 Modifier Modifier	 Supprimer Supprimer	
+ 	4	content	text	utf8mb4_general_ci		Non	Aucun(e)			 Modifier Modifier	 Supprimer Supprimer	
+ 	5	created_at	datetime			Oui	CURRENT_TIMESTAMP		DEFAULT_GENERATED	 Modifier Modifier	 Supprimer Supprimer	
+ 	6	status	enum('operationnel', 'cacher')	utf8mb4_general_ci
+-- =========================================================
+-- 📢 TABLE PUBLICITÉ
+-- =========================================================
+CREATE TABLE funquiz_publicite (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    description TEXT,
+    image_url VARCHAR(500),
+    date_debut DATE,
+    date_fin DATE,
+    statut ENUM('actif', 'inactif', 'expiré') DEFAULT 'inactif',
+    type ENUM('image', 'popup', 'banniere') DEFAULT 'image',
+    clics INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

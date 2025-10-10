@@ -1,43 +1,83 @@
-
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { getUserById } from '../models/authModel.js';
-import db from '../config/db.js';
+import { getUserById } from "../models/authModel.js";
+import db from "../config/db.js";
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || "votre_clé_secrète";
 
+/**
+ * ✅ Middleware d'authentification via JWT
+ */
 export const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
+  try {
+    console.log("🔐 [Auth] Headers reçus:", req.headers);
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
 
-  if (!token) return res.status(401).json({ error: 'Token manquant' });
-
-  jwt.verify(token, JWT_SECRET, async (err, decoded) => {
-    if (err) return res.status(403).json({ error: 'Token invalide' });
-    // Recharge l'utilisateur depuis la BDD pour avoir les infos à jour
-    if (decoded && decoded.user_id) {
-      const [user] = await getUserById(decoded.user_id);
-      if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-      // Récupère les points depuis la vue user_points
-      try {
-        const [rows] = await db.query('SELECT total_points FROM user_points WHERE user_id = ?', [user.user_id]);
-        user.total_points = rows && rows[0] ? rows[0].total_points : 0;
-      } catch (e) {
-        user.total_points = 0;
-      }
-      req.user = user;
-    } else {
-      req.user = decoded;
+    if (!token) {
+      console.log("❌ [Auth] Token manquant");
+      return res.status(401).json({ error: "Token manquant" });
     }
+
+    console.log("🔑 [Auth] Vérification du token...");
+
+    // Vérifie le token JWT
+    const decoded = await new Promise((resolve, reject) => {
+      jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+          console.error("❌ [Auth] Token invalide:", err.message);
+          return reject(err);
+        }
+        resolve(decoded);
+      });
+    });
+
+    if (!decoded || !decoded.user_id) {
+      throw new Error("Token invalide : user_id manquant");
+    }
+
+    console.log("✅ [Auth] Token décodé:", decoded);
+
+    // Recherche de l'utilisateur dans la BDD
+    const [user] = await getUserById(decoded.user_id);
+    if (!user) {
+      console.error("❌ [Auth] Utilisateur non trouvé:", decoded.user_id);
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    console.log("👤 [Auth] Utilisateur trouvé:", user.user_id);
+
+    // Récupération des points
+    let userPoints = 0;
+    try {
+      const [pointsRows] = await db.query(
+        "SELECT total_points FROM user_points WHERE user_id = ?",
+        [user.user_id]
+      );
+      userPoints = pointsRows[0]?.total_points || 0;
+    } catch (err) {
+      console.error("⚠️ [Auth] Erreur récupération points:", err.message);
+    }
+
+    // Injection dans req.user
+    req.user = { ...user, points: userPoints };
+
     next();
-  });
+  } catch (error) {
+    console.error("❌ [Auth] Erreur:", error.message);
+    res.status(403).json({ error: "Token invalide ou expiré" });
+  }
 };
 
-export const authorizeRole = (roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
-    return res.status(403).json({ error: 'Accès refusé' });
+/**
+ * ✅ Middleware d’autorisation selon le rôle
+ * @param {Array} roles - Ex: ['admin', 'moderator']
+ */
+export const authorizeRole = (roles = []) => (req, res, next) => {
+  if (!roles.includes(req.user?.role)) {
+    return res.status(403).json({ error: "Accès refusé" });
   }
   next();
 };

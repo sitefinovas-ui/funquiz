@@ -5,24 +5,27 @@ import db from "../config/db.js";
 // =============================================================================
 
 export const getAllFaqData = async () => {
-    try {   
-    const [rows] = await db.query('SELECT * FROM funquiz_faq ');
+  try {
+    const [rows] = await db.query("SELECT * FROM funquiz_faq ");
     return rows;
-    } catch (error) {
-        console.error('❌ getAllFaqData:', error);
-        throw new Error('Erreur lors de la récupération des FAQ.');
-    }        
-}
-    
+  } catch (error) {
+    console.error("❌ getAllFaqData:", error);
+    throw new Error("Erreur lors de la récupération des FAQ.");
+  }
+};
+
 export const getFaqById = async (faq_id) => {
-    try{ 
-    const [rows] = await db.query('SELECT * FROM funquiz_faq WHERE faq_id = ?', [faq_id]);
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM funquiz_faq WHERE faq_id = ?",
+      [faq_id],
+    );
     return rows[0] ? [rows[0]] : [];
-    } catch (error) {
-        console.error('❌ getFaqById:', error);
-        throw new Error('Erreur lors de la récupération de la FAQ.');
-    }
-}
+  } catch (error) {
+    console.error("❌ getFaqById:", error);
+    throw new Error("Erreur lors de la récupération de la FAQ.");
+  }
+};
 
 export const createFaq = async (data) => {
   try {
@@ -30,14 +33,14 @@ export const createFaq = async (data) => {
 
     const [result] = await db.query(
       `INSERT INTO funquiz_faq (question, answer, is_active) VALUES (?, ?, ?)`,
-      [question, answer, is_active]
+      [question, answer, is_active],
     );
 
-    return { 
-      faq_id: result.insertId, 
-      question, 
-      answer, 
-      is_active 
+    return {
+      faq_id: result.insertId,
+      question,
+      answer,
+      is_active,
     };
   } catch (error) {
     console.error("❌ createFaq error:", error);
@@ -102,7 +105,10 @@ export const deleteFaq = async (faq_id) => {
       throw new Error("faq_id requis.");
     }
 
-    const [result] = await db.query("DELETE FROM funquiz_faq WHERE faq_id = ?", [faq_id]);
+    const [result] = await db.query(
+      "DELETE FROM funquiz_faq WHERE faq_id = ?",
+      [faq_id],
+    );
 
     if (result.affectedRows === 0) {
       throw new Error("FAQ non trouvée.");
@@ -114,4 +120,3 @@ export const deleteFaq = async (faq_id) => {
     throw error;
   }
 };
-  

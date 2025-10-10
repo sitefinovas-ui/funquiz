@@ -1,0 +1,9 @@
+# Ignorer les dossiers générés
+node_modules
+uploads/
+.wwebjs_cache/
+.wwebjs_auth/
+
+# Logs/artefacts
+*.log
+*.html

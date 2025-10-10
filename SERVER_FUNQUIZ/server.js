@@ -10,16 +10,19 @@ import quizRoutes from "./routes/quizRoute.js";
 import faqRoutes from "./routes/faqRoute.js";
 import commentRoutes from "./routes/commentRoute.js";
 import newsletterRoutes from "./routes/newsletterRoute.js";
-import messageRoutes from "./routes/messageRoute.js"
-
+import messageRoutes from "./routes/messageRoute.js";
+import quizStatsRoutes from "./routes/quizStatsRoute.js";
+import quizUserSessionRoutes from "./routes/quizUserSessionRoutes.js";
 import { fileURLToPath } from "url";
 import path from "path";
+import logsRoutes from "./routes/logsRoute.js";
+import publiciteRoutes from "./routes/publiciteRoute.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5100;
-const IP = process.env.IP || "0.0.0.0";
+const PORT = process.env.PORT ;
+const IP = process.env.IP ;
 
 // Helpers pour chemins en ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -30,15 +33,28 @@ app.use(express.json());
 app.use(logger);
 app.use(
   cors({
-    origin: [
-      "http://localhost:30",
-      "http://localhost:31",
-      "https://accounts.google.com",
-      "https://googleusercontent.com",
-    ],
+    origin: function(origin, callback) {
+      console.log('🔒 Requête CORS reçue depuis:', origin);
+      const allowedOrigins = [
+        "http://localhost:30",
+        "http://localhost:63",
+        "http://localhost:5173", // Vite default
+        "http://192.168.1.63:31",
+        "http://192.168.1.63:5100",
+        "https://accounts.google.com",
+        "https://googleusercontent.com",
+      ];
+      
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error('❌ Origine non autorisée:', origin);
+        callback(new Error('Origin not allowed'));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-  })
+  }),
 );
 
 // -----------------------------
@@ -58,7 +74,10 @@ function addBaseUrlRecursively(obj, baseUrl) {
   if (typeof obj === "object") {
     for (const key of Object.keys(obj)) {
       const val = obj[key];
-      if (typeof val === "string" && (key === "icon_url" || key.endsWith("_url"))) {
+      if (
+        typeof val === "string" &&
+        (key === "icon_url" || key.endsWith("_url"))
+      ) {
         if (val && !val.startsWith("http")) {
           obj[key] = `${baseUrl}${val}`;
         }
@@ -86,7 +105,24 @@ app.use((req, res, next) => {
 // -----------------------------
 // Routes
 // -----------------------------
-app.use("/api", authRoutes, quizRoutes, faqRoutes, commentRoutes, newsletterRoutes, messageRoutes);
+app.use(
+  "/api",
+  authRoutes,
+  quizRoutes,
+  faqRoutes,
+  commentRoutes,
+  newsletterRoutes,
+  messageRoutes,
+  quizStatsRoutes,
+  quizUserSessionRoutes,
+  logsRoutes,
+  publiciteRoutes,
+  (await import("./routes/legalCguRoute.js")).default,
+  (await import("./routes/legalPrivacyRoute.js")).default,
+  (await import("./routes/legalCookiesRoute.js")).default,
+  (await import("./routes/legalAboutRoute.js")).default,
+  (await import("./routes/legalContactRoute.js")).default,
+);
 
 // Route test API
 app.get("/", (req, res) => {
@@ -120,7 +156,7 @@ const startServer = async () => {
     await connectDB();
     const server = app.listen(PORT, IP, () => {
       console.log(
-        `🚀 Serveur lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`
+        `🚀 Serveur lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`,
       );
     });
 
