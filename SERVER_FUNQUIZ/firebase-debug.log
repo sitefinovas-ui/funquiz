@@ -1,0 +1,111 @@
+[debug] [2025-10-10T22:37:50.431Z] ----------------------------------------------------------------------
+[debug] [2025-10-10T22:37:50.437Z] Command:       /usr/local/Cellar/node/23.11.0/bin/node /usr/local/bin/firebase projects:create funquiz-prod --display-name FunQuiz Prod
+[debug] [2025-10-10T22:37:50.438Z] CLI Version:   14.19.1
+[debug] [2025-10-10T22:37:50.439Z] Platform:      darwin
+[debug] [2025-10-10T22:37:50.439Z] Node Version:  v23.11.0
+[debug] [2025-10-10T22:37:50.440Z] Time:          Sat Oct 11 2025 00:37:50 GMT+0200 (Central European Summer Time)
+[debug] [2025-10-10T22:37:50.441Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-10T22:37:50.454Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-10T22:37:50.454Z] > authorizing via signed-in user (sitefinovas@gmail.com)
+[debug] [2025-10-10T22:37:50.473Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:50.474Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:50.484Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects [none]
+[debug] [2025-10-10T22:37:50.484Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"projectId":"funquiz-prod","name":"FunQuiz Prod"}
+[debug] [2025-10-10T22:37:51.289Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects 200
+[debug] [2025-10-10T22:37:51.289Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"name":"operations/create_project.global.9095077657628215949"}
+[debug] [2025-10-10T22:37:51.291Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:51.291Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:51.291Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 [none]
+[debug] [2025-10-10T22:37:51.899Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 200
+[debug] [2025-10-10T22:37:51.899Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 {"name":"operations/create_project.global.9095077657628215949"}
+[debug] [2025-10-10T22:37:52.401Z] [Project Creation Poller] Retrying task index 0
+[debug] [2025-10-10T22:37:52.402Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:52.402Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:52.402Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 [none]
+[debug] [2025-10-10T22:37:52.554Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 200
+[debug] [2025-10-10T22:37:52.555Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 {"name":"operations/create_project.global.9095077657628215949"}
+[debug] [2025-10-10T22:37:53.555Z] [Project Creation Poller] Retrying task index 0
+[debug] [2025-10-10T22:37:53.556Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:53.556Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:53.557Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 [none]
+[debug] [2025-10-10T22:37:53.773Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 200
+[debug] [2025-10-10T22:37:53.776Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.9095077657628215949 {"name":"operations/create_project.global.9095077657628215949","metadata":{"@type":"type.googleapis.com/google.cloudresourcemanager.v1.ProjectCreationStatus","gettable":true,"ready":true},"done":true,"response":{"@type":"type.googleapis.com/google.cloudresourcemanager.v1.Project","projectNumber":"115975900769","projectId":"funquiz-prod","lifecycleState":"ACTIVE","name":"FunQuiz Prod","createTime":"2025-10-10T22:37:52.159702Z"}}
+[debug] [2025-10-10T22:37:53.782Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:53.783Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:37:53.784Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase [none]
+[debug] [2025-10-10T22:37:54.913Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase 403
+[debug] [2025-10-10T22:37:54.914Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-10-10T22:37:54.915Z] Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+[debug] [2025-10-10T22:37:54.920Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+    at responseToError (/usr/local/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to add Firebase to Google Cloud Platform project. See firebase-debug.log for more info.
+[debug] [2025-10-10T22:54:06.241Z] ----------------------------------------------------------------------
+[debug] [2025-10-10T22:54:06.249Z] Command:       /usr/local/Cellar/node/23.11.0/bin/node /usr/local/bin/firebase projects:addfirebase funquiz-prod
+[debug] [2025-10-10T22:54:06.250Z] CLI Version:   14.19.1
+[debug] [2025-10-10T22:54:06.250Z] Platform:      darwin
+[debug] [2025-10-10T22:54:06.250Z] Node Version:  v23.11.0
+[debug] [2025-10-10T22:54:06.251Z] Time:          Sat Oct 11 2025 00:54:06 GMT+0200 (Central European Summer Time)
+[debug] [2025-10-10T22:54:06.251Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-10T22:54:06.262Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-10T22:54:06.263Z] > authorizing via signed-in user (sitefinovas@gmail.com)
+[debug] [2025-10-10T22:54:06.271Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:54:06.272Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:54:06.274Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase [none]
+[debug] [2025-10-10T22:54:06.682Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase 403
+[debug] [2025-10-10T22:54:06.682Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-10-10T22:54:06.683Z] Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+[debug] [2025-10-10T22:54:06.686Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+    at responseToError (/usr/local/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to add Firebase to Google Cloud Platform project. See firebase-debug.log for more info.
+[debug] [2025-10-10T22:55:21.346Z] ----------------------------------------------------------------------
+[debug] [2025-10-10T22:55:21.351Z] Command:       /usr/local/Cellar/node/23.11.0/bin/node /usr/local/bin/firebase projects:addfirebase funquiz-prod
+[debug] [2025-10-10T22:55:21.352Z] CLI Version:   14.19.1
+[debug] [2025-10-10T22:55:21.352Z] Platform:      darwin
+[debug] [2025-10-10T22:55:21.353Z] Node Version:  v23.11.0
+[debug] [2025-10-10T22:55:21.353Z] Time:          Sat Oct 11 2025 00:55:21 GMT+0200 (Central European Summer Time)
+[debug] [2025-10-10T22:55:21.353Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-10T22:55:21.364Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-10T22:55:21.364Z] > authorizing via signed-in user (sitefinovas@gmail.com)
+[debug] [2025-10-10T22:55:21.372Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:55:21.372Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:55:21.374Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase [none]
+[debug] [2025-10-10T22:55:21.753Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase 403
+[debug] [2025-10-10T22:55:21.753Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-10-10T22:55:21.754Z] Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+[debug] [2025-10-10T22:55:21.757Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+    at responseToError (/usr/local/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to add Firebase to Google Cloud Platform project. See firebase-debug.log for more info.
+[debug] [2025-10-10T22:56:36.007Z] ----------------------------------------------------------------------
+[debug] [2025-10-10T22:56:36.012Z] Command:       /usr/local/Cellar/node/23.11.0/bin/node /usr/local/bin/firebase projects:addfirebase funquiz-prod
+[debug] [2025-10-10T22:56:36.013Z] CLI Version:   14.19.1
+[debug] [2025-10-10T22:56:36.013Z] Platform:      darwin
+[debug] [2025-10-10T22:56:36.013Z] Node Version:  v23.11.0
+[debug] [2025-10-10T22:56:36.014Z] Time:          Sat Oct 11 2025 00:56:36 GMT+0200 (Central European Summer Time)
+[debug] [2025-10-10T22:56:36.014Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-10T22:56:36.024Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-10T22:56:36.025Z] > authorizing via signed-in user (sitefinovas@gmail.com)
+[debug] [2025-10-10T22:56:36.033Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:56:36.034Z] Checked if tokens are valid: true, expires at: 1760139398641
+[debug] [2025-10-10T22:56:36.036Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase [none]
+[debug] [2025-10-10T22:56:36.462Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase 403
+[debug] [2025-10-10T22:56:36.462Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-10-10T22:56:36.463Z] Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+[debug] [2025-10-10T22:56:36.466Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/funquiz-prod:addFirebase had HTTP Error: 403, The caller does not have permission
+    at responseToError (/usr/local/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to add Firebase to Google Cloud Platform project. See firebase-debug.log for more info.

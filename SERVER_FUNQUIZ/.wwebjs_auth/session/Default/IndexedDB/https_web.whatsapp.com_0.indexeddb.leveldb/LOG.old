@@ -1,35 +1,21 @@
-2025/10/10-19:37:45.097 fc03 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/10-19:37:45.098 fc03 Recovering log #741
-2025/10/10-19:37:45.099 fc03 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000741.log 
-2025/10/10-19:37:46.830 16403 Compacting 1@1 + 5@2 files
-2025/10/10-19:37:46.974 16403 Generated table #744@1: 85103 keys, 2234733 bytes
-2025/10/10-19:37:47.115 16403 Generated table #745@1: 100071 keys, 2253536 bytes
-2025/10/10-19:37:47.255 16403 Generated table #746@1: 42962 keys, 2226970 bytes
-2025/10/10-19:37:47.364 16403 Generated table #747@1: 29361 keys, 2179848 bytes
-2025/10/10-19:37:47.438 16403 Generated table #748@1: 8665 keys, 669805 bytes
-2025/10/10-19:37:47.438 16403 Compacted 1@1 + 5@2 files => 9564892 bytes
-2025/10/10-19:37:47.475 16403 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/10/10-19:37:47.494 16403 Level-0 table #750: started
-2025/10/10-19:37:47.514 16403 Level-0 table #750: 17451 bytes OK
-2025/10/10-19:37:47.551 16403 Delete type=0 #741
-2025/10/10-19:37:47.553 af03 Manual compaction at level-0 from '\x00f\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00g\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/10/10-19:37:52.744 16203 Compacting 1@1 + 5@2 files
-2025/10/10-19:37:53.017 16203 Generated table #751@1: 85097 keys, 2234725 bytes
-2025/10/10-19:37:53.965 16203 Generated table #752@1: 100059 keys, 2253636 bytes
-2025/10/10-19:37:54.459 16203 Generated table #753@1: 42989 keys, 2226726 bytes
-2025/10/10-19:37:54.871 16203 Generated table #754@1: 29436 keys, 2175818 bytes
-2025/10/10-19:37:54.987 16203 Generated table #755@1: 8667 keys, 676283 bytes
-2025/10/10-19:37:54.987 16203 Compacted 1@1 + 5@2 files => 9567188 bytes
-2025/10/10-19:37:55.025 16203 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/10/10-19:37:55.029 16203 Delete type=2 #738
-2025/10/10-19:37:55.029 16203 Delete type=2 #739
-2025/10/10-19:37:55.029 16203 Delete type=2 #748
-2025/10/10-19:37:55.029 16203 Delete type=2 #746
-2025/10/10-19:37:55.029 16203 Delete type=2 #747
-2025/10/10-19:37:55.029 16203 Delete type=2 #745
-2025/10/10-19:37:55.029 16203 Delete type=2 #750
-2025/10/10-19:37:55.029 16203 Delete type=2 #744
-2025/10/10-19:37:55.030 16203 Delete type=2 #742
-2025/10/10-19:37:55.030 16203 Delete type=2 #737
-2025/10/10-19:37:55.030 16203 Delete type=2 #736
-2025/10/10-19:37:55.030 16203 Delete type=2 #735
+2025/10/10-19:54:47.127 a607 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/10-19:54:47.129 a607 Recovering log #749
+2025/10/10-19:54:47.176 a607 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000749.log 
+2025/10/10-19:54:51.722 1f903 Level-0 table #758: started
+2025/10/10-19:54:51.755 1f903 Level-0 table #758: 191989 bytes OK
+2025/10/10-19:54:51.795 1f903 Delete type=0 #749
+2025/10/10-19:54:51.797 1f903 Manual compaction at level-0 from '\x00g\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00h\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/10-19:54:58.543 1f903 Compacting 1@1 + 5@2 files
+2025/10/10-19:54:58.741 1f903 Generated table #759@1: 85086 keys, 2234028 bytes
+2025/10/10-19:54:59.001 1f903 Generated table #760@1: 99918 keys, 2251438 bytes
+2025/10/10-19:54:59.458 1f903 Generated table #761@1: 43277 keys, 2228582 bytes
+2025/10/10-19:54:59.658 1f903 Generated table #762@1: 30036 keys, 2179823 bytes
+2025/10/10-19:54:59.764 1f903 Generated table #763@1: 8670 keys, 676380 bytes
+2025/10/10-19:54:59.765 1f903 Compacted 1@1 + 5@2 files => 9570251 bytes
+2025/10/10-19:54:59.802 1f903 compacted to: files[ 0 0 5 0 0 0 0 ]
+2025/10/10-19:54:59.803 1f903 Delete type=2 #758
+2025/10/10-19:54:59.803 1f903 Delete type=2 #752
+2025/10/10-19:54:59.803 1f903 Delete type=2 #753
+2025/10/10-19:54:59.804 1f903 Delete type=2 #751
+2025/10/10-19:54:59.804 1f903 Delete type=2 #754
+2025/10/10-19:54:59.804 1f903 Delete type=2 #755
