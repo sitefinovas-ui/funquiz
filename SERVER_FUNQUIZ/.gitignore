@@ -1,1 +1,9 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Puppeteer local Chromium
+**/.local-chromium/
+
+# Environnements
 .env
