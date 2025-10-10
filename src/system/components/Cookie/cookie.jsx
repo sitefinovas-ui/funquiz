@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // ← Remplace par ton ID GA4
-const CONSENT_DURATION_DAYS = 10; 
+const CONSENT_DURATION_DAYS = 10;
 
 export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
@@ -96,7 +96,8 @@ export default function CookieBanner() {
       role="alert"
       style={{ zIndex: 9999 }}
     >
-      Ce site utilise des cookies pour améliorer votre expérience. Les cookies analytiques sont utilisés uniquement avec votre consentement.{' '}
+      Ce site utilise des cookies pour améliorer votre expérience. Les cookies analytiques sont
+      utilisés uniquement avec votre consentement.{' '}
       <a href="/politique-de-cookies" target="_blank" rel="noreferrer">
         En savoir plus
       </a>

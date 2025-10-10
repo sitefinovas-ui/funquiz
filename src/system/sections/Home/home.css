@@ -12,8 +12,9 @@ section.show {
 .title-home {
   font-size: 2.5rem;
 }
-@media (min-width: 768px) { /* md et plus */
- .title-home {
+@media (min-width: 768px) {
+  /* md et plus */
+  .title-home {
     font-size: 4.5rem;
   }
 }
@@ -33,7 +34,7 @@ section.show {
 }
 
 .btn-commencer::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: -75%;
@@ -52,7 +53,6 @@ section.show {
   transform: scale(1.05);
   box-shadow: 0 8px 20px rgba(255, 204, 51, 0.7);
 }
-
 
 .font-bold {
   text-transform: none;
@@ -82,46 +82,70 @@ section.show {
 /* --- DEMI-CERCLE (angles différents) --- */
 .t-one {
   transform: rotate(-20deg) translateY(-220px) translateX(-450px);
+  box-shadow: 0 0 30px rgba(30, 255, 142, 0.8);
 }
 .t-two {
   transform: rotate(-10deg) translateY(-195px) translateX(-300px);
+  box-shadow: 0 0 30px rgba(79, 172, 254, 0.8);
 }
 .t-three {
   transform: rotate(-5deg) translateY(-149px) translateX(-100px);
+  box-shadow: 0 0 30px rgba(255, 106, 0, 0.8);
 }
 .t-four {
   transform: rotate(5deg) translateY(-149px) translateX(100px);
+  box-shadow: 0 0 30px rgba(255, 210, 0, 0.8);
 }
 .t-five {
   transform: rotate(10deg) translateY(-195px) translateX(300px);
+  box-shadow: 0 0 30px rgba(142, 45, 226, 0.8);
 }
 .t-six {
   transform: rotate(20deg) translateY(-220px) translateX(450px);
-}
-
-/* --- COULEURS PERSONNALISÉES --- */
-.t-one {
-  box-shadow: 0 0 30px rgba(30, 255, 142, 0.8);
-}
-
-.t-two {
-  box-shadow: 0 0 30px rgba(79, 172, 254, 0.8);
-}
-
-.t-three {
-  box-shadow: 0 0 30px rgba(255, 106, 0, 0.8);
-}
-
-.t-four {
-  box-shadow: 0 0 30px rgba(255, 210, 0, 0.8);
-}
-
-.t-five {
-  box-shadow: 0 0 30px rgba(142, 45, 226, 0.8);
-}
-
-.t-six {
   box-shadow: 0 0 30px rgba(255, 81, 47, 0.8);
+}
+
+/* --- EFFET HOVER POUR DEMI-CERCLES --- */
+.t-one:hover {
+  transform: rotate(-20deg) translateY(-220px) translateX(-450px) scale(1.1);
+  box-shadow: 0 0 60px rgba(30, 255, 142, 1);
+  transition: all 0.3s ease-in-out;
+  z-index: 10000;
+}
+
+.t-two:hover {
+  transform: rotate(-10deg) translateY(-195px) translateX(-300px) scale(1.1);
+  box-shadow: 0 0 60px rgba(79, 172, 254, 1);
+  transition: all 0.3s ease-in-out;
+  z-index: 10000;
+}
+
+.t-three:hover {
+  transform: rotate(-5deg) translateY(-149px) translateX(-100px) scale(1.1);
+  box-shadow: 0 0 60px rgba(255, 106, 0, 1);
+  transition: all 0.3s ease-in-out;
+  z-index: 10000;
+}
+
+.t-four:hover {
+  transform: rotate(5deg) translateY(-149px) translateX(100px) scale(1.1);
+  box-shadow: 0 0 60px rgba(255, 210, 0, 1);
+  transition: all 0.3s ease-in-out;
+  z-index: 10000;
+}
+
+.t-five:hover {
+  transform: rotate(10deg) translateY(-195px) translateX(300px) scale(1.1);
+  box-shadow: 0 0 60px rgba(142, 45, 226, 1);
+  transition: all 0.3s ease-in-out;
+  z-index: 10000;
+}
+
+.t-six:hover {
+  transform: rotate(20deg) translateY(-220px) translateX(450px) scale(1.1);
+  box-shadow: 0 0 60px rgba(255, 81, 47, 1);
+  transition: all 0.3s ease-in-out;
+  z-index: 10000;
 }
 
 .fs-custom {
@@ -143,8 +167,8 @@ section.show {
   overflow: hidden;
   position: relative;
   transition:
-  transform 0.3s ease,
-  box-shadow 0.3s ease;
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   cursor: pointer;
 }
 
@@ -180,7 +204,6 @@ section.show {
 @keyframes zoom {
   0% {
     transform: scale(1);
-    
   }
   50% {
     transform: scale(1.2);
@@ -191,11 +214,13 @@ section.show {
 }
 
 .b-1 {
-  background: linear-gradient(30deg, 
-  rgba(155, 36, 253, 0.734), 
-  rgb(132, 17, 240), 
-  #d4008325, 
-  #39054800 70%);
+  background: linear-gradient(
+    30deg,
+    rgba(155, 36, 253, 0.734),
+    rgb(132, 17, 240),
+    #d4008325,
+    #39054800 70%
+  );
   border-radius: 50px;
 }
 
@@ -285,7 +310,8 @@ section.show {
   animation: fadeIn 0.4s ease-in-out;
 }
 
-.btn-add, .btn-add-md {
+.btn-add,
+.btn-add-md {
   background: linear-gradient(135deg, #91096f, #ca1e1e);
   border: none;
   color: #fff;
@@ -308,7 +334,6 @@ section.show {
 .btn-add:active {
   transform: scale(0.95);
 }
-
 
 /* Animation d’apparition */
 @keyframes fadeIn {
@@ -341,7 +366,9 @@ section.show {
   margin: auto;
   color: #f5f5f5;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
   cursor: pointer;
 }
 
@@ -354,7 +381,7 @@ section.show {
 }
 
 .card-opinion::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: 16px;
@@ -401,7 +428,7 @@ section.show {
 /* Gestion du texte limité */
 .card-opinion .comment-text {
   display: -webkit-box;
-  -webkit-line-clamp: 2;   /* Limite à 2 lignes visibles */
+  -webkit-line-clamp: 2; /* Limite à 2 lignes visibles */
   -webkit-box-orient: vertical;
   overflow: hidden;
   transition: all 0.3s ease-in-out;
@@ -411,7 +438,6 @@ section.show {
 .card-opinion:hover .comment-text {
   -webkit-line-clamp: unset; /* affiche tout le texte */
 }
-
 
 .user-img-container {
   width: 100px;
@@ -517,12 +543,11 @@ section.show {
   font-size: 1rem; /* mobile par défaut */
 }
 
-@media (min-width: 768px) { /* md et plus */
+@media (min-width: 768px) {
+  /* md et plus */
   .title-newsletter h2 {
     font-size: 2.5rem; /* desktop */
   }
-  
-  
 }
 
 .newsletter-form {
@@ -614,9 +639,7 @@ section.show {
 .btn-mb-header:hover {
   background-color: #390548;
   transform: scale(1.05);
-  
 }
-
 
 .container-img-bulle {
   animation: imgBulle ease-in-out infinite alternate;
@@ -631,7 +654,7 @@ section.show {
     opacity: 2;
   }
 }
-.container-img-bulle img{
+.container-img-bulle img {
   object-fit: cover;
 }
 .b-zero {
@@ -651,4 +674,190 @@ section.show {
 }
 .b-five {
   animation-duration: 0.9s;
+}
+
+.info-button-wrapper {
+  position: relative;
+  display: inline-block;
+  z-index: 9999; /* Assure que le wrapper est au-dessus */
+}
+
+.info-tooltip {
+  visibility: hidden;
+  width: max-content;
+  max-width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  position: fixed; /* IMPORTANT : pour être au-dessus de tout */
+  z-index: 20000; /* Très haut pour surpasser tous les éléments */
+  bottom: auto;
+  top: 29px; /* Distance par rapport au top de la page, tu peux ajuster */
+  right: 0%;
+  transform: translateX(-35%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 13px;
+  pointer-events: none; /* Pour que le hover reste sur le bouton */
+}
+
+.info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%; /* Centrée verticalement */
+  right: -10px; /* Décalage vers la droite de la bulle */
+  transform: translateY(-50%); /* Centrer la flèche verticalement */
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent #333; /* La flèche pointe vers la gauche */
+}
+
+/* Afficher la bulle au hover */
+.info-button-wrapper:hover .info-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.comments-carousel {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+
+.comment-card-wrapper {
+  flex: 0 0 320px;
+  scroll-snap-align: start;
+}
+
+.comment-card {
+  background: rgba(33, 37, 41, 0.8);
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+  transition:
+    transform 0.2s,
+    background 0.2s;
+  color: #fff;
+}
+
+.comment-card.hovered {
+  transform: translateY(-5px);
+  background: rgba(64, 37, 87, 0.573);
+}
+
+.avatar-wrapperr {
+  width: 100px;
+  height: 100px;
+  border: 1px solid #fff;
+  overflow: hidden;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatarr {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-body {
+  flex-grow: 1;
+}
+
+.comment-header {
+  margin-bottom: 0.5rem;
+}
+
+.user-name {
+  margin: 0;
+  font-weight: 600;
+  color: #fff;
+}
+
+.date {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.comment-text {
+  font-style: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.comment-text:hover {
+  -webkit-line-clamp: 10;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  font-size: 2.2rem;
+  background: rgba(0, 0, 0, 0.32);
+  border: none;
+  color: #ffffffa2;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  animation: btnLinearPulse 1.5s linear infinite;
+}
+
+@keyframes btnLinearPulse {
+  0% {
+    transform: translateY(-50%) scale(1);
+    box-shadow: 0 0 20px rgba(95, 12, 154, 0.5);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 0 50px rgba(12, 154, 111, 0.8);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+    box-shadow: 0 0 20px rgba(154, 57, 12, 0.5);
+  }
+}
+
+.scroll-btn.left {
+  left: -80px;
+}
+
+.scroll-btn.right {
+  right: -80px;
+}
+
+.scroll-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.scroll-container {
+  position: relative;
+  overflow: none; /* masque la scrollbar */
+  width: 100%;
+}
+
+/* Carrousel scrollable */
+.comments-carousel {
+  display: flex;
+  gap: 1rem;
+  overflow-x: scroll;
+  overflow-y: none;
+  scroll-behavior: smooth;
+  padding-bottom: 0.5rem;
+
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.comments-carousel::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }

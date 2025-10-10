@@ -1,3 +1,302 @@
+/* ========================================
+   HEADER DASHBOARD - DESIGN PROFESSIONNEL
+   ======================================== */
+
+/* Container Principal */
 .bg-head-custom {
-    background-color: #1a1d292c;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ========================================
+   BARRE DE RECHERCHE
+   ======================================== */
+
+.search-barr {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 6px 8px 6px 16px;
+  transition: all 0.2s ease;
+}
+
+.search-barr:hover {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+.search-barr:focus-within {
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-inputt {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 50px 10px 4px;
+  font-size: 14px;
+  color: #1f2937;
+  font-weight: 400;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.btn-search {
+  background: #667eea;
+  border: none;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-search:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+}
+
+.btn-search:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   BOUTONS D'ACTION
+   ======================================== */
+
+.btn-icon {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   BADGES DE NOTIFICATION
+   ======================================== */
+
+.icon-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   MENU DÉROULANT
+   ======================================== */
+
+.dropdown-menu {
+  min-width: 360px;
+  padding: 0;
+  margin-top: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-header {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 16px 20px 12px;
+  margin: 0;
+  background: #f9fafb;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 12px 12px 0 0;
+}
+
+.dropdown-item {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: #374151;
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.dropdown-item:hover {
+  background: #f9fafb;
+  border-left-color: #667eea;
+  padding-left: 24px;
+  color: #1f2937;
+}
+
+.dropdown-item:active {
+  background: #f3f4f6;
+}
+
+.dropdown-divider {
+  margin: 0;
+  border-color: #e5e7eb;
+  opacity: 1;
+}
+
+.text-primary {
+  color: #667eea !important;
+}
+
+.text-primary:hover {
+  color: #5568d3 !important;
+}
+
+/* ========================================
+   MENU D'ACTIONS
+   ======================================== */
+
+.header-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ========================================
+   BARRE DE DÉFILEMENT
+   ======================================== */
+
+.dropdown-menu {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.dropdown-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .search-bar {
+    max-width: 100% !important;
+  }
+
+  .header-menu {
+    gap: 8px !important;
+  }
+
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-input {
+    font-size: 13px;
+    padding: 9px 45px 9px 4px;
+  }
+
+  .dropdown-menu {
+    min-width: 320px;
+  }
+}
+
+@media (max-width: 576px) {
+  .bg-head-custom {
+    padding: 12px !important;
+  }
+
+  .search-bar {
+    padding: 5px 6px 5px 12px;
+  }
+
+  .btn-search {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dropdown-menu {
+    min-width: 300px;
+    max-height: 400px;
+  }
+
+  .dropdown-item {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+}
+
+/* ========================================
+   MICRO-INTERACTIONS
+   ======================================== */
+
+.btn-icon,
+.btn-search,
+.dropdown-item {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-badge {
+  animation: none;
+}
+
+/* Suppression des animations inutiles pour un look pro */
+* {
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }

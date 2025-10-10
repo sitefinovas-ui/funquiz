@@ -181,6 +181,24 @@
   --text-primary: #ffffff;
   --text-secondary: #a0a9c0;
 
+  /* ===== THEME PUBLIC ===== */
+  --site-bg: #0d0d19;
+  --site-accent: #9b34d3;
+
+  /* Couleurs de texte (public) */
+  --site-text: #ffffff;
+  --site-text-muted: #a0a9c0;
+  --site-link: #4ea1ff;
+
+  /* Accent par défaut (fixe) */
+  --site-accent-default: #9b34d3;
+  --site-accent-default-strong: #7e2ab5;
+
+  /* ===== THEME BACKOFFICE ===== */
+  --brand-accent: #667eea;
+  --brand-accent-strong: #5568d3;
+
+  /* Sidebar backoffice */
   --bg-sidebar-dash: #3b0436;
 }
 

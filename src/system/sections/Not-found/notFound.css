@@ -1,64 +1,66 @@
 @import url('../../../');
 .not-found-custom {
-    position: relative;
-    background: linear-gradient(180deg, #110219 3%, #040108 100%);
+  position: relative;
+  background: linear-gradient(180deg, #110219 3%, #040108 100%);
 }
 .fs-custom-notFound {
-    font-size: 400px;
-    font-weight: 500;
-    background: linear-gradient(180deg, #9b34d3 3%, #040307 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  font-size: 400px;
+  font-weight: 500;
+  background: linear-gradient(180deg, #9b34d3 3%, #040307 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .card-custom-notFound {
-    background:#05010757;
-    backdrop-filter: blur(4px);
-    border: 1px solid var(--border-color);
-    box-shadow: 0px 0px 10px var(--shadow-color);
-    padding: 1rem;
-    border-radius: 10px;
-    height: 200px;
-    width: 33rem;
-    position: absolute;
-    bottom:33%;
+  background: #05010757;
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border-color);
+  box-shadow: 0px 0px 10px var(--shadow-color);
+  padding: 1rem;
+  border-radius: 10px;
+  height: 200px;
+  width: 33rem;
+  position: absolute;
+  bottom: 33%;
 }
 .btn-custom-notFound {
-    background: linear-gradient(80deg, #a430c5a5 5%, #5f4706 100%);
-    border: none;
-    border-radius: 5px;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 10px 20px;
-    transition: all 0.3s ease-in-out;
-    transition: background 0.6s ease-in-out, transform 0.6s ease-in-out;
-
+  background: linear-gradient(80deg, #a430c5a5 5%, #5f4706 100%);
+  border: none;
+  border-radius: 5px;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 10px 20px;
+  transition: all 0.3s ease-in-out;
+  transition:
+    background 0.6s ease-in-out,
+    transform 0.6s ease-in-out;
 }
 
 .btn-custom-notFound:hover {
-    background: linear-gradient(130deg, #a430c5a5 5%, #5f1306 100%);
-    transform: scale(1.1);
-    transition: background 0.6s ease-in-out, transform 0.6s ease-in-out;
-    animation: btn-custom-notFound 0.6s infinite ease-in-out;
-
+  background: linear-gradient(130deg, #a430c5a5 5%, #5f1306 100%);
+  transform: scale(1.1);
+  transition:
+    background 0.6s ease-in-out,
+    transform 0.6s ease-in-out;
+  animation: btn-custom-notFound 0.6s infinite ease-in-out;
 }
 
 @keyframes btn-custom-notFound {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 576px) {
-    .fs-custom-notFound {
-        font-size: 200px;
-    }
-    .card-custom-notFound {
-        width: 20rem;
-    }
+  .fs-custom-notFound {
+    font-size: 200px;
+  }
+  .card-custom-notFound {
+    width: 20rem;
+  }
 }

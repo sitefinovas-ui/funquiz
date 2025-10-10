@@ -1,0 +1,148 @@
+/* Style de base de l'input */
+.is-valid-custom {
+  width: 100%;
+  height: 45px;
+  border: 1px solid #dee2e6;
+  border-radius: 50px;
+  padding: 0 15px;
+  background-color: #f8f9fa;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+/* Au survol */
+.is-valid-custom:hover {
+  background-color: #ffffff;
+  border-color: #bdbdbd;
+}
+
+/* Lorsqu’on clique (active) */
+.is-valid-custom:active,
+.is-valid-custom:focus {
+  border: 1px solid #c218c5;
+  box-shadow: 0 0 5px rgba(246, 7, 214, 0.937);
+  background-color: #fff;
+}
+
+/* Placeholder stylé */
+.is-valid-custom::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+/* Si tu veux une icône à l’intérieur (optionnel) */
+.input-group-text {
+  background-color: #fff;
+  border: none;
+  border-radius: 50px 0 0 50px;
+  color: #6c757d;
+  padding-left: 15px;
+}
+
+/* Style de base de l'input */
+
+/* === Styles généraux des filtres === */
+.filters-container {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.filters-container:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* === Labels === */
+.filters-container .form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 3px;
+}
+
+/* === Inputs et selects === */
+.filters-container .form-control,
+.filters-container .form-select {
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.6rem;
+}
+
+/* Effet focus propre et cohérent */
+.filters-container .form-control:focus,
+.filters-container .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+/* === Boutons === */
+.filters-container .btn {
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover effets */
+.filters-container .btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+.filters-container .btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* === Bouton actif (tri sélectionné) === */
+.filters-container .btn-primary {
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+/* === Gestion du responsive === */
+@media (max-width: 768px) {
+  .filters-container {
+    padding: 1rem;
+  }
+
+  .filters-container .form-control,
+  .filters-container .form-select {
+    width: 100%;
+  }
+
+  .filters-container .btn-group {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .filters-container .btn-group .btn {
+    flex: 1;
+    margin-right: 5px;
+  }
+
+  .filters-container .btn-group .btn:last-child {
+    margin-right: 0;
+  }
+}
+
+/* === Champ de texte avec effet de validation === */
+.is-valid-custom:active,
+.is-valid-custom:focus {
+  border: 1px solid #c51818;
+  box-shadow: 0 0 0 0.15rem rgba(197, 24, 24, 0.25);
+}
+.form-control-custom {
+  width: 100%;
+  height: 45px;
+  border: 1px solid #dee2e6;
+  border-radius: 50px;
+  padding: 0 15px;
+  background-color: #ffffff;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  outline: none;
+}

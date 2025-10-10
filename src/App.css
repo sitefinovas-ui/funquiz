@@ -8,12 +8,12 @@
   font-family: 'Montserrat', sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
-  
+
   font-style: normal;
 }
 
 .bg-custom-app {
-  background: #0d0d19;
+  background: var(--site-bg);
 }
 
 li {
@@ -22,4 +22,16 @@ li {
 
 a {
   text-decoration: none !important;
+}
+
+.btn-default-accent {
+  background: var(--site-accent-default);
+  border-color: var(--site-accent-default);
+  color: #ffffff;
+}
+
+.btn-default-accent:hover {
+  background: var(--site-accent-default-strong);
+  border-color: var(--site-accent-default-strong);
+  color: #ffffff;
 }

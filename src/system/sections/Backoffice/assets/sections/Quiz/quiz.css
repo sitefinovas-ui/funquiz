@@ -1,0 +1,46 @@
+.quiz-layout {
+  height: 100%;
+}
+
+.quiz-sider {
+  background: #fff;
+  border-right: 1px solid #f0f0f0;
+}
+
+.quiz-menu {
+  height: 100%;
+  border-right: 0;
+}
+
+.quiz-content {
+  background: #fff;
+  margin: 0;
+  min-height: 100%;
+  padding: 0;
+}
+
+/* Menu styles */
+.ant-menu-item {
+  margin: 4px 0 !important;
+}
+
+.ant-menu-item:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.ant-menu-item-selected {
+  background-color: #e6f7ff !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .quiz-sider {
+    width: 200px !important;
+    min-width: 200px !important;
+  }
+}
+
+/* Ensure dropdown visibility inside modals */
+.select-in-modal {
+  z-index: 1100 !important;
+}

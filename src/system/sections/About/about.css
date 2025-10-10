@@ -1,0 +1,218 @@
+/* about.css */
+
+.about-pagee {
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.loading {
+  text-align: center;
+  padding: 100px 20px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Header */
+.headerr {
+  text-align: center;
+  padding: 80px 20px;
+  background: linear-gradient(135deg, #3103421d, #2a0330);
+}
+
+.headerr h1 {
+  font-family:
+    'SF Pro Display',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+    font-weight: 400;
+      letter-spacing: -0.01em;
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+  color: #ffffff;
+}
+
+.subtitlee {
+  font-size: 1.2rem;
+  color: #b0aeae;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Sections */
+.sectionn {
+  padding: 60px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sectionn.gray {
+  background: #f5f5f5;
+}
+
+.sectionn.dark {
+  background: #1a1a1a;
+  color: white;
+}
+
+.sectionn h2 {
+  font-size: 2rem;
+  margin-bottom: 40px;
+}
+
+.sectionn p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #666;
+}
+
+.sectionn.dark p {
+  color: #ccc;
+}
+
+/* Grid */
+.gridd {  
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  padding: 30px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  color: #1a1a1a;
+}
+
+.card p {
+  font-size: 1rem;
+  color: #666;
+}
+
+.icon {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #999;
+  text-transform: uppercase;
+}
+
+/* Team Cards */
+.team-card {
+  background: white;
+  padding: 30px;
+  border: 1px solid #ddd;
+}
+
+.team-photo {
+  width: 120px;
+  height: 120px;
+  background: #e5e5e5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  margin: 0 auto 20px;
+}
+
+.team-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 5px;
+  color: #1a1a1a;
+}
+
+.role {
+  font-size: 0.9rem;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+}
+
+.team-card p {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Button */
+.btn-about {
+  display: inline-block;
+  padding: 15px 40px;
+  background: white;
+  color: #46073a;
+  border: 1px solid white;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+
+.btn-about:hover {
+  background: transparent;
+  color: white;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.datee {
+  margin-top: 30px;
+  font-size: 0.9rem;
+  color: #ca2121;
+}
+
+.sectionn.dark .datee {
+  color: #ffffff3a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .headerr h1 {
+    font-size: 2rem;
+  }
+  
+  .sectionn h2 {
+    font-size: 1.5rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+}

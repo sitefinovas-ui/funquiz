@@ -1,27 +1,27 @@
 {
-    "header": {
-      "home": "Home",
-      "quiz": "Quiz",
-      "contact": "Contact",
-      "profile": "Profile",
-      "login": "Login",
-      "logo": "FunQuiz",
-      "lang.fr": "French",
-      "lang.en": "English",
-      "lang.es": "Spanish",
-      "searchPlaceholder": "Search for a quiz..."
-    },
-    "footer": {
-      "funquiz": "FunQuiz",
-      "description": "Test your knowledge and have fun with our interactive quizzes! Stay tuned so you don't miss anything.",
-      "quick_links": "Quick links",
-      "home": "Home",
-      "quiz": "Quiz",
-      "ranking": "Ranking",
-      "about": "About",
-      "contact": "Contact",
-      "login": "Login",
-      "signup": "Sign up",
-      "support": "Support"
-    }
+  "header": {
+    "home": "Home",
+    "quiz": "Quiz",
+    "contact": "Contact",
+    "profile": "Profile",
+    "login": "Login",
+    "logo": "FunQuiz",
+    "lang.fr": "French",
+    "lang.en": "English",
+    "lang.es": "Spanish",
+    "searchPlaceholder": "Search for a quiz..."
+  },
+  "footer": {
+    "funquiz": "FunQuiz",
+    "description": "Test your knowledge and have fun with our interactive quizzes! Stay tuned so you don't miss anything.",
+    "quick_links": "Quick links",
+    "home": "Home",
+    "quiz": "Quiz",
+    "ranking": "Ranking",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "signup": "Sign up",
+    "support": "Support"
+  }
 }

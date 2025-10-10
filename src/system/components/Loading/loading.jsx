@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import "./loading.css";
-import Logo from "../../../assets/Log.png"; // mets ton image ici
+import { useState, useEffect } from 'react';
+import './loading.css';
+import Logo from '../../../assets/Log.png'; // mets ton image ici
 
 export default function LoadingPopup() {
   const [visible, setVisible] = useState(true);
@@ -9,7 +9,7 @@ export default function LoadingPopup() {
     // Le pop-up disparaît après 3 secondes
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 7000);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -17,7 +17,6 @@ export default function LoadingPopup() {
 
   return (
     <div className="loading ">
-        
       <div className="loading-box">
         <div className="loading-circle-cus">
           <img src={Logo} alt="loading" className="loading-icon rounded-circle" />

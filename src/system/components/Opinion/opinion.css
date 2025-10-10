@@ -2,7 +2,7 @@
 .opinion-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -19,7 +19,7 @@
   border-radius: 15px;
   padding: 2.5rem;
   position: relative;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 /* Titre */
@@ -73,7 +73,8 @@
   margin-bottom: 2rem;
 }
 
-.form-control, .form-select {
+.form-control,
+.form-select {
   width: 100%;
   border-radius: 8px;
   padding: 0.6rem 1rem;
@@ -82,7 +83,8 @@
   color: #fff;
   margin-bottom: 1rem;
 }
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
   outline: none;
   box-shadow: 0 0 8px #4a90e2;
 }
@@ -160,7 +162,6 @@
   margin: 0;
   font-size: 0.95rem;
 }
-
 
 /* Conteneur du champ de recherche */
 .search-container {

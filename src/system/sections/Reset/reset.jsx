@@ -4,7 +4,7 @@ import authService from '../../configurations/Services/authServices';
 
 export default function ResetPassword() {
   useEffect(() => {
-    document.title = "FUNQUIZ | Réinitialiser mon mot de passe";
+    document.title = 'FUNQUIZ | Réinitialiser mon mot de passe';
   }, []);
 
   const [email, setEmail] = useState('');
@@ -18,30 +18,36 @@ export default function ResetPassword() {
 
   // Demander le code de réinitialisation
   const handleRequestCode = async () => {
-    setError(''); setSuccess(''); setLoading(true);
+    setError('');
+    setSuccess('');
+    setLoading(true);
     try {
       await authService.requestResetPassword(email);
       setSuccess('Code envoyé par mail.');
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors de la demande.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Vérifier le code avant de passer à l'étape suivante
   const handleValidateCode = () => {
     if (!code) {
-      setError("Veuillez saisir le code reçu.");
+      setError('Veuillez saisir le code reçu.');
       return;
     }
     setError('');
-    setSuccess("Code validé avec succès ✅");
+    setSuccess('Code validé avec succès ✅');
     setStep(3);
   };
 
   // Réinitialiser le mot de passe
   const handleResetPassword = async () => {
-    setError(''); setSuccess(''); setLoading(true);
+    setError('');
+    setSuccess('');
+    setLoading(true);
     if (newPassword !== confirmPassword) {
       setError('Les mots de passe ne correspondent pas.');
       setLoading(false);
@@ -53,13 +59,15 @@ export default function ResetPassword() {
       setStep(4); // étape finale
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors du changement.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Fonction utilitaire pour appliquer un effet "grisé"
   const getCardClass = (cardStep) => {
     return `card-3d border-0 h-100 d-flex flex-column align-items-center justify-content-center p-4 
-      ${step < cardStep ? "bg-secondary bg-opacity-25 text-muted" : "text-white"}`;
+      ${step < cardStep ? 'bg-secondary bg-opacity-25 text-muted' : 'text-white'}`;
   };
 
   return (
@@ -73,7 +81,8 @@ export default function ResetPassword() {
                 Réinitialiser votre mot de passe
               </h1>
               <p className="lead text-light fs-5">
-                Entrez votre adresse email ci-dessous et validez chaque étape<br />
+                Entrez votre adresse email ci-dessous et validez chaque étape
+                <br />
                 pour retrouver l'accès à votre compte.
               </p>
             </div>
@@ -89,7 +98,7 @@ export default function ResetPassword() {
                     placeholder="Email"
                     className="form-control"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     disabled={step > 1}
                   />
                   <button
@@ -112,7 +121,7 @@ export default function ResetPassword() {
                     placeholder="Code reçu"
                     className="form-control"
                     value={code}
-                    onChange={e => setCode(e.target.value)}
+                    onChange={(e) => setCode(e.target.value)}
                     disabled={step !== 2}
                   />
                   <button
@@ -135,7 +144,7 @@ export default function ResetPassword() {
                     placeholder="Nouveau mot de passe"
                     className="form-control mb-2"
                     value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     disabled={step !== 3}
                   />
                   <input
@@ -143,7 +152,7 @@ export default function ResetPassword() {
                     placeholder="Confirmer mot de passe"
                     className="form-control"
                     value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={step !== 3}
                   />
                   <button

@@ -11,7 +11,7 @@
   font-size: 12rem;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 3px 3px 15px rgba(0,0,0,0.7);
+  text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.7);
 }
 
 .subtitle-contact {
@@ -19,7 +19,7 @@
   font-weight: 300;
   color: #f1f1f1;
   margin-top: -10px;
-  text-shadow: 1px 1px 8px rgba(0,0,0,0.5);
+  text-shadow: 1px 1px 8px rgba(0, 0, 0, 0.5);
 }
 
 /* ====== FORMULAIRE ====== */
@@ -41,13 +41,13 @@
   color: white;
   border: none;
   transition: all 0.3s ease-in-out;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .btn-contact:hover {
   transform: scale(1.05);
   background: linear-gradient(90deg, #2575fc, #6a11cb);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* ====== RESPONSIVE ====== */
@@ -60,7 +60,9 @@
     font-size: 3.5rem;
   }
 
-  .subtitle-contact{width: 50%;}
+  .subtitle-contact {
+    width: 50%;
+  }
 
   .contact-form {
     background-color: transparent !important;

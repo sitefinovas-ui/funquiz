@@ -1,9 +1,18 @@
-.layout-dash { background: #f8f9fb; } /* ou bg-danger si tu veux rouge */
-.sidebar { /* si tu veux la sidebar en pleine hauteur: */
+.layout-dash {
+  background: #f8f9fb;
+} /* ou bg-danger si tu veux rouge */
+.sidebar {
+  /* si tu veux la sidebar en pleine hauteur: */
   height: auto; /* laissé à flex parent */
   display: flex;
   flex-direction: column;
   padding: 1rem;
 }
-.main-content { min-height: 0; } /* important pour scroll flex */
-.content-wrapper { min-height: 0; display: flex; flex-direction: column; }
+.main-content {
+  min-height: 0;
+} /* important pour scroll flex */
+.content-wrapper {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

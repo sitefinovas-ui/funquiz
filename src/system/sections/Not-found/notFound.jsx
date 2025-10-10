@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const NotFound = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    document.title = "FUNQUIZ | Not found";
+    document.title = 'FUNQUIZ | Not found';
   }, []);
 
   return (
@@ -18,10 +18,7 @@ const NotFound = () => {
           Désolé, la page que vous recherchez n'existe pas.
         </p>
 
-        <button
-          onClick={() => navigate('/')}
-          className="btn-custom-notFound mt-3 rounded-pill"
-        >
+        <button onClick={() => navigate('/')} className="btn-custom-notFound mt-3 rounded-pill">
           Retourner à l'accueil
         </button>
       </div>

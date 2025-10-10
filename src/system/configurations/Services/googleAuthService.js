@@ -1,4 +1,3 @@
-
 import api from '../Api/api_axios';
 
 // Envoie le token Google au backend

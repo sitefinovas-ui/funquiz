@@ -1,7 +1,17 @@
-import api from '../Api/api_axios.js'; 
+import api from '../Api/api_axios.js';
 
 const authService = {
-    // Récupérer les points utilisateur via l'API quiz
+  // Récupérer les points utilisateur via l'API quiz
+
+  getAllUsers: async () => {
+    try {
+      const response = await api.get('/auth/all');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   getUserPoints: async (user_id) => {
     try {
       const response = await api.get(`/point/${user_id}`);
@@ -11,7 +21,7 @@ const authService = {
     }
   },
 
-    requestResetPassword: async (email) => {
+  requestResetPassword: async (email) => {
     try {
       const response = await api.post('/auth/password/request-reset', { email });
       return response.data;
@@ -79,17 +89,43 @@ const authService = {
   },
 
   deleteUserSoft: async ({ user_id, reason, comment }) => {
-  try {
-    const response = await api.post('/auth/delete', {
-      user_id,
-      reason,
-      comment
-    });
-    return response.data;
-  } catch (error) {
-    console.error("❌ deleteUserSoft:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.error || error.message);
-  }
-}
+    try {
+      const response = await api.post('/auth/delete', {
+        user_id,
+        reason,
+        comment,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('❌ deleteUserSoft:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || error.message);
+    }
+  },
+
+  updateUserAdmin: async (id, fields) => {
+    try {
+      const payload = { user_id: id, ...fields };
+
+      // Convertir is_active en 0/1
+      if (payload.is_active !== undefined) {
+        const n = Number(payload.is_active);
+        payload.is_active = Number.isNaN(n) ? (payload.is_active ? 1 : 0) : n ? 1 : 0;
+      }
+
+      // Valider status
+      if (payload.status) {
+        const validStatus = ['active', 'suspended', 'deleted'];
+        if (!validStatus.includes(payload.status)) {
+          payload.status = 'active';
+        }
+      }
+
+      console.log('Payload updateUserAdmin:', payload);
+      const response = await api.put('/auth/update/admin', payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 export default authService;

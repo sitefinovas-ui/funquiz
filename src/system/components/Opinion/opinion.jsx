@@ -8,22 +8,22 @@ const Opinion = ({ closePopup }) => {
   const user_id_token = payload?.user_id;
 
   const [active, setActive] = useState(false);
-  const [opinionText, setOpinionText] = useState("");
+  const [opinionText, setOpinionText] = useState('');
   const [submissionStatus, setSubmissionStatus] = useState(null);
   const [comments, setComments] = useState([]);
-  const [loginMessage, setLoginMessage] = useState("");
+  const [loginMessage, setLoginMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 🔹 Supprimer un commentaire
   const deleteComment = async (commentId) => {
     try {
       await commentServices.deleteComment(commentId);
-      setComments(comments.filter(comment => comment.comment_id !== commentId));
+      setComments(comments.filter((comment) => comment.comment_id !== commentId));
     } catch (error) {
-      console.error("❌ Erreur lors de la suppression :", error);
-      setErrorMessage("Impossible de supprimer le commentaire. Réessayez.");
+      console.error('❌ Erreur lors de la suppression :', error);
+      setErrorMessage('Impossible de supprimer le commentaire. Réessayez.');
     }
   };
 
@@ -32,29 +32,28 @@ const Opinion = ({ closePopup }) => {
     e.preventDefault();
 
     if (!user_id_token) {
-      setSubmissionStatus("error");
-      setLoginMessage("⚠️ Vous devez être connecté pour donner un avis.");
+      setSubmissionStatus('error');
+      setLoginMessage('⚠️ Vous devez être connecté pour donner un avis.');
       return;
     }
 
     setLoading(true);
-    setErrorMessage("");
+    setErrorMessage('');
     try {
       await commentServices.createComment({
         user_id: user_id_token,
-        content: opinionText
+        content: opinionText,
       });
 
-      setSubmissionStatus("success");
-      setOpinionText("");
+      setSubmissionStatus('success');
+      setOpinionText('');
 
       const updated = await commentServices.getCommentsWithUserAndQuiz();
       setComments(updated);
-
     } catch (error) {
-      console.error("❌ Erreur lors de l’envoi :", error);
-      setSubmissionStatus("error");
-      setErrorMessage("⚠️ L’envoi de votre avis a échoué. Réessayez.");
+      console.error('❌ Erreur lors de l’envoi :', error);
+      setSubmissionStatus('error');
+      setErrorMessage('⚠️ L’envoi de votre avis a échoué. Réessayez.');
     } finally {
       setLoading(false);
     }
@@ -68,8 +67,8 @@ const Opinion = ({ closePopup }) => {
         // Trier du plus récent au plus ancien
         setComments(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
       } catch (error) {
-        console.error("❌ Erreur lors de la récupération :", error);
-        setErrorMessage("⚠️ Impossible de récupérer les commentaires.");
+        console.error('❌ Erreur lors de la récupération :', error);
+        setErrorMessage('⚠️ Impossible de récupérer les commentaires.');
       }
     };
     fetchComments();
@@ -78,15 +77,15 @@ const Opinion = ({ closePopup }) => {
   // 🔹 Toggle du formulaire
   const handleToggleForm = () => {
     if (!token) {
-      setLoginMessage("⚠️ Vous devez être connecté pour donner un avis.");
+      setLoginMessage('⚠️ Vous devez être connecté pour donner un avis.');
       return;
     }
-    setLoginMessage("");
+    setLoginMessage('');
     setActive(!active);
   };
 
   // 🔹 Filtrer les commentaires selon la recherche
-  const filteredComments = comments.filter(c => {
+  const filteredComments = comments.filter((c) => {
     const term = searchTerm.toLowerCase();
     return (
       c.content.toLowerCase().includes(term) ||
@@ -133,8 +132,12 @@ const Opinion = ({ closePopup }) => {
         {active && (
           <div className="opinion-form mb-3">
             <h2 className="text-light">Laissez votre avis</h2>
-            {submissionStatus === "success" && <div className="alert alert-success">✅ Merci pour votre avis !</div>}
-            {submissionStatus === "error" && <div className="alert alert-danger">❌ Une erreur est survenue.</div>}
+            {submissionStatus === 'success' && (
+              <div className="alert alert-success">✅ Merci pour votre avis !</div>
+            )}
+            {submissionStatus === 'error' && (
+              <div className="alert alert-danger">❌ Une erreur est survenue.</div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <textarea
@@ -145,7 +148,7 @@ const Opinion = ({ closePopup }) => {
                 required
               />
               <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? "Envoi en cours..." : "Envoyer"}
+                {loading ? 'Envoi en cours...' : 'Envoyer'}
               </button>
             </form>
           </div>
@@ -153,28 +156,60 @@ const Opinion = ({ closePopup }) => {
 
         {/* Liste des commentaires */}
         <div className="comments-list mt-4">
-          {filteredComments.map((c) => (
-            <div key={c.comment_id} className="comment-item">
-              <img src={c.avatar_url} alt={`${c.first_name} ${c.name}`} className="avatar" />
-              <div className="comment-content">
-                <div className="comment-header d-flex justify-content-between align-items-center">
-                  <span className="user-name text-light fs-5">{c.first_name} {c.name}</span>
-                  <div className="d-flex align-items-center">
-                    <small className="comment-date">
-                      {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
-                    </small>
-                    {user_id_token === c.user_id && (
-                      <button onClick={() => deleteComment(c.comment_id)} className="btn btn-sm btn-danger ms-2">x</button>
-                    )}
+          {filteredComments
+            .filter((comment) => Number(comment.is_approved) === 1)
+            .map((c) => (
+              <div key={c.comment_id} className="comment-item">
+                {c.avatar_url ? (
+                  <img
+                    src={c.avatar_url}
+                    alt={`${c.first_name} ${c.name}`}
+                    className="rounded-circle"
+                    style={{ width: '48px', height: '48px', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div
+                    className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center"
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      fontSize: '20px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    }}
+                  >
+                    {c.name.charAt(0).toUpperCase()}
                   </div>
+                )}
+                <div className="comment-content">
+                  <div className="comment-header d-flex justify-content-between align-items-center">
+                    <span className="user-name text-light fs-5">
+                      {c.first_name} {c.name}
+                    </span>
+                    <div className="d-flex align-items-center">
+                      <small className="comment-date">
+                        {new Date(c.created_at).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </small>
+                      {user_id_token === c.user_id && (
+                        <button
+                          onClick={() => deleteComment(c.comment_id)}
+                          className="btn btn-sm btn-danger rounded-circle  ms-2"
+                        >
+                          x
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p
+                    className="comment-text text-white"
+                    dangerouslySetInnerHTML={{ __html: highlightText(c.content) }}
+                  ></p>
                 </div>
-                <p
-                  className="comment-text text-white"
-                  dangerouslySetInnerHTML={{ __html: highlightText(c.content) }}
-                ></p>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </div>

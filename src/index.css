@@ -1,5 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Gantari:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lexend:wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Permanent+Marker&display=swap');
 
 :root {
-  background-color: #0d0d19;
+  --site-bg: #0d0d19;
+  --site-accent: #9b34d3;
+
+  /* Bootstrap ← thème public */
+  --bs-body-color: var(--site-text);
+  --bs-link-color: var(--site-link);
+  --bs-link-hover-color: var(--site-accent);
+}
+
+/* Fond et texte global du site public */
+body {
+  background: var(--site-bg);
+  color: var(--site-text) !important;
+  min-height: 100vh;
+}
+
+/* Liens globaux (public) */
+a {
+  color: var(--site-link);
+}
+a:hover {
+  color: var(--site-accent);
+}
+
+/* Texte atténué (y compris Bootstrap .text-muted) */
+.text-muted {
+  color: var(--site-text-muted) !important;
 }

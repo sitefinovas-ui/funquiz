@@ -1,0 +1,12 @@
+# Ignorer les dossiers générés
+node_modules
+dist
+build
+coverage
+
+# Assets et publics
+public/_redirects
+public/favicon_log_fun_quiz.png
+
+# Optionnel: fichiers volumineux
+dev_front

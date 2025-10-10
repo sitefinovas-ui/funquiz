@@ -1,6 +1,6 @@
 import './Contact.css';
 import { useEffect, useState } from 'react';
-import messageServices from "../../configurations/Services/messageServices.js";
+import messageServices from '../../configurations/Services/messageServices.js';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -8,32 +8,32 @@ export default function Contact() {
     firstname: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
   });
 
   const [status, setStatus] = useState({ success: null, message: '' });
   const maxWords = 50;
 
   useEffect(() => {
-    document.title = "FUNQUIZ | Contacts";
+    document.title = 'FUNQUIZ | Contacts';
   }, []);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
 
-    if (id === "message") {
+    if (id === 'message') {
       const words = value.trim().split(/\s+/);
-      if (words[0] === "") {
-        setFormData(prev => ({ ...prev, message: "" }));
+      if (words[0] === '') {
+        setFormData((prev) => ({ ...prev, message: '' }));
         return;
       }
       if (words.length <= maxWords) {
-        setFormData(prev => ({ ...prev, message: value }));
+        setFormData((prev) => ({ ...prev, message: value }));
       } else {
-        setFormData(prev => ({ ...prev, message: words.slice(0, maxWords).join(" ") }));
+        setFormData((prev) => ({ ...prev, message: words.slice(0, maxWords).join(' ') }));
       }
     } else {
-      setFormData(prev => ({ ...prev, [id]: value }));
+      setFormData((prev) => ({ ...prev, [id]: value }));
     }
   };
 
@@ -42,8 +42,14 @@ export default function Contact() {
     setStatus({ success: null, message: '' });
 
     // Validation simple
-    if (!formData.name || !formData.firstname || !formData.email || !formData.subject || !formData.message) {
-      setStatus({ success: false, message: "Tous les champs sont requis." });
+    if (
+      !formData.name ||
+      !formData.firstname ||
+      !formData.email ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      setStatus({ success: false, message: 'Tous les champs sont requis.' });
       return;
     }
 
@@ -53,11 +59,11 @@ export default function Contact() {
         email: formData.email,
         subject: formData.subject,
         content: formData.message,
-        priority: "normal",
-        status: "unread"
+        priority: 'normal',
+        status: 'unread',
       });
 
-      setStatus({ success: true, message: "Message envoyé avec succès ! 🚀" });
+      setStatus({ success: true, message: 'Message envoyé avec succès ! 🚀' });
 
       // Reset formulaire
       setFormData({
@@ -65,7 +71,7 @@ export default function Contact() {
         firstname: '',
         email: '',
         subject: '',
-        message: ''
+        message: '',
       });
     } catch (error) {
       setStatus({ success: false, message: "Erreur lors de l'envoi du message." });
@@ -73,7 +79,8 @@ export default function Contact() {
     }
   };
 
-  const wordCount = formData.message.trim() === "" ? 0 : formData.message.trim().split(/\s+/).length;
+  const wordCount =
+    formData.message.trim() === '' ? 0 : formData.message.trim().split(/\s+/).length;
   const wordsLeft = maxWords - wordCount;
 
   return (
@@ -81,12 +88,14 @@ export default function Contact() {
       {/* === HEADER CONTACT === */}
       <div className="header-contact-cus d-flex flex-column justify-content-center align-items-center text-center">
         <h1 className="fs-custom-contact">Contact</h1>
-        <p className="subtitle-contact">Un souci, une idée ou juste envie de papoter ? On est là !</p>
+        <p className="subtitle-contact">
+          Un souci, une idée ou juste envie de papoter ? On est là !
+        </p>
       </div>
 
       {/* === FORMULAIRE === */}
       <div className="container d-flex flex-lg-row flex-column justify-content-center align-items-center w-100">
-        <form 
+        <form
           className="contact-form overflow-hidden w-100 p-5 rounded-5 shadow-lg d-flex flex-column gap-4"
           onSubmit={handleSubmit}
         >
@@ -102,7 +111,9 @@ export default function Contact() {
           {/* Nom et prénom */}
           <div className="d-flex gap-4 flex-column flex-md-row">
             <div className="flex-fill">
-              <label htmlFor="name" className="form-label fw-semibold">Nom</label>
+              <label htmlFor="name" className="form-label fw-semibold">
+                Nom
+              </label>
               <input
                 type="text"
                 id="name"
@@ -114,7 +125,9 @@ export default function Contact() {
               />
             </div>
             <div className="flex-fill">
-              <label htmlFor="firstname" className="form-label fw-semibold">Prénom(s)</label>
+              <label htmlFor="firstname" className="form-label fw-semibold">
+                Prénom(s)
+              </label>
               <input
                 type="text"
                 id="firstname"
@@ -129,7 +142,9 @@ export default function Contact() {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="form-label fw-semibold">Email</label>
+            <label htmlFor="email" className="form-label fw-semibold">
+              Email
+            </label>
             <input
               type="email"
               id="email"
@@ -143,7 +158,9 @@ export default function Contact() {
 
           {/* Objet */}
           <div>
-            <label htmlFor="subject" className="form-label fw-semibold">Objet</label>
+            <label htmlFor="subject" className="form-label fw-semibold">
+              Objet
+            </label>
             <input
               type="text"
               id="subject"
@@ -157,7 +174,9 @@ export default function Contact() {
 
           {/* Message */}
           <div>
-            <label htmlFor="message" className="form-label fw-semibold">Message</label>
+            <label htmlFor="message" className="form-label fw-semibold">
+              Message
+            </label>
             <div>
               <textarea
                 id="message"

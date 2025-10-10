@@ -25,7 +25,7 @@ const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-    
+
   // Permet de rafraîchir l'utilisateur à la demande (ex: après upload avatar)
   const refreshUser = async () => {
     setLoading(true);
@@ -60,7 +60,7 @@ const AuthProvider = ({ children }) => {
     try {
       await authService.logout();
       await checkAuth();
-      navigate('/logout');
+      navigate('/login');
     } catch {
       throw error;
     }
@@ -105,8 +105,32 @@ const AuthProvider = ({ children }) => {
       throw error;
     }
   };
+
+  const allUsers = async () => {
+    try {
+      const response = await authService.getAllUsers();
+      await checkAuth();
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout, register, putUserById, deleteUserById, checkUser, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        loginWithGoogle,
+        logout,
+        register,
+        putUserById,
+        deleteUserById,
+        checkUser,
+        refreshUser,
+        allUsers,
+      }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );
