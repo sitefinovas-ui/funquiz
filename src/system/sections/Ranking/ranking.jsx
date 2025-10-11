@@ -136,6 +136,7 @@ const Ranking = () => {
         style={{ height: '500px' }}
         className="overflow-auto list-gamer d-flex flex-column gap-4 container ranking-list mt-5"
       >
+        
         {rankingData.slice(3).map((rank, index) => (
           <div
             key={rank.user_id}
