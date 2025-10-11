@@ -43,7 +43,7 @@ app.use(
         "http://localhost:5173", // front local Vite
         "https://accounts.google.com",
         "https://googleusercontent.com",
-        "https://funquiz-qbytccogo-theb20s-projects.vercel.app/"
+        "https://funquiz-qbytccogo-theb20s-projects.vercel.app/",
         process.env.BASE_URL, // front en prod
       ];
 
