@@ -89,7 +89,6 @@
 @media (max-width: 768px) {
   .signUp {
     border: 0;
-    height: 100vh;
     overflow-y: auto;
   }
   .signUp-container {

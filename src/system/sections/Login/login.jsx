@@ -90,7 +90,7 @@ const Login = () => {
           Connectez-vous pour accéder à votre espace personnel et profiter pleinement de FUNQUIZ.
         </p>
       </div>
-
+      
       {/* Effets de fond */}
       <div className="bg-effect"></div>
       <div className="bg-effect"></div>

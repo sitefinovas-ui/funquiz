@@ -34,6 +34,17 @@ const QuizComponent = () => {
   const [thematicId, setThematicId] = useState(null);
   const [subThematicId, setSubThematicId] = useState(null);
 
+  // Mélange d’ordre des questions (stable par session)
+  const [orderedQuestions, setOrderedQuestions] = useState([]);
+  const shuffle = (arr) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
   // Helpers
   const normalize = (s) =>
     s ? s.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
@@ -85,7 +96,26 @@ const QuizComponent = () => {
           const sameST = stId ? Number(s.sub_thematic_id) === Number(stId) : true;
           return sameT && sameST;
         }) || sessions.find((s) => Number(s.is_completed) === 0);
+
         if (target) {
+          // Reprendre ordre si présent en session_data
+          let orderIds = null;
+          try {
+            const sd = typeof target.session_data === 'string'
+              ? JSON.parse(target.session_data || '{}')
+              : (target.session_data || {});
+            if (Array.isArray(sd?.question_order)) orderIds = sd.question_order;
+          } catch {}
+          if (orderIds && orderIds.length) {
+            const reordered = orderIds
+              .map((id) => (questions || []).find((q) => q.question_id === id))
+              .filter(Boolean);
+            setOrderedQuestions(reordered.length ? reordered : [...questions]);
+          } else {
+            // Session existante sans ordre: garder l’ordre actuel pour éviter un décalage d’index
+            setOrderedQuestions([...questions]);
+          }
+
           setSessionId(target.session_id);
           const answeredPrev = (() => {
             try {
@@ -96,17 +126,21 @@ const QuizComponent = () => {
           })();
           setAnswered(answeredPrev);
           const idxRaw = Number(target.current_question_index || 0);
-          const safeIndex = Math.min(Math.max(idxRaw, 0), Math.max(questions.length - 1, 0));
+          const safeIndex = Math.min(Math.max(idxRaw, 0), Math.max((questions || []).length - 1, 0));
           setCurrentIndex(safeIndex);
           setScore(Number(target.current_score || 0));
         } else {
+          // Nouvelle session: mélanger et persister l’ordre
+          const shuffled = shuffle(questions || []);
+          setOrderedQuestions(shuffled);
+          const orderIds = shuffled.map((q) => q.question_id);
           const res = await quizSessionService.createSession({
             user_id: uid,
             thematic_id: tId,
             sub_thematic_id: stId || null,
-            total_questions: questions.length,
+            total_questions: (questions || []).length,
             difficulty_level: null,
-            session_data: { thematicTitle, subTitle },
+            session_data: { thematicTitle, subTitle, question_order: orderIds },
           });
           setSessionId(res?.sessionId || null);
         }
@@ -118,7 +152,7 @@ const QuizComponent = () => {
 
   if (!questions || questions.length === 0) {
     return (
-      <div className="vh-100 vw-100 d-flex align-items-center justify-content-center">
+      <div className="vh-100 vw-100 d-flex flex-column align-items-center justify-content-center">
         <h2>Aucune question disponible pour cette sous-thématique.</h2>
         <button onClick={() => navigate(-1)} className="btn btn-primary mt-3">
           Retour
@@ -127,7 +161,7 @@ const QuizComponent = () => {
     );
   }
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = orderedQuestions[currentIndex] || questions[currentIndex];
 
   const handleSelectAnswer = async (index) => {
     if (isValidated) return;
@@ -165,7 +199,7 @@ const QuizComponent = () => {
   };
 
   const handleNext = async () => {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex < (orderedQuestions.length || questions.length) - 1) {
       setCurrentIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setIsValidated(false);
@@ -198,7 +232,7 @@ const QuizComponent = () => {
 
       openPopup('result', {
         score: finalScore,
-        total: questions.length,
+        total: (questions || []).length,
         thematicTitle,
         subTitle,
         userId,
@@ -253,10 +287,10 @@ const QuizComponent = () => {
             <h2 className="fw-bold fs-md-4 fs-custom position-relative">
               Question{' '}
               <span className="fs-4 position-absolute end-0">
-                {Math.min(currentIndex + 1, questions.length)}/{questions.length}
+                {Math.min(currentIndex + 1, (orderedQuestions.length || questions.length))}/{(orderedQuestions.length || questions.length)}
               </span>
             </h2>
-            <h4 className="mt-3">{currentQuestion?.content ?? ''}</h4>
+            <h4 className="mt-3 text-dark">{currentQuestion?.content ?? ''}</h4>
           </div>
         </div>
 

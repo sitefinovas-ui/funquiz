@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FaFacebook, FaTwitter, FaTiktok, FaYoutube } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './footer.css';
 import Newsletter from '../../configurations/Services/newsletterServices.js';
 
@@ -21,6 +21,7 @@ const Footer = ({ openPopup }) => {
   const isDash = location.pathname.startsWith('/dashboard');
   const isTerms = location.pathname === '/terms';
   const isSearch = location.pathname === '/search';
+  const isProfil = location.pathname === '/profil';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +51,7 @@ const Footer = ({ openPopup }) => {
 
   return (
     <>
-      {!isGame && !isSearch && !isDash && !isLogin && !isSignUp && (
+      {!isGame && !isProfil && !isSearch && !isDash && !isLogin && !isSignUp && (
         <footer className="footer-funquiz rounded-5 pt-5">
           {!isTerms && (
             <div className="container">
