@@ -10,7 +10,7 @@ import Comment from './assets/sections/Comment/comment.jsx';
 import NewsDash from './assets/sections/Newsletter/newsletter.jsx';
 import QuizDash from './assets/sections/Quiz/quiz.jsx';
 import LegalDash from './assets/sections/Legal/legal.jsx';
-import LogsPage from './assets/sections/Logs/temp.jsx';
+import LogsPage from './assets/sections/Temp/temp.jsx';
 import ThemeSwitcherAdminPage from './../../components/ThemeSwitcher/theme-switcher.jsx';
 
 function Dashboard() {
