@@ -1,5 +1,5 @@
 import './header.css';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link} from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import useAuth from '../../configurations/Context/useAuth';
 import pointService from '../../configurations/Services/pointService';
@@ -14,13 +14,14 @@ import piece from '../../../assets/icons/piece.png';
 import { useTranslation } from 'react-i18next';
 
 const Header = ({ openPopup }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate();   
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const isGame = location.pathname === '/step';
   const isLogin = location.pathname === '/login';
   const isSignUp = location.pathname === '/sign-up';
   const isDash = location.pathname.startsWith('/dashboard');
+  const isSearchRoute = location.pathname === '/search';
   const { user } = useAuth();
   const isAuthenticated = !!user;
 
@@ -135,7 +136,6 @@ const Header = ({ openPopup }) => {
                   </ul>
                 </nav>
 
-                {/* Search bar */}
                 <form
                   className="search-bar d-flex align-items-center position-relative"
                   onSubmit={handleSearch}
@@ -238,29 +238,28 @@ const Header = ({ openPopup }) => {
           </header>
 
           {/* === Footer Mobile === */}
-          <div className="d-flex align-items-center justify-content-center w-100">
+          <div className="d-flex align-items-center mx-1 justify-content-center w-100">
             <div
-              style={{ height: '80px', maxWidth: '90%', zIndex: 99999 }}
-              className="d-flex align-items-center justify-content-between gap-4 px-4 d-lg-none bg-mobile shadow-lg position-fixed bottom-0 w-100 rounded-pill m-2 mx-auto left-0 right-0"
+              style={{
+                height: '64px',
+                maxWidth: '370px',
+                zIndex: 99999,
+                paddingBottom: 'env(safe-area-inset-bottom)',
+              }}
+              className="mobile-bottom-nav d-lg-none bg-mobile shadow-lg position-fixed bottom-0 w-100 rounded-pill m-2 mx-auto left-0 right-0 d-flex align-items-center justify-content-between px-3 gap-2"
             >
               {/* Bloc gauche */}
               <nav className="flex-1">
-                <ul className="d-flex align-items-center justify-content-center gap-3 list-unstyled m-0">
-                  <li>
-                    <button
-                      onClick={() => navigate('/')}
-                      className="btn-mb-header text-decoration-none"
-                    >
-                      <SiHomeassistant /> <span className="title-header">{t('header.home')}</span>
-                    </button>
-                  </li>
+                <ul className="d-flex align-items-center justify-content-center gap-2 list-unstyled m-0 flex-nowrap">
+                  
                   <li>
                     <button
                       onClick={() => openPopup('thematic')}
                       className="btn-mb-header text-decoration-none"
+                      aria-label={t('header.quiz')}
                     >
-                      <SiNintendogamecube />{' '}
-                      <span className="title-header">{t('header.quiz')}</span>
+                      <SiNintendogamecube />
+                      <span className="title-header d-none d-sm-inline">{t('header.quiz')}</span>
                     </button>
                   </li>
                   {/* Bouton accès rapide à la recherche */}
@@ -268,45 +267,79 @@ const Header = ({ openPopup }) => {
                     <button
                       onClick={() => navigate('/search')}
                       className="btn-mb-header text-decoration-none"
+                      aria-label="Rechercher"
                     >
-                      <FaSearch /> <span className="title-header">Rechercher</span>
+                      <FaSearch />
+                      <span className="title-header d-none d-sm-inline">Rechercher</span>
                     </button>
                   </li>
                 </ul>
               </nav>
 
-              {/*logo*/}
-              <div
-                style={{ width: '100px' }}
-                className="logo d-flex align-items-center justify-content-center"
+              {/* logo */}
+              <button
+                style={{ width: '72px' }}
+                onClick={() => navigate('/')}
+                className="logo d-flex align-items-center bg-transparent border-0 justify-content-center"
               >
-                <img src={Logo} className="w-100 h-100" alt="" />
-              </div>
+                <img src={Logo} className="w-100 h-100" alt="Logo" />
+              </button>
 
               {/* Bloc droit */}
               <nav className="flex-1">
-                <ul className="d-flex align-items-center justify-content-center gap-3 list-unstyled m-0">
+                <ul className="d-flex align-items-center justify-content-center gap-2 list-unstyled m-0 flex-nowrap">
                   <li>
                     <button
                       onClick={() => navigate('/contact')}
                       className="btn-mb-header text-decoration-none"
+                      aria-label={t('header.contact')}
                     >
-                      <IoMdMail /> <span className="title-header">{t('header.contact')}</span>
+                      <IoMdMail />
+                      <span className="title-header d-none d-sm-inline">{t('header.contact')}</span>
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => navigate('/profil')}
                       className="btn-mb-header text-decoration-none"
+                      aria-label={t('header.profile')}
                     >
-                      <MdAccountCircle />{' '}
-                      <span className="title-header">{t('header.profile')}</span>
+                      <MdAccountCircle />
+                      <span className="title-header d-none d-sm-inline">{t('header.profile')}</span>
                     </button>
                   </li>
                 </ul>
               </nav>
             </div>
           </div>
+        </div>
+      )}
+      {/* Search bar */}
+      {isSearchRoute && (
+        <div className="container header-desktop position-fixed top-0 end-0 pb-3 d-block d-lg-none pt-4">
+          <form
+                    className="search-bar d-flex align-items-center position-relative"
+                    onSubmit={handleSearch}
+                    role="search"
+                    aria-label="Recherche"
+                  >
+                    <input
+                      type="text"
+                      className="search-input w-100 px-4 py-3 rounded-pill"
+                      placeholder={t('header.searchPlaceholder')}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      ref={searchInputRef}
+                      aria-label={t('header.searchAria')}
+                    />
+                    <button
+                      type="submit"
+                      className="search-btn position-absolute"
+                      aria-label={t('header.searchBtnAria')}
+                    >
+                      <FaSearch />
+                    </button>
+          </form>
         </div>
       )}
     </>

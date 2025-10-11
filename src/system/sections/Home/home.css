@@ -438,7 +438,35 @@ section.show {
 .card-opinion:hover .comment-text {
   -webkit-line-clamp: unset; /* affiche tout le texte */
 }
+/* Taille par défaut (mobile) */
+.fs-md-1 {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+.title-custom {
+  font-size: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+  gap: 0.5rem;
+}
+.title-span{
+  font-size: 1.9rem;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
 
+/* À partir de md (>= 768px) */
+@media (min-width: 768px) {
+  .fs-md-1 {
+    font-size: 3rem;
+  }
+  .title-custom {
+    font-size: 2rem;
+    flex-direction: row;
+    gap: 1rem;
+
+  }
+}
 .user-img-container {
   width: 100px;
   height: 100px;

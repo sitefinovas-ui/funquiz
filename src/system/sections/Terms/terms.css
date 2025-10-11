@@ -151,6 +151,14 @@ body {
    NAVIGATION FLOTTANTE
    ================= */
 
+.h-terms-nav{
+  position: sticky;
+  top: var(--space-lg);
+  left: 0;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .terms-nav {
   position: sticky;
   top: var(--space-lg);
@@ -189,12 +197,23 @@ body {
   padding-left: calc(var(--space-sm) + 8px);
 }
 
+/* Accent visuel pour l'élément actif du menu */
 .terms-nav-item.active {
-  background: rgba(122, 3, 141, 0.284);
-  color: var(--accent);
-  border-left-color: var(--accent);
-  font-weight: 600;
-  padding-left: calc(var(--space-sm) + 8px);
+  color: #fff;
+  background-color: rgba(110, 168, 254, 0.18);
+  border: 1px solid rgba(110, 168, 254, 0.8);
+  box-shadow: 0 0 0 2px rgba(110, 168, 254, 0.25) inset;
+}
+
+/* Mise en avant de la section active dans le contenu */
+.terms-section.active {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  outline: 2px solid rgba(110, 168, 254, 0.35);
+}
+
+.terms-section.active .terms-section-title {
+  color: #6ea8fe;
 }
 
 .terms-nav-item:last-child {
@@ -422,7 +441,8 @@ body {
   }
 
   .terms-nav {
-    position: static;
+    position: absolute;
+    top: 0;
     width: 100%;
     order: 2;
     display: grid;

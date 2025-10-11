@@ -11,6 +11,7 @@ import pointService from '../../configurations/Services/pointService.js';
 import faqServices from '../../configurations/Services/faqService.js';
 
 import { IoArrowRedoOutline } from 'react-icons/io5';
+import { CiSearch } from "react-icons/ci";
 import { usePopup } from '../../configurations/Context/PopupContext.jsx';
 
 function useQueryParam() {
@@ -75,6 +76,7 @@ const isSimilar = (keyword, token) => {
 };
 
 // Traduction FR → EN complète et sans doublons (utile pour la recherche et le filtrage)
+// Dans la déclaration de l'objet frenchToEnglish
 const frenchToEnglish = {
   // --- Général / Structure du site ---
   'accueil': ['home', 'homepage', 'welcome', 'main page'],
@@ -162,7 +164,7 @@ const frenchToEnglish = {
   // --- Contenu dynamique / Quiz / Thèmes ---
   'quiz': ['quiz', 'game', 'test', 'challenge'],
   'question': ['question', 'faq', 'ask', 'query'],
-  'reponse': ['answer', 'response', 'solution'],
+  // (ligne 'reponse' dupliquée supprimée ici)
   'jeu': ['game', 'play', 'entertainment', 'challenge'],
   'niveau': ['level', 'stage', 'difficulty'],
   'thematique populaire': ['popular theme', 'trending topic'],
@@ -374,15 +376,13 @@ const Search = () => {
   );
 
   return (
-    <div className="container py-4 text-light">
+    <div className="container pt-custom pb-4 text-light">
+       
       <div style={{ padding: '20px', marginBottom: '20px', borderRadius: '8px' }}>
         <div>
           {hasQuery ? (
             <div className="d-flex gap-2 mb-3 align-items-start justify-content-start">
-              <p className="m-0 p-0" style={{ color: '#666' }}>
-                Résultats pour : "{qraw}"
-              </p>
-
+              
               {!loading && totalResults > 0 && (
                 <div className="d-flex align-items-center justify-content-center">
                   <p className="m-0 p-0" style={{ color: 'white' }}>
@@ -398,7 +398,7 @@ const Search = () => {
               )}
             </div>
           ) : (
-            <h3 className='text-center p-5 m-5' style={{ color: '#666' }}>Entrez un terme de recherche</h3>
+            <h3 className='text-center p-5 w-100' style={{ color: '#666' }}>Entrez un terme de recherche</h3>
           )}
         </div>
 
@@ -425,7 +425,7 @@ const Search = () => {
         )}
 
         {hasQuery && (
-          <div>
+          <div className="p-0 m-0">
             {!loading && results.thematics.length > 0 && (
               <div style={{ padding: '20px', marginBottom: '20px', borderRadius: '8px' }}>
                 <h3
@@ -454,7 +454,7 @@ const Search = () => {
                         {item.thematic_title || item.title || 'Sans titre'}
                       </h4>
                       <div className="d-flex gap-2 align-items-start">
-                        <div style={{ width: '100px', height: '100px' }}>
+                        <div style={{ maxWidth: '100px', maxHeight: '100px' }}>
                           {item.icon_url ? (
                             <img
                               src={item.icon_url}
@@ -465,7 +465,7 @@ const Search = () => {
                         </div>
                         <div>
                           {(item.thematic_description || item.description) && (
-                            <p className="m-0 p-0 d-flex flex-wrap w-75" style={{ color: '#666' }}>
+                            <p className="m-0 p-0 d-flex flex-wrap w-100" style={{ color: '#666' }}>
                               {item.thematic_description || item.description}
                             </p>
                           )}

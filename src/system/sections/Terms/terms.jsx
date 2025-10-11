@@ -155,23 +155,24 @@ function Terms() {
   ];
 
   // Gestion du scroll actif
-  useEffect(() => {
-    const handleScroll = () => {
-      const sectionsEls = document.querySelectorAll('section[id]');
-      let current = sections.length ? sections[0].id : 'cgu';
-      const offset = window.innerWidth < 900 ? 80 : 120;
-      sectionsEls.forEach((section) => {
-        const rect = section.getBoundingClientRect();
-        if (rect.top <= offset && rect.bottom >= offset) {
-          current = section.id;
-        }
-      });
-      setActiveSection(current);
-    };
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [sections]);
+  // (À retirer complètement) Ancien effet qui changeait l'active au scroll
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     const sectionsEls = document.querySelectorAll('section[id]');
+  //     let current = sections.length ? sections[0].id : 'cgu';
+  //     const offset = window.innerWidth < 900 ? 80 : 120;
+  //     sectionsEls.forEach((section) => {
+  //       const rect = section.getBoundingClientRect();
+  //       if (rect.top <= offset && rect.bottom >= offset) {
+  //         current = section.id;
+  //       }
+  //     });
+  //     setActiveSection(current);
+  //   };
+  //   window.addEventListener('scroll', handleScroll);
+  //   handleScroll();
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, [sections]);
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -194,41 +195,62 @@ function Terms() {
         </div>
       </div>
 
-      <div className="terms-layout">
+      <div className="terms-layout position-relative">
         {/* NAVIGATION */}
-        <nav className="terms-nav" aria-label="Navigation sections">
-          <h2 className="terms-nav-title text-start mb-4 text-secondary text-uppercase fs-6">
-            Navigation
-          </h2>
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => scrollToSection(section.id)}
-              className={`terms-nav-item ${activeSection === section.id ? 'active' : ''}`}
-              title={section.title}
-              aria-label={section.title}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') scrollToSection(section.id);
-              }}
-            >
-              <span aria-hidden="true">{section.icon}</span>{' '}
-              <span className="text-capitalize" style={{ marginLeft: 8 }}>
-                {section.title}
-              </span>
-            </button>
-          ))}
-        </nav>
-
+        <div className="terms-nav">
+          <nav
+            className="h-terms-nav d-flex flex-row flex-lg-column flex-nowrap gap-2 align-items-stretch"
+            aria-label="Navigation sections"
+            style={{
+              top: 0,
+              zIndex: 1000,
+              WebkitOverflowScrolling: 'touch',
+              overflowX: 'hidden',
+              overscrollBehavior: 'none',
+              background: 'rgba(0,0,0,0.35)',
+              backdropFilter: 'blur(6px)',
+              padding: '1rem',
+            }}
+          >
+            <h2 className="terms-nav-title text-start mb-4 text-secondary text-uppercase fs-6 d-none d-lg-block">
+              Navigation
+            </h2>
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`terms-nav-item ${activeSection === section.id ? 'active' : ''} rounded-pill text-truncate`}
+                title={section.title}
+                aria-label={section.title}
+                aria-current={activeSection === section.id ? 'page' : undefined}
+                tabIndex={0}
+                style={{ maxWidth: '80vw' }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setActiveSection(section.id);
+                  }
+                }}
+              >
+                <span aria-hidden="true">{section.icon}</span>{' '}
+                <span className="text-capitalize" style={{ marginLeft: 8 }}>
+                  {section.title}
+                </span>
+              </button>
+            ))}
+          </nav>
+        </div>
         {/* CONTENU */}
         <div className="terms-content">
           {loading && <div className="p-4 text-muted">Chargement des contenus...</div>}
           {error && <div className="p-4 text-danger">⚠️ {error}</div>}
-
           {!loading &&
             !error &&
             sections.map(({ id, icon, title, content }) => (
-              <section key={id} id={id} className="terms-section">
+              <section
+                key={id}
+                id={id}
+                className={`terms-section ${activeSection === id ? 'active' : ''}`}
+              >
                 <div className="terms-section-header">
                   <span className="terms-section-icon" aria-hidden="true">
                     {icon}
@@ -250,7 +272,7 @@ function Terms() {
             </div>
             <a
               href="/contact"
-              className="terms-contact-button"
+              className="terms-contact-button border-0 text-light"
               aria-label="Contacter le support FunQuiz"
             >
               Nous contacter

@@ -70,7 +70,7 @@ const Info = () => {
           }}
         >
           <h2 className="logo d-flex flex-column align-items-center text-center mb-3 text-glow">
-            <span className="Logo_funquiz color-shift">FunQuiz</span>
+            <span className="Logo_funquiz color-shift text-dark">FunQuiz</span>
             <span className="sous-log"></span>
           </h2>
 

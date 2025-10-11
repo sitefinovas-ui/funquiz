@@ -82,23 +82,45 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    const fetchThematics = async () => {
-      try {
-        const data = await thematicService.getAllThematics();
+  let isMounted = true; // pour éviter les setState après démontage
+
+  const fetchThematics = async () => {
+    try {
+      const data = await thematicService.getAllThematics();
+
+      if (isMounted && Array.isArray(data)) {
         setThematics(data);
-      } catch (error) {
-        console.error('Error fetching thematics:', error);
+      } else if (isMounted) {
+        console.warn('Aucune thématique trouvée ou mauvais format :', data);
+        setThematics([]); // on met un tableau vide par défaut
       }
-    };
-    fetchThematics();
-  }, []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des thématiques :', error);
+      if (isMounted) setThematics([]); // on évite de laisser undefined
+    }
+  };
+
+  fetchThematics();
+
+  // nettoyage à la fin
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   useEffect(() => {
     const fetchPoints = async () => {
       try {
         const response = await pointService.getAllUsersPoints();
         // response.data contient { success, data, total }
-        setPoints(response.data); // ou response.data.data selon ton service
+        setPoints(
+          Array.isArray(response?.data?.data)
+            ? response.data.data
+            : Array.isArray(response?.data)
+            ? response.data
+            : []
+        );
       } catch (error) {
         console.error('Error fetching points:', error);
       }
@@ -110,7 +132,14 @@ const Home = () => {
     const fetchFaqs = async () => {
       try {
         const data = await faqService.getAllFaq();
-        setFaqs(data);
+        // Normalise toujours en tableau (supporte {data: [...] } ou [...] ou autres)
+        setFaqs(
+          Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data)
+            ? data
+            : []
+        );
       } catch (error) {
         console.error('Error fetching FAQs:', error);
       }
@@ -132,11 +161,16 @@ const Home = () => {
   }, []);
 
   useEffect(()=>{
-    const fetchPub =async () => {
+    const fetchPub = async () => {
       try{
         const data = await pubService.list();
-        setPub(data)
-        console.log(data);
+        setPub(
+          Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data)
+            ? data
+            : []
+        );
       } catch (error) {
         console.error('Error fetching pub:', error);
       }
@@ -163,11 +197,15 @@ const Home = () => {
     }
   };
 
-  const approvedVisibleComments = (comments || []).filter((comment) => {
-    const isApproved = Number(comment.is_approved);
-    const isVisible = comment.is_visible !== undefined ? Number(comment.is_visible) : isApproved;
-    return isApproved === 1 && isVisible === 1;
-  });
+  const approvedVisibleComments = Array.isArray(comments)
+  ? comments.filter((comment) => {
+      const isApproved = Number(comment.is_approved);
+      const isVisible =
+        comment.is_visible !== undefined ? Number(comment.is_visible) : isApproved;
+      return isApproved === 1 && isVisible === 1;
+    })
+  : [];
+
   const showScroll = approvedVisibleComments.length >= 4;
 
   return (
@@ -426,108 +464,33 @@ const Home = () => {
           className="container-bulle d-flex align-items-center d-lg-none"
         >
           <div className="d-inline-flex gap-3" style={{ padding: '0 20px' }}>
-            <div
-              className="bulle-custom d-flex flex-column align-items-center"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div
-                style={{ width: '100px', height: '100px' }}
-                className="rounded-circle container-img-bulle overflow-hidden b-zero"
-              >
-                <img
-                  src="https://i.pinimg.com/736x/58/af/d6/58afd68fd0c3f3924455d74e86164eb7.jpg"
-                  className="w-100 h-100"
-                  alt=""
-                />
-              </div>
-              <p className="text-white pt-3">Musique</p>
-            </div>
-
-            <div
-              className="bulle-custom d-flex flex-column align-items-center"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div
-                style={{ width: '100px', height: '100px' }}
-                className="rounded-circle container-img-bulle overflow-hidden b-one"
-              >
-                <img
-                  src="https://i.pinimg.com/1200x/54/57/38/545738fc6c989280f7b1c0786222f496.jpg"
-                  className="w-100 h-100"
-                  alt=""
-                />
-              </div>
-              <p className="text-white pt-3">Sport</p>
-            </div>
-
-            <div
-              className="bulle-custom d-flex flex-column align-items-center"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div
-                style={{ width: '100px', height: '100px' }}
-                className="rounded-circle container-img-bulle overflow-hidden b-two"
-              >
-                <img
-                  src="https://i.pinimg.com/736x/65/76/a4/6576a4fa98f5f34c3ef0accc1e5c1f36.jpg"
-                  className="w-100 h-100"
-                  alt=""
-                />
-              </div>
-              <p className="text-white pt-3">Gastronomie</p>
-            </div>
-
-            <div
-              className="bulle-custom d-flex flex-column align-items-center"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div
-                style={{ width: '100px', height: '100px' }}
-                className="rounded-circle container-img-bulle overflow-hidden b-three"
-              >
-                <img
-                  src="https://i.pinimg.com/1200x/71/fd/2e/71fd2e527a4f2b006e80ac06844e3e3c.jpg"
-                  className="w-100 h-100"
-                  alt=""
-                />
-              </div>
-              <p className="text-white pt-3">Culture</p>
-            </div>
-
-            <div
-              className="bulle-custom d-flex flex-column align-items-center"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div
-                style={{ width: '100px', height: '100px' }}
-                className="rounded-circle container-img-bulle overflow-hidden b-four"
-              >
-                <img
-                  src="https://i.pinimg.com/736x/2a/9b/d3/2a9bd35abf540d14b9fb23de2c8ed540.jpg"
-                  className="w-100 h-100"
-                  alt=""
-                />
-              </div>
-              <p className="text-white pt-3">Le quotidien</p>
-            </div>
-
-            <div
-              className="bulle-custom d-flex flex-column align-items-center"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div
-                style={{ width: '100px', height: '100px' }}
-                className="rounded-circle container-img-bulle overflow-hidden b-five"
-              >
-                <img
-                  src="https://i.pinimg.com/1200x/d1/55/9d/d1559d46cdc371704292d403d66f4777.jpg"
-                  className="w-100 h-100"
-                  alt=""
-                />
-              </div>
-              <p className="text-white pt-3">Langue</p>
-            </div>
+  {Array.isArray(thematics) &&
+    thematics
+      .map((thematic) => (
+        <div
+          key={thematic.thematic_id}
+          className="bulle-custom d-flex flex-column align-items-center"
+          style={{ scrollSnapAlign: 'center' }}
+        >
+          <div
+            style={{
+              width: '100px',
+              height: '100px',
+              background: thematic.color_code,
+            }}
+            className="rounded-circle container-img-bulle overflow-hidden b-zero"
+          >
+            <img
+              src={thematic.icon_url}
+              className="w-100 h-100"
+              alt={thematic.thematic_title}
+            />
           </div>
+          <p className="text-white pt-3">{thematic.thematic_title}</p>
+        </div>
+      ))}
+</div>
+
         </div>
       </section>
 
@@ -561,7 +524,7 @@ const Home = () => {
 
             {/* Image utilisateur */}
             <div className="user-img-container w-100 position-absolute bottom-0">
-              {points.length > 0 && points[0] ? (
+              {Array.isArray(points) && points.length > 0 && points[0] ? (
                 <>
                   <div style={{ height: '100px' }} className="">
                     <img
@@ -588,7 +551,7 @@ const Home = () => {
             <span className="notif-badge">
               <img src={secondPrice} alt="badge" className="badge-img" />
             </span>
-            {points.length > 1 && points[1] ? (
+            {Array.isArray(points) && points.length > 1 && points[1] ? (
               <div className="user-img-container position-absolute bottom-0">
                 <img
                   src={points[1].avatar_url}
@@ -612,7 +575,7 @@ const Home = () => {
             <span className="notif-badge">
               <img src={threePrice} alt="badge" className="badge-img p-0 m-0 w-100 h-100" />
             </span>
-            {points.length > 2 && points[2] ? (
+            {Array.isArray(points) && points.length > 2 && points[2] ? (
               <div className="user-img-container position-absolute bottom-0">
                 <img
                   src={points[2].avatar_url}
@@ -707,7 +670,7 @@ const Home = () => {
           <h2 style={{color: 'var(--site-text)'}} className="text-center mb-4 fs-4">Les questions fréquentes</h2>
 
           <div className="faq-list">
-            {faqs.length === 0 ? (
+            {(!Array.isArray(faqs) || faqs.length === 0) ? (
               <p className="text-light">Aucune FAQ disponible pour le moment.</p>
             ) : (
               faqs.slice(0, 4).map((faq, index) => (
@@ -733,68 +696,75 @@ const Home = () => {
       </section>
 
       {/* PUB */}
-      <section className="section px-5 mt-4 mb-4  w-100">
+      <section className="section px-5 mt-4 mb-5  w-100">
         <div className="">
           <div className="">
-            {pub
-            .filter(item => item.statut === 'actif')
-            .map((item, index) => (
-              <div key={index} className="">
-                
-                <div className="d-flex align-items-start justify-content-between gap-5 h-100">
-                  <div style={{width: '46vw', height: '500px'}} className=" rounded-5 overflow-hidden ">
-                    <img src={item.image_url} className="img-fluid object-fit-cover w-100 h-100" alt={item.titre} />
-                  </div>
-                  <div style={{maxWidth: '46vw'}} className="card-body">
-                    <div className="">
-                      <h2 className="text-focuss position-relative w-100" style={{
-                        fontSize: '1.5rem',
-                        fontWeight: '500',
-                        lineHeight: '1.3',
-                        letterSpacing: '0.5px',
-                        color: 'var(--site-text)',
-                      }}>
-                        En ce moment !
-                      </h2>
-                      
+            {Array.isArray(pub) && pub.length > 0 ? (
+              pub
+                .filter(item => item.statut === 'actif')
+                .map((item, index) => (
+                  <div key={index} className="">
+                    
+                    <div className="d-flex flex-lg-row flex-column align-items-start justify-content-between gap-5 w-100  h-100">
+                      <div style={{width: '100%', height: '500px'}} className=" rounded-5 overflow-hidden ">
+                        <img src={item.image_url} className="img-fluid object-fit-cover w-100 h-100" alt={item.titre} />
+                      </div>
+                      <div style={{maxWidth: '100%'}} className="card-body">
+                        <div className="">
+                          <h2 className="text-focuss position-relative w-100" style={{
+                            fontSize: '1.5rem',
+                            fontWeight: '500',
+                            lineHeight: '1.3',
+                            letterSpacing: '0.5px',
+                            color: 'var(--site-text)',
+                          }}>
+                            En ce moment !
+                          </h2>
+                          
+                        </div>
+                        <div className="mb-5">
+                          <h2
+                            style={{ color: 'var(--site-text)' }}
+                            className="card-title fs-md-1"
+                          >
+                            {item?.titre ?? 'Titre indisponible'}
+                          </h2>
+                          <small className="text-muted">
+                              Publié le {new Date(item.created_at).toLocaleDateString()}
+                          </small>
+                        </div>
+                          <p style={{textAlign: 'justify',fontSize: '1.2rem', color: 'var(--site-text-muted)'}} className="card-text w-100 w-lg-75 mb-5">{item.description}</p>
+                          <p style={{textAlign: 'justify',fontSize: '1.2rem', color: 'var(--site-text-muted)'}} className="card-text w-100 d-flex flex-wrap gap-2">
+                            
+                            <small className="text-light bg-danger rounded-pill py-1 px-2">
+                              Du {formatDateFr(item.date_debut)}
+                            </small>
+                            <small className="text-light bg-danger rounded-pill py-1 px-2">
+                              au {formatDateFr(item.date_fin)}
+                            </small>
+                            
+                            
+                          </p>
+                        </div>
                     </div>
-                    <div className="mb-5">
-                      <h2 style={{fontSize: '3rem', color: 'var(--site-text)'}} className="card-title ">{item.titre} </h2>
-                      <small className="text-muted">
-                          Publié le {new Date(item.created_at).toLocaleDateString()}
-                      </small>
-                    </div>
-                    <p style={{fontSize: '1.2rem', color: 'var(--site-text-muted)'}} className="card-text w-75 mb-5">{item.description}</p>
-                    <p style={{fontSize: '1.2rem', color: 'var(--site-text-muted)'}} className="card-text w-75 d-flex flex-wrap gap-2">
-                       
-                      <small className="text-muted">
-                         Du {formatDateFr(item.date_debut)}
-                      </small>
-                      <small className="text-muted">
-                         au {formatDateFr(item.date_fin)}
-                      </small>
-                      
-                       
-                    </p>
-                   
                   </div>
-                </div>
+                ))
+            ) : (
+              <p className="text-light">Aucune publicité active pour le moment.</p>
+            )}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
       </section>
 
       {/* GOOGLE OPINIONS */}
-      <section className="section py-5">
+      <section className="section py-3 px-4">
         {/* Header */}
         <div className="container text-center mb-4">
           <div className="d-flex align-items-center justify-content-center gap-3">
             <img src={google} width={50} height={50} alt="Google logo" className="img-fluid" />
-            <h2 style={{color: 'var(--site-text)'}} className="m-0 fw-bold d-flex align-items-center gap-2">
-              Google
-              <span
-                className="fw-normal"
+            <h2 style={{color: 'var(--site-text)'}} className="m-0 fw-bold title-custom d-flex">
+              <span className="fw-bold title-span">Google</span>
+              <span className="fw-normal text-start"
                 style={{
                   background: 'linear-gradient(145deg, rgb(158, 4, 4), rgb(79, 178, 18))',
                   WebkitBackgroundClip: 'text',
@@ -876,7 +846,7 @@ const Home = () => {
           ) : (
             <div className="row g-3">
               {approvedVisibleComments.slice(0, 3).map((comment, index) => (
-                <div key={comment.comment_id ?? index} className="col-12 col-md-6 col-lg-4">
+                <div key={comment.comment_id ?? index} className="col-12  col-md-6 col-lg-4">
                   <div
                     className={`comment-card ${hoveredIndex === index ? 'hovered' : ''}`}
                     onMouseEnter={() => setHoveredIndex(index)}
@@ -959,6 +929,7 @@ const Home = () => {
           {message && <p className="mt-3 text-light position-absolute bottom-0">{message}</p>}
         </div>
       </section>
+      
     </div>
   );
 };

@@ -20,6 +20,7 @@ const Footer = ({ openPopup }) => {
   const isSignUp = location.pathname === '/sign-up';
   const isDash = location.pathname.startsWith('/dashboard');
   const isTerms = location.pathname === '/terms';
+  const isSearch = location.pathname === '/search';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,8 +50,8 @@ const Footer = ({ openPopup }) => {
 
   return (
     <>
-      {!isGame && !isDash && !isLogin && !isSignUp && (
-        <footer className="footer-funquiz pt-5">
+      {!isGame && !isSearch && !isDash && !isLogin && !isSignUp && (
+        <footer className="footer-funquiz rounded-5 pt-5">
           {!isTerms && (
             <div className="container">
               <div className="row g-4">
@@ -77,12 +78,12 @@ const Footer = ({ openPopup }) => {
                 {/* === Liens rapides === */}
                 <div className="col-lg-2 col-md-6">
                   <h3 className="footer-title">{t('footer.quick_links')}</h3>
-                  <ul className="footer-links">
+                  <ul className="footer-links d-flex flex-lg-column flex-wrap gap-2">
                     <li>
                       <Link to="/">{t('footer.home')}</Link>
                     </li>
                     <li>
-                      <Link to="/#" onClick={() => openPopup('thematic')}>
+                      <Link onClick={() => openPopup('thematic')}>
                         {t('footer.quiz')}
                       </Link>
                     </li>
@@ -90,7 +91,7 @@ const Footer = ({ openPopup }) => {
                       <Link to="/classements">{t('footer.ranking')}</Link>
                     </li>
                     <li>
-                      <Link to="/about">À propos</Link>
+                      <Link className='' to="/about">À propos</Link>
                     </li>
                     <li>
                       <Link to="/contact">{t('footer.contact')}</Link>
@@ -107,9 +108,9 @@ const Footer = ({ openPopup }) => {
                 {/* === Support === */}
                 <div className="col-lg-2 col-md-6">
                   <h3 className="footer-title">{t('footer.support')}</h3>
-                  <ul className="footer-links">
+                  <ul className="footer-links d-flex flex-lg-column flex-wrap gap-2">
                     <li>
-                      <Link to="/faq">FAQ</Link>
+                      <Link to="/terms">FAQ</Link>
                     </li>
                     <li>
                       <Link to="/terms">Politique de confidentialité</Link>
@@ -121,7 +122,7 @@ const Footer = ({ openPopup }) => {
                 </div>
 
                 {/* === Newsletter === */}
-                <div className="col-lg-4 col-md-6">
+                <div className="col-lg-4 col-md-6 d-none d-lg-block">
                   <h3 className="footer-title">Newsletter</h3>
                   <p className="mb-4">
                     Recevez les derniers quiz et astuces directement dans votre boîte mail !
@@ -130,7 +131,7 @@ const Footer = ({ openPopup }) => {
                     <form onSubmit={handleSubmit} className="input-group">
                       <input
                         type="email"
-                        className="form-control rounded-pill newsletter-input"
+                        className="form-control rounded-pill m-0 newsletter-input"
                         placeholder="Votre email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -158,7 +159,7 @@ const Footer = ({ openPopup }) => {
             </div>
           )}
           {/* === Footer Bottom === */}
-          <div className="footer-bottom py-3 mt-5">
+          <div className="footer-bottom py-3">
             <div className="container">
               <div className="row">
                 <div className="col-md-6">
@@ -171,6 +172,7 @@ const Footer = ({ openPopup }) => {
                 </div>
               </div>
             </div>
+            <div style={{ height: '100px',  }} className="bottom-custom"></div>
           </div>
         </footer>
       )}

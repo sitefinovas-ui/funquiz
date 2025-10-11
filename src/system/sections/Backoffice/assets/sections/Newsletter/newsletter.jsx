@@ -1,9 +1,10 @@
+// En-tête du fichier NewsletterDashboard
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { jwtDecode } from 'jwt-decode';
 import newsletterService from '../../../../../configurations/Services/newsletterServices';
-import './newsletter.css';
+import './Newsletter.css';
 
 const NewsletterDashboard = () => {
   const [newsletters, setNewsletters] = useState([]);

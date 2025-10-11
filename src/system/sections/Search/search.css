@@ -136,4 +136,7 @@
   .result-section {
     padding: 20px;
   }
+  .pt-custom {
+    padding-top: 6rem;
+  }
 }

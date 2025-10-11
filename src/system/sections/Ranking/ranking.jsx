@@ -31,7 +31,7 @@ const Ranking = () => {
       {/* Header classement */}
       <div
         style={{ height: '17rem' }}
-        className="d-flex align-items-center justify-content-center container-raking w-100 mb-5"
+        className="d-flex align-items-center justify-content-center container-raking w-100 "
       >
         <img
           src={rocket}
@@ -40,7 +40,7 @@ const Ranking = () => {
           className="ms-5 d-none d-lg-block"
           alt="icon rocket"
         />
-        <div className="container d-flex w-50 flex-column align-items-center justify-content-center">
+        <div className="container d-flex w-100 w-lg-50 flex-column align-items-center justify-content-center">
           <h1 className="fs-custom-raking">Classement</h1>
           <p className="text-muted-custom-desk text-center">
             Retrouvez ici le classement des meilleurs joueurs, mis à jour en temps réel en fonction
@@ -57,14 +57,12 @@ const Ranking = () => {
       </div>
 
       {/* Top 3 joueurs */}
-      <div className="ranking-content gap-4 w-100 d-flex align-items-center justify-content-center">
+      <div
+        className="ranking-content gap-2 w-100 d-flex flex-row flex-nowrap align-items-center justify-content-between pt-5">
         {/* 2ème */}
         {rankingData.length > 1 && (
           <div className="j-2 align-items-center justify-content-center d-flex flex-column">
-            <div
-              style={{ width: '190px', height: '190px' }}
-              className="user-animation rounded-circle overflow-hidden"
-            >
+            <div className="user-animation rounded-circle overflow-hidden">
               <img
                 src={rankingData[1].avatar_url}
                 className="w-100 h-100 objectif-fit-cover"
@@ -79,7 +77,6 @@ const Ranking = () => {
             </span>
           </div>
         )}
-
         {/* 1er */}
         {rankingData.length > 0 && (
           <div className="position-relative">
@@ -97,7 +94,6 @@ const Ranking = () => {
 
             <div className="card-cus-raking align-items-center justify-content-center mx-3 d-flex flex-column">
               <div
-                style={{ width: '230px', height: '230px' }}
                 className="user-animation bg-success j-1 rounded-circle overflow-hidden b-2"
               >
                 <img
@@ -115,14 +111,10 @@ const Ranking = () => {
             </div>
           </div>
         )}
-
         {/* 3ème */}
         {rankingData.length > 2 && (
           <div className="align-items-center justify-content-center d-flex flex-column j-3">
-            <div
-              style={{ width: '190px', height: '190px' }}
-              className=" user-animation rounded-circle overflow-hidden"
-            >
+            <div className="user-animation rounded-circle overflow-hidden">
               <img
                 src={rankingData[2].avatar_url}
                 className="w-100 h-100 objectif-fit-cover"
