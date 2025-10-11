@@ -39,8 +39,8 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        "https://funquiz-qbytccogo-theb20s-projects.vercel.app/",
-        process.env.BASE_URL, // front en prod
+        process.env.URL_FRONT,
+        process.env.BASE_URL, 
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
