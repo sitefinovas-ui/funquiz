@@ -40,7 +40,7 @@ app.use(
     origin: function(origin, callback) {
       const allowedOrigins = [
         "http://localhost:5173", // dev local
-        "https://funquiz-qbytccogo-theb20s-projects.vercel.app" // front prod Vercel
+        "https://funquiz-two.vercel.app" // front prod Vercel
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
