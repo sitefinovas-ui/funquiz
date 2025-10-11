@@ -39,10 +39,6 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:5173", // front local Vite
-        "https://accounts.google.com",
-        "https://googleusercontent.com",
         "https://funquiz-qbytccogo-theb20s-projects.vercel.app/",
         process.env.BASE_URL, // front en prod
       ];
