@@ -52,6 +52,7 @@ export const getUserPoints = async (req, res) => {
   try {
     const { user_id } = req.params;
     const data = await getUserTotalPoints(user_id);
+    // On renvoie tel quel, déjà typé côté modèle
     res.json(data);
   } catch (error) {
     console.error(error);

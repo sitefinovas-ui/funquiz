@@ -122,7 +122,7 @@ export const getUserTotalPoints = async (user_id) => {
     [user_id],
   );
 
-  return (
+  const base = (
     rows[0] || {
       user_id,
       full_name: "",
@@ -130,6 +130,133 @@ export const getUserTotalPoints = async (user_id) => {
       total_games_played: 0,
     }
   );
+
+  const LEVEL_THRESHOLDS = [0, 100, 250, 450, 700, 1000, 1350, 1750];
+  const total = Number(base.total_points) || 0;
+
+  const computeLevel = (t) => {
+    let lvl = 1;
+    for (let i = 1; i < LEVEL_THRESHOLDS.length; i++) {
+      if (t >= LEVEL_THRESHOLDS[i]) lvl = i + 1;
+      else break;
+    }
+    return lvl;
+  };
+
+  const level = computeLevel(total);
+  const prevThreshold = LEVEL_THRESHOLDS[Math.max(0, level - 1)];
+  const nextThreshold = LEVEL_THRESHOLDS[Math.min(level, LEVEL_THRESHOLDS.length - 1)];
+  const next_level_xp = Math.max(0, nextThreshold - total);
+  const xp_in_level = Math.max(0, total - prevThreshold);
+  const level_span = Math.max(1, nextThreshold - prevThreshold);
+
+  // Helpers robustes pour manipuler les dates en UTC (format YYYY-MM-DD)
+  const toYMD = (input) => {
+    if (!input) return null;
+    let d;
+    if (input instanceof Date) {
+      d = new Date(Date.UTC(
+        input.getUTCFullYear(),
+        input.getUTCMonth(),
+        input.getUTCDate()
+      ));
+    } else if (typeof input === 'string') {
+      const m = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) {
+        d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+      } else {
+        // Fallback parse: peut être 'YYYY-MM-DDTHH:MM:SSZ' ou autre ISO
+        const tmp = new Date(input);
+        if (isNaN(tmp.getTime())) return null;
+        d = new Date(Date.UTC(
+          tmp.getUTCFullYear(),
+          tmp.getUTCMonth(),
+          tmp.getUTCDate()
+        ));
+      }
+    } else {
+      return null;
+    }
+    if (isNaN(d.getTime())) return null;
+    const y = d.getUTCFullYear();
+    const m2 = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m2}-${dd}`;
+  };
+
+  const minusOneDay = (input) => {
+    const ymd = toYMD(input);
+    if (!ymd) return null;
+    const [yStr, mStr, dStr] = ymd.split('-');
+    const d = new Date(Date.UTC(+yStr, +mStr - 1, +dStr));
+    d.setUTCDate(d.getUTCDate() - 1);
+    const y = d.getUTCFullYear();
+    const m2 = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m2}-${dd}`;
+  };
+
+  const [daysRows] = await db.query(
+    `
+    SELECT DATE(played_at) AS day
+    FROM quiz_game_history
+    WHERE user_id = ?
+    GROUP BY day
+    ORDER BY day DESC
+    `,
+    [user_id]
+  );
+
+  // Normalise toutes les valeurs jour et filtre les invalides
+  const dayStrings = daysRows
+    .map((r) => toYMD(r.day))
+    .filter(Boolean);
+
+  const daySet = new Set(dayStrings);
+
+  // Série courante: consécutive terminant au dernier jour d'activité
+  let current_streak = 0;
+  if (dayStrings.length > 0) {
+    let cursor = dayStrings[0]; // dernier jour d'activité (max)
+    while (cursor && daySet.has(cursor)) {
+      current_streak += 1;
+      cursor = minusOneDay(cursor);
+    }
+  }
+
+  // Meilleure série historique (optionnel)
+  let best_streak = 0;
+  for (let i = 0; i < dayStrings.length; i++) {
+    let count = 1;
+    let cur = dayStrings[i];
+    let prev = minusOneDay(cur);
+    while (prev && daySet.has(prev)) {
+      count += 1;
+      cur = prev;
+      prev = minusOneDay(cur);
+    }
+    if (count > best_streak) best_streak = count;
+  }
+
+  // ➜ Correction : utiliser la colonne existante 'correct_answers'
+  const [correctRows] = await db.query(
+    `SELECT COALESCE(SUM(correct_answers), 0) AS total_correct_answers
+     FROM quiz_game_history
+     WHERE user_id = ?`,
+    [user_id]
+  );
+  const total_correct_answers = Number(correctRows?.[0]?.total_correct_answers) || 0;
+
+  return {
+    ...base,
+    level,
+    next_level_xp,
+    xp_in_level,
+    level_span,
+    current_streak,
+    best_streak,
+    total_correct_answers,
+  };
 };
 
 export const getAllUsersTotalPoints = async () => {
