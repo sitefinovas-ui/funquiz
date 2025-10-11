@@ -33,12 +33,13 @@ app.use(express.json());
 app.use(logger);
 app.use(
   cors({
-    origin: function(origin, callback) {
+    origin: function (origin, callback) {
       console.log('🔒 Requête CORS reçue depuis:', origin);
+
       const allowedOrigins = [
-        "https://funquiz-front.onrender.com/",
+        "https://funquiz-front.onrender.com", 
       ];
-      
+
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -48,7 +49,7 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-  }),
+  })
 );
 
 // -----------------------------
