@@ -15,6 +15,7 @@ import ThemeSwitcherAdminPage from './../../components/ThemeSwitcher/theme-switc
 
 function Dashboard() {
   return (
+    // Backoffice
     <PopupProvider>
       <Routes>
         <Route element={<LayoutDash />}>
