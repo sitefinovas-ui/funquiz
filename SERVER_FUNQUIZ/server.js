@@ -36,13 +36,7 @@ app.use(
     origin: function(origin, callback) {
       console.log('🔒 Requête CORS reçue depuis:', origin);
       const allowedOrigins = [
-        "http://localhost:30",
-        "http://localhost:63",
-        "http://localhost:5173", // Vite default
-        "http://192.168.1.63:31",
-        "http://192.168.1.63:5100",
-        "https://accounts.google.com",
-        "https://googleusercontent.com",
+        "https://funquiz-front.onrender.com/",
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
