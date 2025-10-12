@@ -515,6 +515,7 @@ export const logout = (req, res) => {
     (secure = true),
     (sameSite = "None"),
   );
+  res.redirect(`${process.env.FRONTEND_URL}`);
 };
 
 // -----------------------------
