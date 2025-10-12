@@ -83,12 +83,13 @@ app.use(
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
       const allowedOrigins = [
-        "https://funquiz-flnr.onrender.com",
-        process.env.FRONTEND_URL,
+        "https://funquiz-7k43.onrender.com", // production Render
+        "http://localhost:31",              // dev local (port Vite)
+        process.env.FRONTEND_URL,             // variable d'environnement si définie
       ].filter(Boolean);
 
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true); // origine autorisée
+        callback(null, true);
       } else {
         console.error("❌ Origine non autorisée:", origin);
         callback(new Error("Origin not allowed"));
@@ -98,6 +99,7 @@ app.use(
     credentials: true,
   })
 );
+
 
 
 // -----------------------------
