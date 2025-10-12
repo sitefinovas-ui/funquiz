@@ -65,6 +65,12 @@
 .nav-text {
   font-size: 0.9rem;
   transition: all 0.2s ease;
+  /* Réduit la surface pour éviter que le nav devienne LCP */
+  flex: 0 0 auto;
+  max-width: 40vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .avatar-wrapper {
@@ -182,4 +188,11 @@
   width: 3px;
   background-color: var(--brand-accent-strong);
   border-radius: 0 3px 3px 0;
+}
+
+/* Optimisation rendu du contenu principal (réduit LCP) */
+.content-wrapper {
+  /* Diffère le rendu hors écran sans impacter le header */
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
 }

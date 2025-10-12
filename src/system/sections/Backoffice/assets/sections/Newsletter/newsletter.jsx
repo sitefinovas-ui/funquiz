@@ -127,12 +127,12 @@ const NewsletterDashboard = () => {
     <div className="newsletter-dashboard">
       {/* Filtres */}
       <div className="filters-section card p-3 mb-4">
-        <h5>Filtres</h5>
+        <h5 className="text-dark">Filtres</h5>
         <div className="row g-3">
           <div className="col-md-3">
             <input
               type="text"
-              className="form-control"
+              className="form-control-custom"
               placeholder="Rechercher par email..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -140,7 +140,7 @@ const NewsletterDashboard = () => {
           </div>
           <div className="col-md-3">
             <select
-              className="form-select"
+              className="form-select border text-dark"
               value={filters.confirmed}
               onChange={(e) => setFilters({ ...filters, confirmed: e.target.value })}
             >
@@ -152,7 +152,7 @@ const NewsletterDashboard = () => {
           <div className="col-md-3">
             <input
               type="date"
-              className="form-control"
+              className="form-control-custom"
               placeholder="Date début"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
@@ -161,7 +161,7 @@ const NewsletterDashboard = () => {
           <div className="col-md-3">
             <input
               type="date"
-              className="form-control"
+              className="form-control-custom"
               placeholder="Date fin"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}

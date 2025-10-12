@@ -5,6 +5,7 @@ import {
   TrophyOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  FileTextOutlined, // Nouvelle icône pour les thématiques
 } from '@ant-design/icons';
 import quizStatsServices from '../../../../../configurations/Services/quizStatsServices.js';
 import './QuizStats.css';
@@ -12,14 +13,48 @@ import './QuizStats.css';
 const QuizStats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [globalStats, setGlobalStats] = useState(null);
+  const [globalStats, setGlobalStats] = useState({
+    totalUsers: 0,
+    totalQuestions: 0,
+    activeThematics: 0,
+    averageSuccessRate: 0,
+    averageScore: 0, // ajout: score moyen (%)
+  });
   const [thematicStats, setThematicStats] = useState([]);
   const [rankings, setRankings] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [showHeavy, setShowHeavy] = useState(false); // ajout: différer rendu lourd
+
+  // Couleurs pour les icônes globales (correspondant au CSS)
+  const iconColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  const thematicColor = '#6366f1'; // Couleur unique pour les thématiques
+
+  // Utilitaires d'affichage robustes
+  const formatInt = (v) => Number(v ?? 0);
+  const formatPercent = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toFixed(1) : '0.0';
+  };
 
   useEffect(() => {
     fetchAllStats();
+    // Diffère le rendu des sections lourdes pour améliorer LCP
+    const run = () => setShowHeavy(true);
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(run, { timeout: 1000 });
+    } else {
+      setTimeout(run, 150);
+    }
   }, []);
+
+  const asNumber = (val, field) => {
+    const v = Number(val);
+    if (!Number.isFinite(v)) {
+      console.warn(`[QuizStats] Champ ${field} invalide`, val);
+      return 0;
+    }
+    return v;
+  };
 
   const fetchAllStats = async () => {
     try {
@@ -31,42 +66,48 @@ const QuizStats = () => {
         quizStatsServices.getRecentActivity(),
       ]);
 
-      // Mapping des statistiques globales en cohérence avec le backend
-      const g = global?.data || {};
+      const rawGlobal = global?.data ?? global ?? {};
+      const g = Array.isArray(rawGlobal) ? (rawGlobal[0] || {}) : rawGlobal || {};
+
+      ['total_participants', 'total_questions', 'active_thematics', 'avg_success_rate', 'avg_score'].forEach((k) => {
+        if (!(k in g)) console.warn(`[QuizStats] Champ manquant dans /stats/global: ${k}`);
+      });
+
       setGlobalStats({
-        totalUsers: g.total_participants ?? 0,
-        completedQuizzes: g.total_quizzes ?? 0,
-        averageSuccessRate: g.avg_success_rate ?? 0,
-        // Utilise avg_score comme "Score moyen" (%)
-        averageCompletionTime: g.avg_score ?? 0,
+        totalUsers: asNumber(g.total_participants, 'total_participants'),
+        totalQuestions: asNumber(g.total_questions, 'total_questions'),
+        activeThematics: asNumber(g.active_thematics, 'active_thematics'),
+        averageSuccessRate: asNumber(g.avg_success_rate, 'avg_success_rate'),
+        averageScore: asNumber(g.avg_score, 'avg_score'),
       });
 
       // Statistiques par thématique
-      const thematicsData = (thematics?.data || []).map((t) => ({
+      const thematicsData = (thematics?.data || thematics || []).map((t) => ({
         id: t.thematic_id,
         name: t.thematic_title,
-        completedQuizzes: t.quiz_count,
-        successRate: t.success_rate,
+        completedQuizzes: formatInt(t.quiz_count),
+        successRate: t.success_rate ? Number(t.success_rate) : 0,
       }));
       setThematicStats(thematicsData);
 
       // Classement des utilisateurs
-      const rankingsData = (rank?.data || []).map((r) => ({
+      const rankingsData = (rank?.data || rank || []).map((r) => ({
         user_id: r.user_id,
-        username: r.full_name || r.username,
-        score: r.total_points ?? 0,
+        username: r.full_name || r.username || 'Anonyme',
+        score: formatInt(r.total_points),
       }));
       setRankings(rankingsData);
 
       // Activité récente
-      const activityData = (activity?.data || []).map((a) => ({
+      const activityData = (activity?.data || activity || []).map((a) => ({
         history_id: a.history_id,
         date: a.played_at,
-        username: a.full_name || a.username,
+        username: a.full_name || a.username || 'Anonyme',
         quizName: `${a.quiz_title} · ${a.thematic_title}`,
         score: `${a.score}/${a.max_score}`,
       }));
       setRecentActivity(activityData);
+
     } catch (err) {
       setError('Erreur lors du chargement des statistiques');
       console.error(err);
@@ -75,15 +116,23 @@ const QuizStats = () => {
     }
   };
 
-  if (loading) return <Spin size="large" className="stats-loader" />;
-  if (error) return <Alert message={error} type="error" />;
+  if (loading) return <Spin size="large" className="stats-loader" style={{ display: 'block', margin: '50px auto' }} />;
+  if (error) return <Alert message={error} type="error" showIcon />;
 
+  // Colonnes du classement
   const rankColumns = [
     {
       title: 'Rang',
       dataIndex: 'rank',
       key: 'rank',
-      render: (text, record, index) => index + 1,
+      // Style professionnel pour les premiers rangs
+      render: (text, record, index) => {
+        const rank = index + 1;
+        if (rank === 1) return <TrophyOutlined style={{ color: '#ffd700', fontSize: '16px' }} />;
+        if (rank === 2) return <TrophyOutlined style={{ color: '#c0c0c0', fontSize: '16px' }} />;
+        if (rank === 3) return <TrophyOutlined style={{ color: '#cd7f32', fontSize: '16px' }} />;
+        return rank;
+      },
     },
     {
       title: 'Utilisateur',
@@ -91,33 +140,42 @@ const QuizStats = () => {
       key: 'username',
     },
     {
-      title: 'Score',
+      title: 'Score Total',
       dataIndex: 'score',
       key: 'score',
+      sorter: (a, b) => a.score - b.score,
+      defaultSortOrder: 'descend',
     },
   ];
 
+  // Colonnes de l'activité récente
   const activityColumns = [
     {
       title: 'Date',
       dataIndex: 'date',
       key: 'date',
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => new Date(date).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      }),
+      width: 100,
     },
     {
       title: 'Utilisateur',
       dataIndex: 'username',
       key: 'username',
+      ellipsis: true,
     },
     {
       title: 'Quiz',
       dataIndex: 'quizName',
       key: 'quizName',
+      ellipsis: true,
     },
     {
       title: 'Score',
       dataIndex: 'score',
       key: 'score',
+      width: 80,
     },
   ];
 
@@ -125,83 +183,98 @@ const QuizStats = () => {
     <div className="quiz-stats-container">
       <h1>Tableau de bord des Quiz</h1>
 
-      {/* Statistiques globales */}
-      <Row gutter={16} className="stats-row">
-        <Col span={6}>
+      {/* Statistiques globales (4 Cards) */}
+      <Row gutter={[24, 24]} className="stats-row">
+        <Col xs={24} sm={12} lg={6}>
           <Card>
-            <UserOutlined className="stats-icon" />
-            <h3 className="fs-6">Utilisateurs totaux</h3>
-            <p className="stats-number">{globalStats?.totalUsers || 0}</p>
+            <UserOutlined className="stats-icon" style={{ color: iconColors[0] }} />
+            <h3 className="fs-6">Participants Totaux</h3>
+            <p className="stats-number">{Number(globalStats?.totalUsers ?? 0).toLocaleString('fr-FR')}</p>
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <Card>
-            <TrophyOutlined className="stats-icon" />
-            <h3 className="fs-6">Quiz complétés</h3>
-            <p className="stats-number">{globalStats?.completedQuizzes || 0}</p>
+            <FileTextOutlined className="stats-icon" style={{ color: iconColors[1] }} />
+            <h3 className="fs-6">Questions Totales</h3>
+            <p className="stats-number">{Number(globalStats?.totalQuestions ?? 0).toLocaleString('fr-FR')}</p>
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <Card>
-            <CheckCircleOutlined className="stats-icon" />
-            <h3 className="fs-6">Taux de réussite moyen</h3>
-            <p className="stats-number">{globalStats?.averageSuccessRate || 0}%</p>
+            <TrophyOutlined className="stats-icon" style={{ color: iconColors[2] }} />
+            <h3 className="fs-6">Thématiques Actives</h3>
+            <p className="stats-number">{Number(globalStats?.activeThematics ?? 0).toLocaleString('fr-FR')}</p>
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <Card>
-            <ClockCircleOutlined className="stats-icon" />
-            <h3 className="fs-6">Score moyen</h3>
-            <p className="stats-number">{globalStats?.averageCompletionTime || 0}%</p>
+            <CheckCircleOutlined className="stats-icon" style={{ color: iconColors[3] }} />
+            <h3 className="fs-6">Réussite Moyenne</h3>
+            <p className="stats-number">{Number.isFinite(Number(globalStats?.averageSuccessRate)) ? Number(globalStats?.averageSuccessRate).toFixed(1) : '0.0'}%</p>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <ClockCircleOutlined className="stats-icon" style={{ color: iconColors[3] }} />
+            <h3 className="fs-6">Score Moyen (%)</h3>
+            <p className="stats-number">{Number.isFinite(Number(globalStats?.averageScore)) ? Number(globalStats?.averageScore).toFixed(1) : '0.0'}%</p>
           </Card>
         </Col>
       </Row>
 
-      {/* Statistiques par thématique */}
-      <Row gutter={16} className="stats-row">
-        <Col span={12}>
-          <Card title="Top du classement">
-            <Table
-              dataSource={rankings}
-              columns={rankColumns}
-              pagination={false}
-              size="small"
-              rowKey="user_id"
-            />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="Activité récente">
-            <Table
-              dataSource={recentActivity}
-              columns={activityColumns}
-              pagination={false}
-              size="small"
-              rowKey="history_id"
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Classement et Activité Récente (2 Tables) — différé pour LCP */}
+      {showHeavy && (
+        <Row gutter={[24, 24]} className="stats-row">
+          <Col xs={24} lg={12}>
+            <Card title="Top 10 du classement" bodyStyle={{ padding: '0px' }}>
+              <Table
+                dataSource={rankings.slice(0, 10)}
+                columns={rankColumns}
+                pagination={false}
+                size="small"
+                rowKey="user_id"
+                scroll={{ y: 300 }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} lg={12}>
+            <Card title="Activité récente" bodyStyle={{ padding: '0px' }}>
+              <Table
+                dataSource={recentActivity.slice(0, 10)}
+                columns={activityColumns}
+                pagination={false}
+                size="small"
+                rowKey="history_id"
+                scroll={{ y: 300 }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
-      {/* Statistiques par thématique */}
-      <Row className="stats-row">
-        <Col span={24}>
-          <Card title="Statistiques par thématique">
-            <Row gutter={[16, 16]}>
-              {thematicStats.map((thematic) => (
-                <Col span={8} key={thematic.id}>
-                  <Card size="small">
-                    {/* Icône supprimée (non fournie par l'API) */}
-                    <h4>{thematic.name}</h4>
-                    <p>Quiz complétés: {thematic.completedQuizzes}</p>
-                    <p>Taux de réussite: {thematic.successRate}%</p>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        </Col>
-      </Row>
+      {/* Statistiques par thématique (Grille) — différé pour LCP */}
+      {showHeavy && (
+        <Row gutter={[24, 24]} className="stats-row">
+          <Col span={24}>
+            <Card title="Statistiques Détaillées par Thématique">
+              <Row gutter={[16, 16]}>
+                {thematicStats.map((thematic) => (
+                  <Col xs={24} sm={12} md={8} key={thematic.id}>
+                    <Card size="small" hoverable>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                          <FileTextOutlined style={{ color: thematicColor, fontSize: '18px', marginRight: 8 }} />
+                          <h4>{thematic.name}</h4>
+                      </div>
+                      <p>Quiz complétés: <strong>{thematic.completedQuizzes.toLocaleString('fr-FR')}</strong></p>
+                      <p>Taux de réussite: <strong style={{ color: thematicColor }}>{thematic.successRate}%</strong></p>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </div>
   );
 };

@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react'; // ajout pour détecter le device
 function Dashboard() {
   // Détection desktop: exclut mobile/tablette et petites fenêtres
   const [isDesktop, setIsDesktop] = useState(true);
-
+{/*
   useEffect(() => {
     const check = () => {
       const ua = navigator.userAgent || '';
@@ -41,7 +41,7 @@ function Dashboard() {
       </div>
     );
   }
-
+*/}
   return (
     // Backoffice
     <PopupProvider>

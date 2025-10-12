@@ -1,4 +1,3 @@
-// imports (ajout du PopupContext)
 import './game.css';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -10,7 +9,6 @@ import authService from '../../configurations/Services/authServices.js';
 import thematicService from '../../configurations/Services/thematicServices.js';
 import subThematicServices from '../../configurations/Services/subThematicServices.js';
 import quizAnswerService from '../../configurations/Services/quizAnswerService.js';
-import pointService from '../../configurations/Services/pointService.js';
 import { usePopup } from '../../configurations/Context/PopupContext.jsx';
 
 const QuizComponent = () => {
@@ -24,18 +22,14 @@ const QuizComponent = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
   const [isValidated, setIsValidated] = useState(false);
-  const [result, setResult] = useState(null);
-  const [activePopup, setActivePopup] = useState(null);
 
-  // états (dans le composant)
   const [userId, setUserId] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [answered, setAnswered] = useState([]);
-  const [thematicId, setThematicId] = useState(null);
   const [subThematicId, setSubThematicId] = useState(null);
-
-  // Mélange d’ordre des questions (stable par session)
   const [orderedQuestions, setOrderedQuestions] = useState([]);
+
+  // Mélange d’ordre des questions
   const shuffle = (arr) => {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -45,7 +39,6 @@ const QuizComponent = () => {
     return a;
   };
 
-  // Helpers
   const normalize = (s) =>
     s ? s.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
 
@@ -56,7 +49,6 @@ const QuizComponent = () => {
       return acc + (a.selectedOption === correct ? 1 : 0);
     }, 0);
 
-  // ➕ Résoudre IDs par titres
   const resolveIdsByTitles = async () => {
     const thematics = await thematicService.getAllParamThematics();
     const arrT = Array.isArray(thematics) ? thematics : thematics?.data || [];
@@ -73,7 +65,6 @@ const QuizComponent = () => {
     return { tId, stId };
   };
 
-  // Démarrage: récupérer utilisateur, résoudre IDs, reprendre ou créer session
   useEffect(() => {
     document.title = 'FUNQUIZ | Session de jeu';
     (async () => {
@@ -82,47 +73,46 @@ const QuizComponent = () => {
         const uid = me?.user_id ?? me?.id;
         setUserId(uid);
         if (!uid) return;
+
         const { tId, stId } = await resolveIdsByTitles();
-        setThematicId(tId);
         setSubThematicId(stId);
+
         if (!tId) {
           console.warn("ID thématique introuvable pour", thematicTitle);
           return;
         }
+
         const sessions = await quizSessionService.getUserSessions(uid);
-        const target = sessions.find((s) => {
-          if (Number(s.is_completed) === 1) return false;
-          const sameT = Number(s.thematic_id) === Number(tId);
-          const sameST = stId ? Number(s.sub_thematic_id) === Number(stId) : true;
-          return sameT && sameST;
-        }) || sessions.find((s) => Number(s.is_completed) === 0);
+        const target =
+          sessions.find((s) => {
+            if (Number(s.is_completed) === 1) return false;
+            const sameT = Number(s.thematic_id) === Number(tId);
+            const sameST = stId ? Number(s.sub_thematic_id) === Number(stId) : true;
+            return sameT && sameST;
+          }) || sessions.find((s) => Number(s.is_completed) === 0);
 
         if (target) {
-          // Reprendre ordre si présent en session_data
           let orderIds = null;
           try {
-            const sd = typeof target.session_data === 'string'
-              ? JSON.parse(target.session_data || '{}')
-              : (target.session_data || {});
+            const sd =
+              typeof target.session_data === 'string'
+                ? JSON.parse(target.session_data || '{}')
+                : target.session_data || {};
             if (Array.isArray(sd?.question_order)) orderIds = sd.question_order;
           } catch {}
+
           if (orderIds && orderIds.length) {
             const reordered = orderIds
               .map((id) => (questions || []).find((q) => q.question_id === id))
               .filter(Boolean);
             setOrderedQuestions(reordered.length ? reordered : [...questions]);
           } else {
-            // Session existante sans ordre: garder l’ordre actuel pour éviter un décalage d’index
             setOrderedQuestions([...questions]);
           }
 
           setSessionId(target.session_id);
           const answeredPrev = (() => {
-            try {
-              return JSON.parse(target.answered_questions || '[]');
-            } catch {
-              return [];
-            }
+            try { return JSON.parse(target.answered_questions || '[]'); } catch { return []; }
           })();
           setAnswered(answeredPrev);
           const idxRaw = Number(target.current_question_index || 0);
@@ -130,7 +120,6 @@ const QuizComponent = () => {
           setCurrentIndex(safeIndex);
           setScore(Number(target.current_score || 0));
         } else {
-          // Nouvelle session: mélanger et persister l’ordre
           const shuffled = shuffle(questions || []);
           setOrderedQuestions(shuffled);
           const orderIds = shuffled.map((q) => q.question_id);
@@ -173,10 +162,7 @@ const QuizComponent = () => {
     const scoreNext = score + (isCorrect ? 1 : 0);
     setScore(scoreNext);
 
-    const answeredNext = [
-      ...answered,
-      { questionId: currentQuestion.question_id, selectedOption: index + 1 },
-    ];
+    const answeredNext = [...answered, { questionId: currentQuestion.question_id, selectedOption: index + 1 }];
     setAnswered(answeredNext);
 
     try {
@@ -193,9 +179,7 @@ const QuizComponent = () => {
       console.warn('Sauvegarde progression échouée:', e?.message);
     }
 
-    setTimeout(() => {
-      handleNext();
-    }, 500);
+    setTimeout(() => handleNext(), 500);
   };
 
   const handleNext = async () => {
@@ -204,7 +188,6 @@ const QuizComponent = () => {
       setSelectedAnswer(null);
       setIsValidated(false);
     } else {
-      // Fin de partie: finaliser session, pousser points, ouvrir le popup externe
       const finalScore = computeCorrectCount(answered);
       try {
         if (sessionId) {
@@ -218,24 +201,20 @@ const QuizComponent = () => {
           await quizSessionService.completeSession(sessionId);
         }
 
-        await quizAnswerService.pushFinalPoints({
-          userId,
-          subThematicId,
-          answered,
-          questions,
-        });
-
+        await quizAnswerService.pushFinalPoints({ userId, subThematicId, answered, questions });
         window.dispatchEvent(new CustomEvent('points:updated'));
       } catch (e) {
         console.warn('Finalisation session échouée:', e?.message);
       }
 
       openPopup('result', {
+        sessionId,
         score: finalScore,
         total: (questions || []).length,
         thematicTitle,
         subTitle,
         userId,
+        playedAt: new Date().toISOString(),
       });
     }
   };
@@ -258,14 +237,13 @@ const QuizComponent = () => {
     }
   };
 
-  const getCardClass = (index) => {
-    return selectedAnswer === index ? 'selected border-primary bg-custom-quiz' : 'border-secondary';
-  };
+  const getCardClass = (index) => (selectedAnswer === index ? 'selected border-primary bg-custom-quiz' : 'border-secondary');
 
   return (
     <div className="container-game vh-100 vw-100 d-flex align-items-center justify-content-center overflow-hidden">
-        <Loading />
-        <div className="d-flex flex-column align-items-center justify-content-center gap-4 container">
+      <Loading />
+      <div className="d-flex flex-column align-items-center justify-content-center gap-4 container">
+
         {/* Bouton quitter */}
         <button
           onClick={() => setVisible(true)}
@@ -282,7 +260,6 @@ const QuizComponent = () => {
             </div>
             <h1 className="fw-bold text-light d-none d-lg-block">FunQuiz</h1>
           </div>
-
           <div className="bg-light w-100 rounded-4 p-4 overflow-hidden container-custom">
             <h2 className="fw-bold fs-md-4 fs-custom position-relative">
               Question{' '}
@@ -295,10 +272,7 @@ const QuizComponent = () => {
         </div>
 
         {/* Partie droite */}
-        <div
-          style={{ width: '320px', maxHeight: '600px' }}
-          className="visio-two bg-white shadow-lg rounded-4 p-4 position-relative"
-        >
+        <div style={{ width: '320px', maxHeight: '600px' }} className="visio-two bg-white shadow-lg rounded-4 p-4 position-relative">
           {currentQuestion?.answers && currentQuestion.answers.length > 0 ? (
             <div>
               {Object.keys(currentQuestion.answers?.[0] ?? {})
@@ -310,21 +284,14 @@ const QuizComponent = () => {
                     onClick={() => handleSelectAnswer(i)}
                     className={`quiz-btn d-flex gap-2 align-items-center mb-2 ${getCardClass(i)}`}
                   >
-                    <span className="fw-bold text-uppercase letter">
-                      {String.fromCharCode(65 + i)}
-                    </span>
+                    <span className="fw-bold text-uppercase letter">{String.fromCharCode(65 + i)}</span>
                     <span>{(currentQuestion.answers?.[0] ?? {})[key]}</span>
                   </button>
                 ))}
             </div>
           ) : (
             <div className="d-flex justify-content-end mt-4">
-              <button
-                onClick={handleNext}
-                className="w-100 rounded-pill py-2 border-0 btn-submit-quiz"
-              >
-                Continuer
-              </button>
+              <button onClick={handleNext} className="w-100 rounded-pill py-2 border-0 btn-submit-quiz">Continuer</button>
             </div>
           )}
         </div>
@@ -336,39 +303,13 @@ const QuizComponent = () => {
               <h5 className="fw-bold mb-3">Voulez-vous quitter la partie ?</h5>
               <p className="text-muted mb-4">Votre progression sera sauvegardée.</p>
               <div className="d-flex justify-content-center gap-3">
-                <button onClick={() => setVisible(false)} className="btn btn-secondary rounded-pill px-4">
-                  Annuler
-                </button>
-                <button onClick={handleQuit} className="btn btn-danger rounded-pill px-4">
-                  Quitter
-                </button>
+                <button onClick={() => setVisible(false)} className="btn btn-secondary rounded-pill px-4">Annuler</button>
+                <button onClick={handleQuit} className="btn btn-danger rounded-pill px-4">Quitter</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Popup résultat */}
-        {activePopup === 'result' && result && (
-          <div className="blur bg-dark bg-opacity-50 top-0 bottom-0 left-0 right-0 position-absolute z-3 w-100 h-100 d-flex align-items-center justify-content-center">
-            <div className="result-card bg-white shadow-lg rounded-4 p-4 text-center">
-              <h3 className="fw-bold mb-3">Résultat du Quiz</h3>
-              <p className="mb-2">Sous-thème : {result.subTitle}</p>
-              <p className="mb-2">Thématique : {result.thematicTitle}</p>
-              <p className="fw-bold fs-4 text-success mb-3">
-                {result.score} / {result.total}
-              </p>
-              <p className="mb-2">
-                Total de vos points : {totalPoints ?? '...'}
-              </p>
-              <button
-                onClick={() => navigate('/')}
-                className="btn btn-primary rounded-pill px-4"
-              >
-                Retour à l'accueil
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -154,7 +154,6 @@ const Home = () => {
       try {
         const data = await commentService.getCommentsWithUserAndQuiz();
         setComments(data);
-        console.log(data);
       } catch (error) {
         console.error('Error fetching comments:', error);
       }

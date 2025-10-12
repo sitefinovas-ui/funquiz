@@ -386,7 +386,7 @@ export default function Comment() {
   return (
     <div className="container py-3">
       <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="mb-0">Gestion des commentaires</h2>
+        <h2 className="mb-0 text-dark">Gestion des commentaires</h2>
         <button className="btn btn-primary d-flex align-items-center gap-2" onClick={openAddForm}>
           <FaPlus /> <span>Ajouter</span>
         </button>
@@ -399,7 +399,7 @@ export default function Comment() {
           style={{ width: '520px' }}
         >
           <span className="input-group-text rounded-0 ">
-            <FaSearch />
+            <FaSearch color='#000' />
           </span>
           <input
             type="text"
@@ -414,10 +414,7 @@ export default function Comment() {
         </button>
       </div>
 
-      {/* 🔍 Filtres avancés */}
-      <div className="filters-container bg-light p-3 rounded shadow-sm mb-3">
-        {/* ... existing code ... */}
-      </div>
+      
 
       {showForm && (
         <div className="card mb-3 shadow-sm">
