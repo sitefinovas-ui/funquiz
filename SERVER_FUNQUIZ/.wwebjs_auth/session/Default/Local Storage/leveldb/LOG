@@ -1,5 +1,3 @@
-2025/10/12-15:07:00.300 8103 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2025/10/12-15:07:00.302 8103 Recovering log #187
-2025/10/12-15:07:00.304 8103 Level-0 table #190: started
-2025/10/12-15:07:00.333 8103 Level-0 table #190: 12268 bytes OK
-2025/10/12-15:07:00.391 8103 Delete type=0 #187
+2025/10/12-15:55:09.165 8803 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2025/10/12-15:55:09.167 8803 Recovering log #191
+2025/10/12-15:55:09.169 8803 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/Local Storage/leveldb/000191.log 

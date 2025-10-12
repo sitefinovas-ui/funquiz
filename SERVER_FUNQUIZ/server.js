@@ -80,12 +80,15 @@ app.use(logger);
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log("🔒 Requête CORS reçue depuis:", origin);
+      console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
-      const allowedOrigins = [process.env.FRONTEND_URL].filter(Boolean);
+      const allowedOrigins = [
+        "https://funquiz-flnr.onrender.com",
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
 
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+        callback(null, true); // origine autorisée
       } else {
         console.error("❌ Origine non autorisée:", origin);
         callback(new Error("Origin not allowed"));
@@ -95,6 +98,7 @@ app.use(
     credentials: true,
   })
 );
+
 
 // -----------------------------
 // Middleware : rendre "uploads" public
