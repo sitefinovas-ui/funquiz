@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import api from '../Api/api_axios.js';
 
 const authService = {
@@ -49,14 +48,13 @@ const authService = {
     }
   },
 
-  logout: async () => {
-    // Suppression du token côté front, sans appeler l'API
+   logout: async () => {
     try {
-      localStorage.removeItem('token');
-      const navigate = useNavigate();
-      navigate('/login');
+      await api.post('/auth/logout');
     } catch (error) {
-      console.error('❌ logout:', error.response?.data || error.message);
+      console.error("Erreur de déconnexion :", error);
+    } finally {
+      localStorage.removeItem('token');
     }
   },
 
