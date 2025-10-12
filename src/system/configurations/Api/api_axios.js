@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const rawBase = import.meta.env.VITE_API_URL || '';
+const baseURL = rawBase.endsWith('/api')
+  ? rawBase
+  : `${rawBase.replace(/\/+$/, '')}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
   timeout: 20000,
   withCredentials: true,
   headers: {
@@ -32,7 +37,12 @@ api.interceptors.response.use(
       console.error('❌ Aucune réponse du serveur');
       return Promise.reject(new Error('Erreur réseau'));
     }
-    return Promise.reject(error);
+    const message =
+      error.response.data?.message ||
+      error.response.data?.error ||
+      error.message ||
+      'Erreur serveur';
+    return Promise.reject(new Error(message));
   }
 );
 
