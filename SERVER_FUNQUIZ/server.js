@@ -18,6 +18,7 @@ import logsRoutes from "./routes/logsRoute.js";
 import publiciteRoutes from "./routes/publiciteRoute.js";
 import { fileURLToPath } from "url";
 import path from "path";
+import { listPublicites } from "./controllers/publiciteController.js";
 
 // -----------------------------
 // Configuration initiale
@@ -40,6 +41,7 @@ app.use(compression());
 
 // Caching statique long terme + immutable
 app.use(
+  "/public",
   express.static(path.join(__dirname, "public"), {
     maxAge: "365d",
     etag: true,
@@ -83,9 +85,8 @@ app.use(
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
       const allowedOrigins = [
-        "https://funquiz-7k43.onrender.com", // production Render
-        "http://localhost:31",              // dev local (port Vite)
-        process.env.FRONTEND_URL,             // variable d'environnement si définie
+        "https://funquiz-7k43.onrender.com", // front Render
+        process.env.FRONTEND_URL,             // override via env
       ].filter(Boolean);
 
       if (!origin || allowedOrigins.includes(origin)) {
@@ -95,10 +96,14 @@ app.use(
         callback(new Error("Origin not allowed"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
+    optionsSuccessStatus: 204,
+    maxAge: 86400,
   })
 );
+// Répondre explicitement aux préflights CORS
+app.options("*", cors());
 
 
 
@@ -165,6 +170,9 @@ app.use(
   (await import("./routes/legalAboutRoute.js")).default,
   (await import("./routes/legalContactRoute.js")).default
 );
+
+// Alias de compatibilité pour /publicites (sans /api)
+app.get("/publicites", listPublicites);
 
 // -----------------------------
 // Route racine de test

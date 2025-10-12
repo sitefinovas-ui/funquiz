@@ -1,3 +1,21 @@
 2025/10/12-16:22:50.579 a707 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
 2025/10/12-16:22:50.582 a707 Recovering log #1061
 2025/10/12-16:22:50.605 a707 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001061.log 
+2025/10/12-16:22:53.028 b903 Level-0 table #1070: started
+2025/10/12-16:22:53.057 b903 Level-0 table #1070: 173345 bytes OK
+2025/10/12-16:22:53.095 b903 Delete type=0 #1061
+2025/10/12-16:22:53.099 b903 Manual compaction at level-0 from '\x00\x8e\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x8f\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/12-16:22:59.622 b303 Compacting 1@1 + 5@2 files
+2025/10/12-16:22:59.853 b303 Generated table #1071@1: 85231 keys, 2233977 bytes
+2025/10/12-16:23:00.098 b303 Generated table #1072@1: 98561 keys, 2250519 bytes
+2025/10/12-16:23:00.320 b303 Generated table #1073@1: 65789 keys, 2254725 bytes
+2025/10/12-16:23:00.562 b303 Generated table #1074@1: 40602 keys, 2206582 bytes
+2025/10/12-16:23:00.685 b303 Generated table #1075@1: 14834 keys, 1773508 bytes
+2025/10/12-16:23:00.686 b303 Compacted 1@1 + 5@2 files => 10719311 bytes
+2025/10/12-16:23:00.745 b303 compacted to: files[ 0 0 5 0 0 0 0 ]
+2025/10/12-16:23:00.746 b303 Delete type=2 #1063
+2025/10/12-16:23:00.746 b303 Delete type=2 #1066
+2025/10/12-16:23:00.746 b303 Delete type=2 #1067
+2025/10/12-16:23:00.746 b303 Delete type=2 #1065
+2025/10/12-16:23:00.746 b303 Delete type=2 #1070
+2025/10/12-16:23:00.746 b303 Delete type=2 #1064
