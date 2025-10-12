@@ -85,11 +85,10 @@ app.use(
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
       const allowedOrigins = [
-        "https://funquiz-7k43.onrender.com", // front Render
+        "https://funquiz-7k43.onrender.com", // backend Render (si utilisé)
         "https://funquiz-front.onrender.com", // frontend Render
-        "http://localhost:31", // front Vite
-        "http://localhost:5100",              // front Vite local
-        process.env.FRONTEND_URL,             // override via env
+        "http://localhost:31",              // front Vite local
+        process.env.FRONTEND_URL,             // override via env si défini
       ].filter(Boolean);
 
       if (!origin || allowedOrigins.includes(origin)) {
@@ -106,9 +105,14 @@ app.use(
     maxAge: 86400,
   })
 );
-// Fallback générique pour les préflights (évite la 404 et le crash path-to-regexp)
+
+// Fallback préflight OPTIONS (sans wildcard Express 5)
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     return res.sendStatus(204);
   }
   next();

@@ -12,11 +12,15 @@ import {
   authenticateToken,
   authorizeRole,
 } from "../middleware/authentification.js";
+import cors from "cors";
 
 const router = express.Router();
 
 // Routes publiques
-router.post("/newsletters", addNewsletter);
+// Préflight CORS pour l’inscription newsletter
+router.options("/newsletters", cors());
+// Inscription newsletter (publique) avec CORS route-spécifique
+router.post("/newsletters", cors({ origin: true, credentials: false }), addNewsletter);
 
 // Routes protégées (admin/modérateur)
 router.get("/newsletters", authenticateToken, authorizeRole(["admin", "moderator"]), allNewsletters);
