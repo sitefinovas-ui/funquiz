@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import createError from "http-errors";
 import { connectDB } from "./config/db.js";
 import { logger } from "./middleware/logger.js";
+import compression from "compression";
 
 import authRoutes from "./routes/authRoute.js";
 import quizRoutes from "./routes/quizRoute.js";
@@ -13,38 +14,81 @@ import newsletterRoutes from "./routes/newsletterRoute.js";
 import messageRoutes from "./routes/messageRoute.js";
 import quizStatsRoutes from "./routes/quizStatsRoute.js";
 import quizUserSessionRoutes from "./routes/quizUserSessionRoutes.js";
-import { fileURLToPath } from "url";
-import path from "path";
 import logsRoutes from "./routes/logsRoute.js";
 import publiciteRoutes from "./routes/publiciteRoute.js";
-//complet
-dotenv.config();
+import { fileURLToPath } from "url";
+import path from "path";
 
+// -----------------------------
+// Configuration initiale
+// -----------------------------
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT ;
 const IP = process.env.IP ;
 
-// Helpers pour chemins en ES modules
+// Helpers pour chemins ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware JSON
+// -----------------------------
+// Middleware de performance
+// -----------------------------
+
+// Compression Brotli (mieux que gzip)
+app.use(compression());
+
+// Caching statique long terme + immutable
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "365d",
+    etag: true,
+    immutable: true,
+  })
+);
+
+// Préchargement de ressources critiques
+app.use((req, res, next) => {
+  res.setHeader(
+    "Link",
+    [
+      '</public/main.js>; rel=preload; as=script',
+      '</public/styles.css>; rel=preload; as=style',
+    ].join(", ")
+  );
+  next();
+});
+
+// -----------------------------
+// Middleware JSON et sécurité
+// -----------------------------
 app.use(express.json());
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && "body" in err) {
+    return res.status(400).json({
+      message: "Payload JSON invalide",
+      details: err.message,
+    });
+  }
+  next(err);
+});
+
+// Logger
 app.use(logger);
+
+// CORS avec origines autorisées explicites
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log('🔒 Requête CORS reçue depuis:', origin);
+      console.log("🔒 Requête CORS reçue depuis:", origin);
 
-      const allowedOrigins = [
-        "https://funquiz-front.onrender.com", 
-      ];
+      const allowedOrigins = [process.env.FRONTEND_URL].filter(Boolean);
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.error('❌ Origine non autorisée:', origin);
-        callback(new Error('Origin not allowed'));
+        console.error("❌ Origine non autorisée:", origin);
+        callback(new Error("Origin not allowed"));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -58,7 +102,7 @@ app.use(
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // -----------------------------
-// Middleware global : ajouter BASE_URL aux *_url
+// Ajout automatique du BASE_URL sur les champs *_url
 // -----------------------------
 function addBaseUrlRecursively(obj, baseUrl) {
   if (!obj) return;
@@ -69,10 +113,7 @@ function addBaseUrlRecursively(obj, baseUrl) {
   if (typeof obj === "object") {
     for (const key of Object.keys(obj)) {
       const val = obj[key];
-      if (
-        typeof val === "string" &&
-        (key === "icon_url" || key.endsWith("_url"))
-      ) {
+      if (typeof val === "string" && (key === "icon_url" || key.endsWith("_url"))) {
         if (val && !val.startsWith("http")) {
           obj[key] = `${baseUrl}${val}`;
         }
@@ -98,7 +139,7 @@ app.use((req, res, next) => {
 });
 
 // -----------------------------
-// Routes
+// Routes principales
 // -----------------------------
 app.use(
   "/api",
@@ -116,23 +157,28 @@ app.use(
   (await import("./routes/legalPrivacyRoute.js")).default,
   (await import("./routes/legalCookiesRoute.js")).default,
   (await import("./routes/legalAboutRoute.js")).default,
-  (await import("./routes/legalContactRoute.js")).default,
+  (await import("./routes/legalContactRoute.js")).default
 );
 
-// Route test API
+// -----------------------------
+// Route racine de test
+// -----------------------------
 app.get("/", (req, res) => {
-  res.json({ message: "🚀 API FunQuiz fonctionne !" });
+  res.json({
+    message: "🚀 API FunQuiz fonctionne !",
+    note: "Optimisée avec Brotli, cache statique et préchargement",
+  });
 });
 
 // -----------------------------
-// Middleware pour gérer les 404
+// Gestion des erreurs 404
 // -----------------------------
 app.use((req, res, next) => {
   next(createError(404, "Route non trouvée"));
 });
 
 // -----------------------------
-// Middleware global d'erreur
+// Middleware global d’erreur
 // -----------------------------
 app.use((err, req, res, next) => {
   console.error("❌ Erreur détectée :", err.message);
@@ -145,13 +191,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 🚀 Lancement serveur
+// -----------------------------
+// 🚀 Lancement du serveur
+// -----------------------------
 const startServer = async () => {
   try {
     await connectDB();
     const server = app.listen(PORT, IP, () => {
       console.log(
-        `🚀 Serveur lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`,
+        `🚀 Serveur FunQuiz optimisé lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`
       );
     });
 

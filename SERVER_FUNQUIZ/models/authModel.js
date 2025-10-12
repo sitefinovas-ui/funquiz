@@ -159,12 +159,11 @@ export const registerOrLoginGoogleUser = async ({
     return { ...rows[0], date_cx: now };
   }
 
-  // Sinon créer un utilisateur Google avec numéro interne unique
-  const uniqueNumber = await generateUniqueUserNumber();
+  // Crée un utilisateur Google sans numéro; l’utilisateur l’ajoutera ensuite dans son profil
   const [result] = await db.query(
     `INSERT INTO funquiz_users (google_id, email, name, first_name, avatar_url, number, date_cx) 
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [google_id, email, name, first_name, avatar_url || null, uniqueNumber, now],
+    [google_id, email, name, first_name, avatar_url || null, null, now],
   );
 
   return {
@@ -237,6 +236,25 @@ export const updateUserFields = async (user_id, fields, allowedFields) => {
     const updates = [];
     const values = [];
 
+    // Pré-check unicité pour le champ number
+    if (fields.number !== undefined) {
+      // Autoriser explicitement null/"" pour effacer le numéro
+      if (fields.number === "" || fields.number === null) {
+        fields.number = null;
+      } else {
+        // Vérifier si ce number est déjà utilisé par un autre user
+        const [dup] = await db.query(
+          "SELECT user_id FROM funquiz_users WHERE number = ? AND user_id != ?",
+          [fields.number, user_id]
+        );
+        if (dup[0]) {
+          const err = new Error("Ce numéro est déjà utilisé par un autre compte.");
+          err.code = "NUMBER_ALREADY_IN_USE";
+          throw err;
+        }
+      }
+    }
+
     Object.keys(fields).forEach((key) => {
       if (allowedFields.includes(key)) {
         updates.push(`${key} = ?`);
@@ -258,8 +276,16 @@ export const updateUserFields = async (user_id, fields, allowedFields) => {
     return rows[0];
   } catch (error) {
     console.error("❌ updateUserFields:", error);
-    throw new Error(error.message);
+    // Si la base renvoie quand même un doublon (course), normaliser le code
+    if (error.code === "ER_DUP_ENTRY") {
+      const err = new Error("Ce numéro est déjà utilisé par un autre compte.");
+      err.code = "NUMBER_ALREADY_IN_USE";
+      throw err;
+    }
+    // Préserver le code applicatif si présent
+    throw error;
   }
+  throw new Error(error.message);
 };
 // -----------------------------
 // 7️⃣ Suppression soft

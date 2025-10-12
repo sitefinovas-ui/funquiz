@@ -1,21 +1,27 @@
-2025/10/12-00:21:21.571 ae03 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/12-00:21:21.572 ae03 Recovering log #900
-2025/10/12-00:21:21.615 ae03 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000900.log 
-2025/10/12-00:21:23.593 8203 Level-0 table #909: started
-2025/10/12-00:21:23.622 8203 Level-0 table #909: 248189 bytes OK
-2025/10/12-00:21:23.661 8203 Delete type=0 #900
-2025/10/12-00:21:23.663 8203 Manual compaction at level-0 from '\x00z\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00{\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/10/12-00:21:26.821 15c03 Compacting 1@1 + 5@2 files
-2025/10/12-00:21:27.183 15c03 Generated table #910@1: 85016 keys, 2233887 bytes
-2025/10/12-00:21:27.419 15c03 Generated table #911@1: 99231 keys, 2252303 bytes
-2025/10/12-00:21:27.634 15c03 Generated table #912@1: 55411 keys, 2244612 bytes
-2025/10/12-00:21:27.895 15c03 Generated table #913@1: 39533 keys, 2197843 bytes
-2025/10/12-00:21:27.957 15c03 Generated table #914@1: 9092 keys, 1341493 bytes
-2025/10/12-00:21:27.958 15c03 Compacted 1@1 + 5@2 files => 10270138 bytes
-2025/10/12-00:21:27.996 15c03 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/10/12-00:21:27.997 15c03 Delete type=2 #909
-2025/10/12-00:21:27.997 15c03 Delete type=2 #902
-2025/10/12-00:21:27.997 15c03 Delete type=2 #903
-2025/10/12-00:21:27.997 15c03 Delete type=2 #904
-2025/10/12-00:21:27.997 15c03 Delete type=2 #905
-2025/10/12-00:21:27.997 15c03 Delete type=2 #906
+2025/10/12-13:55:20.027 fc03 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/12-13:55:20.028 fc03 Recovering log #1029
+2025/10/12-13:55:20.057 fc03 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001029.log 
+2025/10/12-13:55:20.058 fc03 Delete type=2 #1023
+2025/10/12-13:55:20.058 fc03 Delete type=2 #1030
+2025/10/12-13:55:20.058 fc03 Delete type=2 #1024
+2025/10/12-13:55:20.058 fc03 Delete type=2 #1025
+2025/10/12-13:55:20.058 fc03 Delete type=2 #1027
+2025/10/12-13:55:20.058 fc03 Delete type=2 #1026
+2025/10/12-13:55:22.420 1d703 Level-0 table #1038: started
+2025/10/12-13:55:22.448 1d703 Level-0 table #1038: 214347 bytes OK
+2025/10/12-13:55:22.488 1d703 Delete type=0 #1029
+2025/10/12-13:55:22.491 17103 Manual compaction at level-0 from '\x00\x8a\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x8b\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/12-13:55:29.200 1d703 Compacting 1@1 + 5@2 files
+2025/10/12-13:55:29.455 1d703 Generated table #1039@1: 85382 keys, 2234657 bytes
+2025/10/12-13:55:29.754 1d703 Generated table #1040@1: 98740 keys, 2251284 bytes
+2025/10/12-13:55:30.244 1d703 Generated table #1041@1: 63204 keys, 2254065 bytes
+2025/10/12-13:55:30.816 1d703 Generated table #1042@1: 42222 keys, 2205675 bytes
+2025/10/12-13:55:30.909 1d703 Generated table #1043@1: 11541 keys, 1677844 bytes
+2025/10/12-13:55:30.909 1d703 Compacted 1@1 + 5@2 files => 10623525 bytes
+2025/10/12-13:55:30.952 1d703 compacted to: files[ 0 0 5 0 0 0 0 ]
+2025/10/12-13:55:30.953 1d703 Delete type=2 #1035
+2025/10/12-13:55:30.953 1d703 Delete type=2 #1034
+2025/10/12-13:55:30.953 1d703 Delete type=2 #1031
+2025/10/12-13:55:30.953 1d703 Delete type=2 #1033
+2025/10/12-13:55:30.953 1d703 Delete type=2 #1032
+2025/10/12-13:55:30.953 1d703 Delete type=2 #1038

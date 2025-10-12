@@ -116,8 +116,7 @@ export const signup = async (req, res) => {
         role: user.role,
       },
       JWT_SECRET,
-      { expiresIn: "1h" },
-    );
+      { expiresIn: "3d" },    );
 
     res.status(201).json({
       message: "Utilisateur inscrit",
@@ -182,8 +181,7 @@ export const login = async (req, res) => {
         role: user.role,
       },
       JWT_SECRET,
-      { expiresIn: "1h" },
-    );
+      { expiresIn: "3d" },    );
 
     await mailConnected(user.email, user.first_name, req.ip);
 
@@ -238,7 +236,7 @@ export const googleAuth = async (req, res) => {
         role: user.role,
       },
       JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "3d" },
     );
 
     // Réponse
@@ -315,6 +313,17 @@ export const updateUserProfile = async (req, res) => {
     res.status(200).json({ message: "Profil mis à jour", user: updatedUser });
   } catch (error) {
     console.error("❌ updateUserProfile:", error);
+    // Conflit d'unicité sur number -> 409
+    if (
+      error?.code === "NUMBER_ALREADY_IN_USE" ||
+      /Duplicate entry/.test(error?.message || "")
+    ) {
+      return res.status(409).json({
+        message: "Ce numéro est déjà utilisé par un autre compte.",
+        code: "NUMBER_ALREADY_IN_USE",
+        type: "erreur",
+      });
+    }
     res.status(400).json({ error: error.message });
   }
 };
@@ -383,6 +392,16 @@ export const updateUserAdmin = async (req, res) => {
       .json({ message: "Utilisateur mis à jour (admin)", user: updatedUser });
   } catch (error) {
     console.error("❌ updateUserAdmin:", error);
+    if (
+      error?.code === "NUMBER_ALREADY_IN_USE" ||
+      /Duplicate entry/.test(error?.message || "")
+    ) {
+      return res.status(409).json({
+        message: "Ce numéro est déjà utilisé par un autre compte.",
+        code: "NUMBER_ALREADY_IN_USE",
+        type: "erreur",
+      });
+    }
     res.status(400).json({ error: error.message });
   }
 };

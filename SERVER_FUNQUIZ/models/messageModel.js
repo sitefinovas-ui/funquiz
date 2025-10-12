@@ -4,7 +4,10 @@ import db from "../config/db.js";
 export const getAllMessagesData = async () => {
   try {
     const [rows] = await db.query(
-      "SELECT * FROM funquiz_messages ORDER BY created_at DESC",
+      `SELECT m.*, fu.avatar_url
+       FROM funquiz_messages m
+       LEFT JOIN funquiz_users fu ON fu.user_id = m.user_id
+       ORDER BY m.created_at DESC`
     );
     return rows;
   } catch (error) {
@@ -17,7 +20,10 @@ export const getAllMessagesData = async () => {
 export const getMessageById = async (message_id) => {
   try {
     const [rows] = await db.query(
-      "SELECT * FROM funquiz_messages WHERE message_id = ?",
+      `SELECT m.*, fu.avatar_url
+       FROM funquiz_messages m
+       LEFT JOIN funquiz_users fu ON fu.user_id = m.user_id
+       WHERE m.message_id = ?`,
       [message_id],
     );
     return rows[0] ? rows[0] : null;
