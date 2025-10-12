@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // ← Remplace par ton ID GA4
+const GA_MEASUREMENT_ID = 'G-BVLJ3MHEX3';
+
 const CONSENT_DURATION_DAYS = 10;
 
 export default function CookieBanner() {
