@@ -144,6 +144,17 @@ const UserManagement = () => {
     }
   }, [location.state]);
 
+  // Bloque le scroll du body quand la modale est ouverte
+  useEffect(() => {
+    if (showModal) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev || 'auto';
+      };
+    }
+  }, [showModal]);
+
   useEffect(() => {
     const fetchUsersWithPoints = async () => {
       try {
@@ -757,7 +768,7 @@ const UserManagement = () => {
 
   // ==================== RENDER ====================
   return (
-    <div className="user-management mt-5">
+    <div className="user-management overflow-scroll vh-100 mt-5">
       <div className="mb-4">
         <h1 style={{ fontSize: '3em' }} className="fw-bold text-dark">
           Gestion des utilisateurs
@@ -1342,12 +1353,12 @@ const UserManagement = () => {
 
       {showModal && (
         <div
-          className="modal show d-block"
-          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+          className="modal position-fixed bottom-0 d-flex align-items-center justify-content-center show d-block"
+          style={{ backgroundColor: 'rgba(176, 17, 17, 0.7)', zIndex: 1100 }}
           onClick={closeModal}
         >
           <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content bg-dark text-light border-0">
+            <div className="modal-content bg-dark text-light border-0" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
               {/* ------------------------- Header ------------------------- */}
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title">
@@ -1516,17 +1527,10 @@ const UserManagement = () => {
       <style>{`
         .user-management .table-hover tbody tr:hover {
           background-color: rgba(59, 130, 246, 0.05);
-        }
-        
-        .user-management .form-check-input:checked {
-          background-color: #3b82f6;
-          border-color: #3b82f6;
-        }
-        
-        .modal.show {
-          display: block;
+          position: relative;
         }
       `}</style>
+
     </div>
   );
 };

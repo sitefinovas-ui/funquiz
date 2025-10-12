@@ -1,8 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import api from '../Api/api_axios.js';
 
 const authService = {
-  // Récupérer les points utilisateur via l'API quiz
-
+  
   getAllUsers: async () => {
     try {
       const response = await api.get('/auth/all');
@@ -50,12 +50,13 @@ const authService = {
   },
 
   logout: async () => {
+    // Suppression du token côté front, sans appeler l'API
     try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      // même si erreur, on supprime le token côté client
-    } finally {
       localStorage.removeItem('token');
+      const navigate = useNavigate();
+      navigate('/login');
+    } catch (error) {
+      console.error('❌ logout:', error.response?.data || error.message);
     }
   },
 

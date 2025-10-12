@@ -208,7 +208,7 @@ const Sidebar = () => {
               </div>
             </div>
 
-            <div className="dropdown">
+            <div className="dropdown position-relative">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="btn btn-link p-0 text-muted-custom border-0"
@@ -217,9 +217,10 @@ const Sidebar = () => {
                 {isOpen ? <LuChevronUp /> : <FiChevronDown />}
               </button>
               <ul
-                className={`dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border-0 rounded-3 ${
+                className={`dropdown-menu dropdown-menu-dark position-absolute  end-0 shadow-lg border-0 rounded-3 ${
                   isOpen ? 'show' : ''
                 }`}
+                style={{ zIndex: 1100, top:'-180px', display: isOpen ? 'block' : 'none' }}
               >
                 <li>
                   <a className="dropdown-item py-2" href="/profil" onClick={() => setIsOpen(false)}>
@@ -251,7 +252,7 @@ const Sidebar = () => {
             </div>
           </div>
         ) : (
-          <div className="d-flex flex-column align-items-center">
+          <div className="d-flex flex-column align-items-center position-relative">
             <div className="position-relative mb-2">
               <img
                 src={user.avatar_url || 'https://ui-avatars.com/api/?name=' + user.name}
@@ -271,9 +272,10 @@ const Sidebar = () => {
               <i className="bi bi-three-dots"></i>
             </button>
             <ul
-              className={`dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3 ${
+              className={`dropdown-menu dropdown-menu-dark position-absolute top-100 end-0 shadow-lg border-0 rounded-3 ${
                 isOpen ? 'show' : ''
               }`}
+              style={{ zIndex: 1100, display: isOpen ? 'block' : 'none' }}
             >
               <li>
                 <a className="dropdown-item py-2" href="/profil" onClick={() => setIsOpen(false)}>

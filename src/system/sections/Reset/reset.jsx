@@ -1,12 +1,13 @@
 import './reset.css';
 import { useEffect, useState } from 'react';
 import authService from '../../configurations/Services/authServices';
+import { useNavigate } from 'react-router-dom';
 
 export default function ResetPassword() {
   useEffect(() => {
     document.title = 'FUNQUIZ | Réinitialiser mon mot de passe';
   }, []);
-
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -57,6 +58,9 @@ export default function ResetPassword() {
       await authService.resetPassword({ email, code, newPassword });
       setSuccess('Mot de passe réinitialisé 🎉');
       setStep(4); // étape finale
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors du changement.');
     } finally {
@@ -167,7 +171,7 @@ export default function ResetPassword() {
             </div>
 
             {/* Messages d'état */}
-            <div className="text-center mt-4">
+            <div className="text-center position-absolute top-0 start-50 translate-middle mt-4">
               {error && <div className="alert alert-danger">{error}</div>}
               {success && <div className="alert alert-success">{success}</div>}
             </div>

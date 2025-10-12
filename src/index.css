@@ -29,3 +29,14 @@ a:hover {
 .text-muted {
   color: var(--site-text-muted) !important;
 }
+
+/* Styles déplacés depuis le composant Users */
+.user-management .table-hover tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Si besoin de limiter la hauteur du contenu modal */
+.modal .modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
