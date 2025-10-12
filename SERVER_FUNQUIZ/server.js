@@ -86,6 +86,7 @@ app.use(
 
       const allowedOrigins = [
         "https://funquiz-7k43.onrender.com", // front Render
+        "https://funquiz-front.onrender.com", // front Render
         process.env.FRONTEND_URL,             // override via env
       ].filter(Boolean);
 
@@ -102,8 +103,13 @@ app.use(
     maxAge: 86400,
   })
 );
-// Répondre explicitement aux préflights CORS
-app.options("*", cors());
+// Fallback générique pour les préflights (évite la 404 et le crash path-to-regexp)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 
 
