@@ -85,8 +85,8 @@ app.use(
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
       const allowedOrigins = [
-        "https://funquiz-7k43.onrender.com", // backend Render (si utilisé)
-        "https://funquiz-front.onrender.com", // frontend Render
+        "https://funquiz-7k43.onrender.com", // frontend Render (prod)
+        "https://funquiz-front.onrender.com", // éventuel ancien frontend
         "http://localhost:31",              // front Vite local
         process.env.FRONTEND_URL,             // override via env si défini
       ].filter(Boolean);

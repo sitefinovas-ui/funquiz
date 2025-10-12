@@ -1,7 +1,7 @@
-2025/10/12-18:00:10.660 a203 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/12-18:00:10.662 a203 Recovering log #1107
-2025/10/12-18:00:10.720 a203 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001107.log 
-2025/10/12-18:00:16.357 16c03 Level-0 table #1118: started
-2025/10/12-18:00:16.414 16c03 Level-0 table #1118: 181025 bytes OK
-2025/10/12-18:00:16.441 16c03 Delete type=0 #1107
-2025/10/12-18:00:16.452 16c03 Manual compaction at level-0 from '\x00\x94\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x95\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/12-18:30:40.623 8903 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/12-18:30:40.625 8903 Recovering log #1132
+2025/10/12-18:30:40.795 8903 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001132.log 
+2025/10/12-18:30:48.952 fb03 Level-0 table #1141: started
+2025/10/12-18:30:49.006 fb03 Level-0 table #1141: 331656 bytes OK
+2025/10/12-18:30:49.051 fb03 Delete type=0 #1132
+2025/10/12-18:30:49.055 fb03 Manual compaction at level-0 from '\x00\x97\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x98\x00\x00\x00' @ 0 : 0; will stop at (end)
