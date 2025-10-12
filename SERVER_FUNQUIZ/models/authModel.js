@@ -159,11 +159,12 @@ export const registerOrLoginGoogleUser = async ({
     return { ...rows[0], date_cx: now };
   }
 
-  // Sinon créer un utilisateur Google
+  // Sinon créer un utilisateur Google avec numéro interne unique
+  const uniqueNumber = await generateUniqueUserNumber();
   const [result] = await db.query(
     `INSERT INTO funquiz_users (google_id, email, name, first_name, avatar_url, number, date_cx) 
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [google_id, email, name, first_name, avatar_url || null, 0, now],
+    [google_id, email, name, first_name, avatar_url || null, uniqueNumber, now],
   );
 
   return {
@@ -398,4 +399,22 @@ export const setUserVerified = async (user_id) => {
     console.error("❌ setUserVerified:", error);
     throw error;
   }
+};
+
+// fichier: authModel.js
+
+// Génère un numéro utilisateur unique (10 chiffres) et vérifie en base
+const generateUniqueUserNumber = async () => {
+  for (let i = 0; i < 5; i++) {
+    const candidate = String(
+      Math.floor(1000000000 + Math.random() * 9000000000)
+    ); // 10 chiffres
+    const [rows] = await db.query(
+      "SELECT user_id FROM funquiz_users WHERE number = ?",
+      [candidate]
+    );
+    if (rows.length === 0) return candidate;
+  }
+  // Fallback déterministe: 10 derniers chiffres du timestamp
+  return String(Date.now()).slice(-10);
 };
