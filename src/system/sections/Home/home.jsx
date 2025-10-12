@@ -707,7 +707,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* PUB */}
+      {/* PUB optionnelle */}
       <section className="section px-5 mt-4 mb-5  w-100">
         <div className="">
           <div className="">
