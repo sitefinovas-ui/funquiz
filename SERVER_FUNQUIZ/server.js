@@ -86,8 +86,9 @@ app.use(
 
       const allowedOrigins = [
         "https://funquiz-7k43.onrender.com", // front Render
-        "https://funquiz-front.onrender.com",
+        "https://funquiz-front.onrender.com", // frontend Render
         "http://localhost:31", // front Vite
+        "http://localhost:5100",              // front Vite local
         process.env.FRONTEND_URL,             // override via env
       ].filter(Boolean);
 
@@ -100,6 +101,7 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
     optionsSuccessStatus: 204,
     maxAge: 86400,
   })

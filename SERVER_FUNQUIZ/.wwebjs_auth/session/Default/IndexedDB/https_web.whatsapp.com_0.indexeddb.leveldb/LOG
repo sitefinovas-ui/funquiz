@@ -1,21 +1,7 @@
-2025/10/12-16:53:18.118 11203 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/12-16:53:18.120 11203 Recovering log #1077
-2025/10/12-16:53:18.182 11203 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001077.log 
-2025/10/12-16:53:20.612 15e03 Level-0 table #1086: started
-2025/10/12-16:53:20.645 15e03 Level-0 table #1086: 179740 bytes OK
-2025/10/12-16:53:20.683 15e03 Delete type=0 #1077
-2025/10/12-16:53:20.686 15e03 Manual compaction at level-0 from '\x00\x90\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x91\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/10/12-16:53:31.330 15c03 Compacting 1@1 + 5@2 files
-2025/10/12-16:53:31.764 15c03 Generated table #1087@1: 85287 keys, 2235412 bytes
-2025/10/12-16:53:32.557 15c03 Generated table #1088@1: 98489 keys, 2250295 bytes
-2025/10/12-16:53:33.057 15c03 Generated table #1089@1: 66972 keys, 2259316 bytes
-2025/10/12-16:53:33.716 15c03 Generated table #1090@1: 40005 keys, 2206744 bytes
-2025/10/12-16:53:33.957 15c03 Generated table #1091@1: 15897 keys, 1808097 bytes
-2025/10/12-16:53:33.958 15c03 Compacted 1@1 + 5@2 files => 10759864 bytes
-2025/10/12-16:53:34.079 15c03 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/10/12-16:53:34.111 15c03 Delete type=2 #1082
-2025/10/12-16:53:34.111 15c03 Delete type=2 #1083
-2025/10/12-16:53:34.111 15c03 Delete type=2 #1081
-2025/10/12-16:53:34.111 15c03 Delete type=2 #1080
-2025/10/12-16:53:34.111 15c03 Delete type=2 #1079
-2025/10/12-16:53:34.111 15c03 Delete type=2 #1086
+2025/10/12-17:51:24.072 a203 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/12-17:51:24.073 a203 Recovering log #1093
+2025/10/12-17:51:24.103 a203 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001093.log 
+2025/10/12-17:51:26.786 16503 Level-0 table #1102: started
+2025/10/12-17:51:26.819 16503 Level-0 table #1102: 177462 bytes OK
+2025/10/12-17:51:26.860 16503 Delete type=0 #1093
+2025/10/12-17:51:26.864 16503 Manual compaction at level-0 from '\x00\x92\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x93\x00\x00\x00' @ 0 : 0; will stop at (end)
