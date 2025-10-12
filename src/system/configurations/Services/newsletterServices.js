@@ -74,8 +74,20 @@ const newsletterServices = {
       err.code = 'INVALID_EMAIL_PAYLOAD';
       throw err;
     }
-    const response = await api.post('/newsletters', body);
-    return response.data;
+    try {
+      // Appel public: pas de cookies -> simplifie CORS
+      const response = await api.post('/newsletters', body, { withCredentials: false });
+      return response.data;
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Erreur réseau';
+      const e = new Error(message);
+      e.status = error?.response?.status;
+      throw e;
+    }
   },
 
   // Mettre à jour le statut d'une newsletter

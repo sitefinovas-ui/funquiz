@@ -41,6 +41,7 @@ const Home = () => {
   const [comments, setComments] = useState([]);
   const [email, setEmail] = useState('');
   const [pub, setPub] = useState([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { openPopup, setActivePopup } = usePopup();
 
@@ -181,6 +182,8 @@ const Home = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // anti double-clic
+    setIsSubmitting(true);
     setLoading(true);
     setMessage('');
 
@@ -188,13 +191,20 @@ const Home = () => {
       await newsletterService.addNewsletter(email, user_id_token || null);
       setMessage('Merci pour votre inscription !');
       setEmail('');
-      setTimeout(() => setMessage(''), 5000); // disparaît après 5 secondes
+      setTimeout(() => setMessage(''), 5000);
     } catch (error) {
-      console.error('Error subscribing to newsletter:', error);
-      setMessage('Une erreur est survenue. Veuillez réessayer.');
-      setTimeout(() => setMessage(''), 5000); // disparaît après 5 secondes
+      // Traiter 409 comme un succès informatif (déjà abonné)
+      if (error?.status === 409 || /déjà abonné/i.test(error?.message || '')) {
+        setMessage('Cet email est déjà abonné.');
+        setTimeout(() => setMessage(''), 5000);
+      } else {
+        console.error('Error subscribing to newsletter:', error);
+        setMessage('Une erreur est survenue. Veuillez réessayer.');
+        setTimeout(() => setMessage(''), 5000);
+      }
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
