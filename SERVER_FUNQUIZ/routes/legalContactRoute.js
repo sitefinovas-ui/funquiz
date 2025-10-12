@@ -5,7 +5,7 @@ import { authenticateToken, authorizeRole } from "../middleware/authentification
 const router = express.Router();
 router.get("/legal/contact", listContacts);
 router.get("/legal/contact/:id", authenticateToken, authorizeRole(["admin","moderator"]), contactById);
-router.post("/legal/contact",authenticateToken, authorizeRole(["admin"]), addContact); // formulaire public
+router.post("/legal/contact", addContact); // formulaire public
 router.put("/legal/contact/:id", authenticateToken, authorizeRole(["admin","moderator"]), editContact);
 router.delete("/legal/contact/:id", authenticateToken, authorizeRole(["admin"]), removeContact);
 

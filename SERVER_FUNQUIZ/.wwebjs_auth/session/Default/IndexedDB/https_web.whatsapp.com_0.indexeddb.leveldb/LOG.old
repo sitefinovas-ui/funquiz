@@ -1,7 +1,38 @@
-2025/10/12-18:30:40.623 8903 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/12-18:30:40.625 8903 Recovering log #1132
-2025/10/12-18:30:40.795 8903 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001132.log 
-2025/10/12-18:30:48.952 fb03 Level-0 table #1141: started
-2025/10/12-18:30:49.006 fb03 Level-0 table #1141: 331656 bytes OK
-2025/10/12-18:30:49.051 fb03 Delete type=0 #1132
-2025/10/12-18:30:49.055 fb03 Manual compaction at level-0 from '\x00\x97\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x98\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/12-18:42:00.674 a903 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/12-18:42:00.676 a903 Recovering log #1156
+2025/10/12-18:42:00.677 a903 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001156.log 
+2025/10/12-18:42:03.454 16903 Compacting 1@1 + 6@2 files
+2025/10/12-18:42:03.636 16903 Level-0 table #1161: started
+2025/10/12-18:42:03.646 16903 Level-0 table #1161: 20490 bytes OK
+2025/10/12-18:42:03.674 16903 Delete type=0 #1156
+2025/10/12-18:42:03.816 16903 Generated table #1159@1: 84749 keys, 2234198 bytes
+2025/10/12-18:42:04.238 16903 Generated table #1162@1: 98290 keys, 2251001 bytes
+2025/10/12-18:42:04.537 16903 Generated table #1163@1: 69321 keys, 2260264 bytes
+2025/10/12-18:42:04.922 16903 Generated table #1164@1: 41200 keys, 2209975 bytes
+2025/10/12-18:42:05.061 16903 Generated table #1165@1: 19317 keys, 1981348 bytes
+2025/10/12-18:42:05.061 16903 Compacted 1@1 + 6@2 files => 10936786 bytes
+2025/10/12-18:42:05.108 16903 compacted to: files[ 1 0 5 0 0 0 0 ]
+2025/10/12-18:42:05.109 ae03 Manual compaction at level-0 from '\x00\x9a\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x9b\x00\x00\x00' @ 0 : 0; will stop at '\x00\x9a\x00\x00\x05' @ 3108813 : 1
+2025/10/12-18:42:05.109 ae03 Compacting 1@0 + 0@1 files
+2025/10/12-18:42:05.134 ae03 Generated table #1166@0: 450 keys, 9322 bytes
+2025/10/12-18:42:05.134 ae03 Compacted 1@0 + 0@1 files => 9322 bytes
+2025/10/12-18:42:05.170 ae03 compacted to: files[ 0 1 5 0 0 0 0 ]
+2025/10/12-18:42:05.173 ae03 Delete type=2 #1161
+2025/10/12-18:42:05.178 ae03 Manual compaction at level-0 from '\x00\x9a\x00\x00\x05' @ 3108813 : 1 .. '\x00\x9b\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/12-18:42:12.843 1f803 Compacting 1@1 + 3@2 files
+2025/10/12-18:42:13.399 1f803 Generated table #1167@1: 84834 keys, 2233742 bytes
+2025/10/12-18:42:14.198 1f803 Generated table #1168@1: 98311 keys, 2251463 bytes
+2025/10/12-18:42:14.684 1f803 Generated table #1169@1: 69093 keys, 2255225 bytes
+2025/10/12-18:42:14.684 1f803 Compacted 1@1 + 3@2 files => 6740430 bytes
+2025/10/12-18:42:14.725 1f803 compacted to: files[ 0 0 5 0 0 0 0 ]
+2025/10/12-18:42:14.727 1f803 Delete type=2 #1157
+2025/10/12-18:42:14.727 1f803 Delete type=2 #1154
+2025/10/12-18:42:14.727 1f803 Delete type=2 #1151
+2025/10/12-18:42:14.727 1f803 Delete type=2 #1153
+2025/10/12-18:42:14.727 1f803 Delete type=2 #1152
+2025/10/12-18:42:14.727 1f803 Delete type=2 #1163
+2025/10/12-18:42:14.728 1f803 Delete type=2 #1162
+2025/10/12-18:42:14.729 1f803 Delete type=2 #1148
+2025/10/12-18:42:14.729 1f803 Delete type=2 #1149
+2025/10/12-18:42:14.729 1f803 Delete type=2 #1159
+2025/10/12-18:42:14.729 1f803 Delete type=2 #1166

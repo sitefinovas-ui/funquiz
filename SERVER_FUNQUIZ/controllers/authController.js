@@ -205,6 +205,9 @@ export const login = async (req, res) => {
 // -----------------------------
 export const googleAuth = async (req, res) => {
   try {
+    if (!GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ error: "GOOGLE_CLIENT_ID manquant côté serveur" });
+    }
     const { token } = req.body;
 
     // Vérifier le token Google
