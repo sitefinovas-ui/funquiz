@@ -11,6 +11,8 @@ import Opinion from '../Opinion/opinion.jsx';
 import Import from '../ImportUser/import-user.jsx';
 import Result from '../Result/result.jsx';
 import { useEffect } from 'react';
+// Ajout import du popup
+import AddNumber from '../AddNumber/add-number.jsx';
 
 export default function Layout() {
   const { activePopup, setActivePopup, closePopup, popupPayload } = usePopup();
@@ -31,6 +33,8 @@ export default function Layout() {
     opinion: <Opinion closePopup={closePopup} />,
     result: <Result closePopup={closePopup} />,
     importUser: <Import closePopup={closePopup} />,
+    // Ajout: popup d’ajout de numéro
+    addNumber: <AddNumber closePopup={closePopup} />,
   };
 
   useEffect(() => {

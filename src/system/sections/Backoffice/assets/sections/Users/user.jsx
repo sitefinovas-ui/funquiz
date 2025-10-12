@@ -773,7 +773,7 @@ const UserManagement = () => {
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small">Total</p>
+                  <p className="text-muted mb-1 small text-dark">Total</p>
                   <h3 className="fw-bold mb-0">{stats.total}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-primary bg-opacity-10">
@@ -788,7 +788,7 @@ const UserManagement = () => {
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small">Actifs</p>
+                  <p className="text-muted mb-1 small text-dark">Actifs</p>
                   <h3 className="fw-bold mb-0">{stats.active}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-success bg-opacity-10">
@@ -803,7 +803,7 @@ const UserManagement = () => {
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small">Admins</p>
+                  <p className="text-muted mb-1 small text-dark">Admins</p>
                   <h3 className="fw-bold mb-0">{stats.admins}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-danger bg-opacity-10">
@@ -818,7 +818,7 @@ const UserManagement = () => {
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small">Modérateurs</p>
+                  <p className="text-muted mb-1 small text-dark">Modérateurs</p>
                   <h3 className="fw-bold mb-0">{stats.moderators}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-warning bg-opacity-10">
@@ -833,7 +833,7 @@ const UserManagement = () => {
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small">Bannis</p>
+                  <p className="text-muted mb-1 small text-dark">Bannis</p>
                   <h3 className="fw-bold mb-0">{stats.banned}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-dark bg-opacity-10">
@@ -849,7 +849,7 @@ const UserManagement = () => {
         <div className="col-12 col-lg-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
-              <h5 className="fw-bold mb-4">Répartition par rôle</h5>
+              <h5 className="fw-bold mb-4 text-dark">Répartition par rôle</h5>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
@@ -876,7 +876,7 @@ const UserManagement = () => {
         <div className="col-12 col-lg-4 ">
           <div className="d-flex card h-100 border-0 flex-column gap-2 mb-3">
             <div className="d-flex flex-column card-body align-items-start">
-              <h5 className="fw-bold">Inscription par mois</h5>
+              <h5 className="fw-bold text-dark">Inscription par mois</h5>
               {availableYears.map((year) => (
                 <button
                   key={String(year)}
@@ -920,7 +920,7 @@ const UserManagement = () => {
         <div className="col-12 col-lg-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
-              <h5 className="fw-bold mb-4">Connexions hebdomadaires</h5>
+              <h5 className="fw-bold mb-4 text-dark">Connexions hebdomadaires</h5>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={activityData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

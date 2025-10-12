@@ -4,9 +4,7 @@ import './header-dash.css';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoFunQuiz from '../../../../../../assets/Log.png';
 import { LuChevronUp } from 'react-icons/lu';
-import { FiChevronDown } from 'react-icons/fi';
-
-import { FiChevronsRight, FiChevronsLeft } from 'react-icons/fi';
+import { FiChevronDown, FiChevronsRight, FiChevronsLeft } from 'react-icons/fi';
 import {
   FaTachometerAlt,
   FaUsers,
@@ -30,12 +28,7 @@ const Sidebar = () => {
     { id: 'dashboard', icon: FaTachometerAlt, label: "Vue d'ensemble", link: '/dashboard/' },
     { id: 'users', icon: FaUsers, label: 'Gestion des utilisateurs', link: '/dashboard/users' },
     { id: 'comments', icon: FaComments, label: 'Commentaires', link: '/dashboard/comment' },
-    {
-      id: 'messages',
-      icon: FaEnvelope,
-      label: 'Messages utilisateurs',
-      link: '/dashboard/message',
-    },
+    { id: 'messages', icon: FaEnvelope, label: 'Messages utilisateurs', link: '/dashboard/message' },
     { id: 'newsletter', icon: FaEnvelopeOpen, label: 'Newsletter', link: '/dashboard/newsletter' },
     { id: 'quiz', icon: FaQuestionCircle, label: 'Quiz', link: '/dashboard/quiz' },
     { id: 'legal', icon: FaStar, label: 'Légal', link: '/dashboard/legal' },
@@ -47,7 +40,9 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`sidebar-pro d-flex flex-column position-sticky top-0 vh-100 ${isCollapsed ? 'collapsed' : 'expanded'}`}
+      className={`sidebar-pro d-flex flex-column position-sticky top-0 vh-100 ${
+        isCollapsed ? 'collapsed' : 'expanded'
+      }`}
       style={{
         width: isCollapsed ? '80px' : '280px',
         transition: 'width 0.3s ease-in-out',
@@ -57,10 +52,7 @@ const Sidebar = () => {
       }}
     >
       {/* Header */}
-      <div
-        className="sidebar-header d-flex align-items-center justify-content-between px-3 py-4"
-        style={{ minHeight: '80px' }}
-      >
+      <div className="sidebar-header d-flex align-items-center justify-content-between px-3 py-4">
         {!isCollapsed ? (
           <>
             <div className="d-flex align-items-center">
@@ -108,10 +100,7 @@ const Sidebar = () => {
       <nav className="flex-grow-1 overflow-auto px-2 pb-2" style={{ scrollbarWidth: 'thin' }}>
         <div className="nav-section">
           {!isCollapsed && (
-            <div
-              className="nav-section-title text-muted-custom mt-3 small fw-medium mb-2 px-3"
-              style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
-            >
+            <div className="nav-section-title text-muted-custom mt-3 small fw-medium mb-2 px-3">
               Navigation
             </div>
           )}
@@ -123,7 +112,11 @@ const Sidebar = () => {
                 <li key={item.id} className="nav-item mb-1">
                   <Link
                     to={item.link}
-                    className={`nav-link nav-link-pro d-flex align-items-center justify-content-${isCollapsed ? 'center' : 'start'} px-3 py-3 rounded-2 position-relative ${activeItem === item.id ? 'active' : ''}`}
+                    className={`nav-link nav-link-pro d-flex align-items-center justify-content-${
+                      isCollapsed ? 'center' : 'start'
+                    } px-3 py-3 rounded-2 position-relative ${
+                      activeItem === item.id ? 'active' : ''
+                    }`}
                     onClick={() => handleItemClick(item.id)}
                     title={isCollapsed ? item.label : ''}
                     style={{ transition: 'all 0.2s ease' }}
@@ -132,7 +125,8 @@ const Sidebar = () => {
                       className="nav-icon"
                       size={20}
                       style={{
-                        color: activeItem === item.id ? '#ffffff' : 'var(--site-text-muted)',
+                        color:
+                          activeItem === item.id ? '#ffffff' : 'var(--site-text-muted)',
                         minWidth: '20px',
                       }}
                     />
@@ -156,16 +150,18 @@ const Sidebar = () => {
         {/* Quick Actions */}
         {!isCollapsed && (
           <div className="nav-section mt-4">
-            <div
-              className="nav-section-title text-muted-custom small fw-medium mb-2 px-3"
-              style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
-            >
+            <div className="nav-section-title text-muted-custom small fw-medium mb-2 px-3">
               Actions rapide
             </div>
             <div className="px-2">
               <button
                 className="btn w-100 mb-2 py-2 fw-medium"
-                style={{ fontSize: '0.85rem', backgroundColor: 'var(--brand-accent)', borderColor: 'var(--brand-accent)', color: '#fff' }}
+                style={{
+                  fontSize: '0.85rem',
+                  backgroundColor: 'var(--brand-accent)',
+                  borderColor: 'var(--brand-accent)',
+                  color: '#fff',
+                }}
                 onClick={() => navigate('/dashboard/logs')}
               >
                 <i className="bi bi-plus-lg me-2"></i>
@@ -176,7 +172,7 @@ const Sidebar = () => {
                 className="btn btn-outline-light w-100 py-2 fw-medium text-muted-custom border-secondary d-flex gap-2 align-items-center justify-content-center"
                 style={{ fontSize: '0.85rem' }}
               >
-                <FaHome className="me-2"></FaHome>
+                <FaHome className="me-2" />
                 Accueil
               </button>
             </div>
@@ -185,10 +181,7 @@ const Sidebar = () => {
       </nav>
 
       {/* User Profile */}
-      <div
-        className="sidebar-footer border-top border-secondary px-3 py-3"
-        style={{ minHeight: '80px' }}
-      >
+      <div className="sidebar-footer border-top border-secondary px-3 py-3">
         {!isCollapsed ? (
           <div className="d-flex align-items-center">
             <div className="position-relative">
@@ -219,19 +212,22 @@ const Sidebar = () => {
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="btn btn-link p-0 text-muted-custom border-0"
-                data-bs-toggle="dropdown"
-                style={{ fontSize: '16px' }}
+                aria-expanded={isOpen}
               >
                 {isOpen ? <LuChevronUp /> : <FiChevronDown />}
               </button>
-              <ul className="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border-0 rounded-3">
+              <ul
+                className={`dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border-0 rounded-3 ${
+                  isOpen ? 'show' : ''
+                }`}
+              >
                 <li>
-                  <a className="dropdown-item py-2" href="/profil">
+                  <a className="dropdown-item py-2" href="/profil" onClick={() => setIsOpen(false)}>
                     <i className="bi bi-person me-2"></i>Profil
                   </a>
                 </li>
                 <li>
-                  <a className="dropdown-item py-2" href="/terms">
+                  <a className="dropdown-item py-2" href="/terms" onClick={() => setIsOpen(false)}>
                     <i className="bi bi-shield-lock me-2"></i>Confidentialité
                   </a>
                 </li>
@@ -239,7 +235,15 @@ const Sidebar = () => {
                   <hr className="dropdown-divider" />
                 </li>
                 <li>
-                  <a className="dropdown-item py-2 text-danger" href="#" onClick={logout}>
+                  <a
+                    className="dropdown-item py-2 text-danger"
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsOpen(false);
+                      logout();
+                    }}
+                  >
                     <i className="bi bi-box-arrow-right me-2"></i>Déconnexion
                   </a>
                 </li>
@@ -261,15 +265,18 @@ const Sidebar = () => {
               ></div>
             </div>
             <button
+              onClick={() => setIsOpen(!isOpen)}
               className="btn btn-link p-0 text-muted-custom border-0"
-              data-bs-toggle="dropdown"
-              style={{ fontSize: '16px' }}
             >
               <i className="bi bi-three-dots"></i>
             </button>
-            <ul className="dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3">
+            <ul
+              className={`dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3 ${
+                isOpen ? 'show' : ''
+              }`}
+            >
               <li>
-                <a className="dropdown-item py-2" href="#">
+                <a className="dropdown-item py-2" href="/profil" onClick={() => setIsOpen(false)}>
                   Profil
                 </a>
               </li>
@@ -277,7 +284,15 @@ const Sidebar = () => {
                 <hr className="dropdown-divider" />
               </li>
               <li>
-                <a className="dropdown-item py-2 text-danger" href="#" onClick={logout}>
+                <a
+                  className="dropdown-item py-2 text-danger"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    logout();
+                  }}
+                >
                   Déconnexion
                 </a>
               </li>
@@ -286,6 +301,7 @@ const Sidebar = () => {
         )}
       </div>
 
+      {/* ✅ CSS intégré */}
       <style>{`
         .sidebar-pro .nav-link-pro {
           color: var(--site-text-muted);
@@ -298,28 +314,12 @@ const Sidebar = () => {
           background-color: var(--brand-accent);
           color: #ffffff;
         }
-        .sidebar-pro .nav-link-pro.active::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          width: 3px;
-          background-color: var(--brand-accent);
-          border-radius: 0 3px 3px 0;
-        }
         .sidebar-pro::-webkit-scrollbar {
           width: 6px;
         }
         .sidebar-pro::-webkit-scrollbar-thumb {
           background-color: rgba(255, 255, 255, 0.2);
           border-radius: 3px;
-        }
-        .text-muted-custom {
-          color: var(--site-text-muted);
-        }
-        .dropdown-menu-dark {
-          background-color: var(--bg-sidebar-dash);
         }
       `}</style>
     </div>

@@ -147,6 +147,7 @@ const Messages = () => {
         groupKey,
         messageIds: arr.map((x) => x.id),
         user_id: last.user_id,
+        avatar_url: last.avatar_url,
         name: last.name || arr[0].name || 'Utilisateur anonyme',
         email: last.email || arr[0].email || 'Sans email',
         created_at: last.created_at,
@@ -173,6 +174,7 @@ const Messages = () => {
 
         const transformed = data.map((msg) => ({
           id: msg.message_id,
+          avatar_url: msg.avatar_url,
           user_id: msg.user_id,
           admin_id: msg.admin_id,
           name: msg.name || 'Utilisateur anonyme',
@@ -395,7 +397,11 @@ const Messages = () => {
                 onClick={() => handleSelectMessage(msg)}
               >
                 <div className="conversation-avatar">
-                  {msg.name.charAt(0).toUpperCase()}
+                  {msg.avatar_url ? (
+                    <img src={msg.avatar_url} alt={msg.name} className="w-100 h-100 objectif-fit-cover" />
+                  ) : (
+                    msg.name?.charAt(0) || '?'
+                  )}
                   {msg.online && <span className="online-badge"></span>}
                 </div>
                 <div className="conversation-content">

@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import './terms.css';
 
+import {
+  FaFileContract,   // CGU
+  FaUserShield,     // Politique de confidentialité
+  FaCookieBite,     // Politique des cookies
+  FaEnvelope,       // Contact
+  FaQuestionCircle, // FAQ
+} from 'react-icons/fa';
+
+// Les services d'API (supposés importés correctement)
 import cguServices from '../../configurations/Services/cguServices.js';
 import privacyPolicyServices from '../../configurations/Services/privacyPolicyServices.js';
 import cookiesPolicyServices from '../../configurations/Services/cookiesPolicyServices.js';
@@ -17,6 +26,15 @@ function Terms() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Définir les icônes de manière centrale
+  const sectionIcons = {
+    cgu: <FaFileContract />,
+    privacy: <FaUserShield />,
+    cookies: <FaCookieBite />,
+    contact: <FaEnvelope />,
+    faq: <FaQuestionCircle />,
+  };
 
   // Charger toutes les politiques
   useEffect(() => {
@@ -59,8 +77,9 @@ function Terms() {
   // Divise le contenu en paragraphes
   const splitParagraphs = (text) => {
     if (!text) return [];
+    // Diviser par au moins deux retours à la ligne consécutifs, ou un point suivi d'un espace.
     return String(text)
-      .split(/\n{2,}|\.\s+/)
+      .split(/\n{2,}|\.\s+/) 
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
   };
@@ -98,31 +117,31 @@ function Terms() {
     return null;
   };
 
-  // Construction des sections
+  // Construction des sections avec les icônes
   const sections = [
     // CGU
-    ...cguList.map((row) => ({
-      id: `cgu-${row.id}`,
-      title: row.title || "Conditions Générales d'Utilisation",
-      icon: '',
+    ...cguList.map((row, index) => ({
+      id: `cgu-${row.id || index}`,
+      title: row.title || 'Conditions Générales',
+      icon: sectionIcons.cgu, // <== AJOUT DE L'ICÔNE
       color: '#3b82f6',
       content: row.content || '',
     })),
 
     // Politique de confidentialité
-    ...privacyList.map((row) => ({
-      id: `privacy-${row.id}`,
-      title: row.title || 'Politique de confidentialité',
-      icon: '',
+    ...privacyList.map((row, index) => ({
+      id: `privacy-${row.id || index}`,
+      title: row.title || 'Politique de Confidentialité',
+      icon: sectionIcons.privacy, // <== AJOUT DE L'ICÔNE
       color: '#8b5cf6',
       content: row.content || '',
     })),
 
     // Politique des cookies
-    ...cookiesList.map((row) => ({
-      id: `cookies-${row.id}`,
-      title: row.title || 'Politique des cookies',
-      icon: '',
+    ...cookiesList.map((row, index) => ({
+      id: `cookies-${row.id || index}`,
+      title: row.title || 'Politique des Cookies',
+      icon: sectionIcons.cookies, // <== AJOUT DE L'ICÔNE
       color: '#ec4899',
       content: row.content || '',
     })),
@@ -130,13 +149,13 @@ function Terms() {
     // Contact (filtrer uniquement ceux opérationnels)
     ...contactList
       .filter((row) => !row.status || row.status === 'operationnel')
-      .map((row) => ({
-        id: `contact-${row.id}`,
+      .map((row, index) => ({
+        id: `contact-${row.id || index}`,
         title: row.service || 'Contact',
-        icon: '',
+        icon: sectionIcons.contact, // <== AJOUT DE L'ICÔNE
         color: '#06b6d4',
         content: [
-          ...splitParagraphs(row.content || ''),
+          ...splitParagraphs(row.content || 'Vous pouvez nous contacter via les informations suivantes :'),
           row.email ? `📧 Email : ${row.email}` : '',
           row.created_at ? `🕓 Créé le ${formatDate(row.created_at)}` : '',
         ],
@@ -145,43 +164,62 @@ function Terms() {
     // FAQ (uniquement actives)
     ...faqList
       .filter((f) => Number(f.is_active) === 1)
-      .map((f) => ({
-        id: `faq-${f.faq_id}`,
+      .map((f, index) => ({
+        id: `faq-${f.faq_id || index}`,
         title: f.question || 'FAQ',
-        icon: '',
+        icon: sectionIcons.faq, // <== AJOUT DE L'ICÔNE
         color: '#f59e0b',
-        content: f.answer || '',
+        content: f.answer || 'Réponse en attente...',
       })),
   ];
 
-  // Gestion du scroll actif
-  // (À retirer complètement) Ancien effet qui changeait l'active au scroll
-  // useEffect(() => {
-  //   const handleScroll = () => {
-  //     const sectionsEls = document.querySelectorAll('section[id]');
-  //     let current = sections.length ? sections[0].id : 'cgu';
-  //     const offset = window.innerWidth < 900 ? 80 : 120;
-  //     sectionsEls.forEach((section) => {
-  //       const rect = section.getBoundingClientRect();
-  //       if (rect.top <= offset && rect.bottom >= offset) {
-  //         current = section.id;
-  //       }
-  //     });
-  //     setActiveSection(current);
-  //   };
-  //   window.addEventListener('scroll', handleScroll);
-  //   handleScroll();
-  //   return () => window.removeEventListener('scroll', handleScroll);
-  // }, [sections]);
-
+  // Fonction pour faire défiler (scroll) vers la section
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (el) {
-      const y =
-        el.getBoundingClientRect().top + window.scrollY - (window.innerWidth < 900 ? 60 : 100);
+      // Ajustement de l'offset pour laisser de l'espace pour la barre de nav fixe
+      const offset = window.innerWidth < 900 ? 80 : 120;
+      const y = el.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
+  
+  // Gérer le changement de section et le scroll
+  const handleSetActiveSection = (id) => {
+    setActiveSection(id);
+    scrollToSection(id);
+  };
+
+  // Gestion du scroll pour maintenir la navigation active (rétabli)
+  useEffect(() => {
+    const handleScroll = () => {
+      const sectionsEls = document.querySelectorAll('section[id]');
+      // Par défaut, la première section si disponible, sinon l'état initial 'cgu'
+      let current = sections.length ? sections[0].id : 'cgu'; 
+      const offset = window.innerWidth < 900 ? 80 : 120;
+      
+      sectionsEls.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        // Détecte si le haut de la section est au niveau de l'offset (proche du haut de l'écran)
+        if (rect.top <= offset && rect.bottom >= offset) {
+          current = section.id;
+        }
+      });
+      
+      // Mise à jour de l'état uniquement si nécessaire
+      if (current !== activeSection) {
+        setActiveSection(current);
+      }
+    };
+    
+    // Ajoute l'écouteur de scroll
+    window.addEventListener('scroll', handleScroll);
+    // Exécute une première fois pour définir l'état initial
+    handleScroll();
+    
+    // Nettoyage lors du démontage du composant
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [sections.length, activeSection]); // Dépendance à sections.length pour réexécuter si le contenu charge
 
   const heroTitle = 'Tous les termes et conditions';
 
@@ -196,21 +234,11 @@ function Terms() {
       </div>
 
       <div className="terms-layout position-relative">
-        {/* NAVIGATION */}
+        {/* NAVIGATION FIXE / COLLANTE */}
         <div className="terms-nav">
           <nav
-            className="h-terms-nav d-flex flex-row flex-lg-column flex-nowrap gap-2 align-items-stretch"
+            className="h-terms-nav"
             aria-label="Navigation sections"
-            style={{
-              top: 0,
-              zIndex: 1000,
-              WebkitOverflowScrolling: 'touch',
-              overflowX: 'hidden',
-              overscrollBehavior: 'none',
-              background: 'rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(6px)',
-              padding: '1rem',
-            }}
           >
             <h2 className="terms-nav-title text-start mb-4 text-secondary text-uppercase fs-6 d-none d-lg-block">
               Navigation
@@ -218,18 +246,14 @@ function Terms() {
             {sections.map((section) => (
               <button
                 key={section.id}
-                onClick={() => setActiveSection(section.id)}
+                // Correction: utilisation du handleSetActiveSection pour scroll + mettre à jour l'état
+                onClick={() => handleSetActiveSection(section.id)}
                 className={`terms-nav-item ${activeSection === section.id ? 'active' : ''} rounded-pill text-truncate`}
                 title={section.title}
                 aria-label={section.title}
                 aria-current={activeSection === section.id ? 'page' : undefined}
                 tabIndex={0}
                 style={{ maxWidth: '80vw' }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    setActiveSection(section.id);
-                  }
-                }}
               >
                 <span aria-hidden="true">{section.icon}</span>{' '}
                 <span className="text-capitalize" style={{ marginLeft: 8 }}>
@@ -239,17 +263,20 @@ function Terms() {
             ))}
           </nav>
         </div>
-        {/* CONTENU */}
+        
+        {/* CONTENU PRINCIPAL */}
         <div className="terms-content">
           {loading && <div className="p-4 text-muted">Chargement des contenus...</div>}
           {error && <div className="p-4 text-danger">⚠️ {error}</div>}
+          
           {!loading &&
             !error &&
             sections.map(({ id, icon, title, content }) => (
+              // Note: Le composant affiche TOUTES les sections, et le CSS s'occupe de la mise en page.
               <section
                 key={id}
                 id={id}
-                className={`terms-section ${activeSection === id ? 'active' : ''}`}
+                className="terms-section"
               >
                 <div className="terms-section-header">
                   <span className="terms-section-icon" aria-hidden="true">
@@ -273,7 +300,7 @@ function Terms() {
             <a
               href="/contact"
               className="terms-contact-button border-0 text-light"
-              aria-label="Contacter le support FunQuiz"
+              aria-label="Contacter le support"
             >
               Nous contacter
             </a>

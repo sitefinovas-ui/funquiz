@@ -754,23 +754,36 @@ function ProfilePage() {
                 <p className="d-flex align-items-center gap-2">
                   <FcAddressBook /> {userInfo.email}
                 </p>
-                <p className="d-flex align-items-center gap-2">
-                  {userInfo.is_verify === 0 ? (
+                {/* Téléphone / Ajout pour comptes Google */}
+                {!userInfo.number && user?.google_id ? (
+                  <p className="d-flex align-items-center gap-2">
+                    <FcAddressBook />
                     <button
-                      onClick={() => setActiveOtp(true)}
-                      className="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
+                      className="btn btn-sm btn-primary"
+                      onClick={() => setActivePopup('addNumber')}
                     >
-                      <FcAddressBook />
-                      +{userInfo.number}{' '}
-                      <CgDanger color="red" title="Non vérifié" size={18} />
+                      Ajouter un numéro
                     </button>
-                  ) : (
-                    <>
-                      <FcAddressBook />+{userInfo.number}{' '}
-                      <FaCheckCircle color="green" title="Vérifié" size={16} />
-                    </>
-                  )}
-                </p>
+                  </p>
+                ) : (
+                  <p className="d-flex align-items-center gap-2">
+                    {userInfo.is_verify === 0 ? (
+                      <button
+                        onClick={() => setActiveOtp(true)}
+                        className="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
+                      >
+                        <FcAddressBook />
+                        +{userInfo.number}{' '}
+                        <CgDanger color="red" title="Non vérifié" size={18} />
+                      </button>
+                    ) : (
+                      <>
+                        <FcAddressBook />+{userInfo.number}{' '}
+                        <FaCheckCircle color="green" title="Vérifié" size={16} />
+                      </>
+                    )}
+                  </p>
+                )}
                 <p className="d-flex align-items-center gap-2">
                   <FcPlanner /> Membre depuis{' '}
                   {userInfo.joinDate ? new Date(userInfo.joinDate).toLocaleDateString('fr-FR') : '—'}
@@ -831,8 +844,8 @@ function ProfilePage() {
           >
             {alert0 && (
               <div className="shadow-lg p-4 rounded-4 bg-white text-center" style={{ maxWidth: 400 }}>
-                <h3 className="mb-3">Vérification requise</h3>
-                <p className="mb-4">
+                <h3 className="mb-3 text-dark">Vérification requise</h3>
+                <p className="mb-4 text-dark">
                   Vous devez vérifier votre numéro pour accéder à certaines fonctionnalités de notre
                   application.
                 </p>
@@ -861,7 +874,7 @@ function ProfilePage() {
             )}
 
             {alert && (
-              <div className="shadow-lg p-4 rounded-4 bg-white text-center" style={{ maxWidth: 400 }}>
+              <div className="shadow-lg p-4 text-dark rounded-4 bg-white text-center" style={{ maxWidth: 400 }}>
                 <h2 className="mb-3">Vérification du numéro</h2>
                 <p className="mb-3">
                   Un code de vérification a été envoyé à votre numéro <strong>{userInfo.number}</strong>. Veuillez entrer le code ci-dessous :
@@ -869,7 +882,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   placeholder="Entrez le code OTP"
-                  className="form-control mb-3 text-center"
+                  className="form-control-custom mb-3 text-center"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   maxLength={6}
@@ -961,10 +974,50 @@ function ProfilePage() {
                 </div>
               </div>
 
-              <div className="mb-3">
+              <div className="mb-3 avatar-field">
                 <label className="form-label">Photo de profil (.webp)</label>
-                <input type="file" accept="image/webp" className="form-control" onChange={(e) => { const file = e.target.files?.[0]; setSelectedFile(file || null); setPreviewUrl(file ? URL.createObjectURL(file) : null); }} />
-                {previewUrl && <img src={previewUrl} alt="Preview" style={{ maxWidth: 120, marginTop: 8, borderRadius: 8 }} />}
+
+                {/* Input caché et label cliquable */}
+                <input
+                  id="profileWebp"
+                  type="file"
+                  accept="image/webp"
+                  className="visually-hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setSelectedFile(file || null);
+                    setPreviewUrl(file ? URL.createObjectURL(file) : null);
+                  }}
+                />
+                {!previewUrl && (
+                  <label htmlFor="profileWebp" className="avatar-picker">
+                    <span className="picker-icon">＋</span>
+                    <span className="picker-text">
+                      <strong>Choisir une image</strong>
+                      <small>Format WebP recommandé</small>
+                    </span>
+                  </label>
+                )}
+
+                {/* Aperçu + action supprimer */}
+                {previewUrl && (
+                  <div className="avatar-preview">
+                    <img src={previewUrl} alt="Preview" className="avatar-img" />
+                    <div className="avatar-actions">
+                      <label htmlFor="profileWebp" className="btn btn-soft">Changer</label>
+                      <button
+                        type="button"
+                        className="btn btn-soft-danger"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setPreviewUrl(null);
+                        }}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="d-flex align-items-center justify-content-between">

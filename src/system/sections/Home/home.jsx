@@ -22,8 +22,8 @@ import commentService from '../../configurations/Services/commentServices.js';
 import newsletterService from '../../configurations/Services/newsletterServices.js';
 import pubService from '../../configurations/Services/publiciteServices.js';
 
+// Home component
 const Home = () => {
-  const { setActivePopup } = usePopup();
   const token = localStorage.getItem('token');
   const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const user_id_token = payload?.user_id;
@@ -41,6 +41,8 @@ const Home = () => {
   const [comments, setComments] = useState([]);
   const [email, setEmail] = useState('');
   const [pub, setPub] = useState([])
+
+  const { openPopup, setActivePopup } = usePopup();
 
   const containerRef = useRef(null);
 
@@ -238,12 +240,10 @@ const Home = () => {
           </p>
         </div>
 
-        {/* cards container (position:absolute in your CSS) */}
         <div className="cards-container position-relative d-lg-flex d-none">
-          {/* ... vos cartes thematiques (laissez la structure d'origine) */}
           {thematics.length > 0 && (
             <div
-              onClick={() => setActivePopup('thematic')}
+              onClick={() => openPopup('thematic', { highlightThematicId: thematics[0].thematic_id })}
               style={{
                 background: `linear-gradient(180deg, ${thematics[0].color_code} 0%, #046030 100%)`,
               }}
@@ -277,7 +277,7 @@ const Home = () => {
 
           {thematics.length > 2 && (
             <div
-              onClick={() => setActivePopup('thematic')}
+              onClick={() => openPopup('thematic', { highlightThematicId: thematics[2].thematic_id })}
               style={{
                 background: `linear-gradient(180deg, ${thematics[2].color_code} 0%, #0052d4 100%)`,
               }}
@@ -311,7 +311,7 @@ const Home = () => {
 
           {thematics.length > 1 && (
             <div
-              onClick={() => setActivePopup('thematic')}
+              onClick={() => openPopup('thematic', { highlightThematicId: thematics[1].thematic_id })}
               style={{
                 background: `linear-gradient(180deg, ${thematics[1].color_code} 0%, #ee0979 100%)`,
               }}
@@ -343,14 +343,20 @@ const Home = () => {
             </div>
           )}
 
-          <button onClick={() => setActivePopup('thematic')} className="btn-commencer d-flex gap-3">
+          <button
+            onClick={() =>
+              openPopup('thematic', {
+                highlightThematicId: thematics[0]?.thematic_id,
+              })
+            }
+            className="btn-commencer d-flex gap-3">
             <MdGamepad className="p-0 m-0" size={20} />
             Commencer
           </button>
 
           {thematics.length > 3 && (
             <div
-              onClick={() => setActivePopup('thematic')}
+              onClick={() => openPopup('thematic', { highlightThematicId: thematics[3].thematic_id })}
               style={{
                 background: `linear-gradient(180deg, ${thematics[3].color_code} 0%, #ffd200 100%)`,
               }}
@@ -384,7 +390,7 @@ const Home = () => {
 
           {thematics.length > 4 && (
             <div
-              onClick={() => setActivePopup('thematic')}
+              onClick={() => openPopup('thematic', { highlightThematicId: thematics[4].thematic_id })}
               style={{
                 background: `linear-gradient(180deg, ${thematics[4].color_code} 0%, #4a00e0 100%)`,
               }}
@@ -418,7 +424,7 @@ const Home = () => {
 
           {thematics.length > 5 && (
             <div
-              onClick={() => setActivePopup('thematic')}
+              onClick={() => openPopup('thematic', { highlightThematicId: thematics[5].thematic_id })}
               style={{
                 background: `linear-gradient(180deg, ${thematics[5].color_code} 0%, #dd2476 100%)`,
               }}
@@ -464,32 +470,39 @@ const Home = () => {
           className="container-bulle d-flex align-items-center d-lg-none"
         >
           <div className="d-inline-flex gap-3" style={{ padding: '0 20px' }}>
-  {Array.isArray(thematics) &&
-    thematics
-      .map((thematic) => (
-        <div
-          key={thematic.thematic_id}
-          className="bulle-custom d-flex flex-column align-items-center"
-          style={{ scrollSnapAlign: 'center' }}
-        >
-          <div
-            style={{
-              width: '100px',
-              height: '100px',
-              background: thematic.color_code,
-            }}
-            className="rounded-circle container-img-bulle overflow-hidden b-zero"
-          >
-            <img
-              src={thematic.icon_url}
-              className="w-100 h-100"
-              alt={thematic.thematic_title}
-            />
+            {Array.isArray(thematics) &&
+              thematics.map((thematic) => (
+                <div
+                  key={thematic.thematic_id}
+                  className="bulle-custom d-flex flex-column align-items-center"
+                  style={{ scrollSnapAlign: 'center', cursor: 'pointer' }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openPopup('thematic', { highlightThematicId: thematic.thematic_id })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      openPopup('thematic', { highlightThematicId: thematic.thematic_id });
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      background: thematic.color_code,
+                    }}
+                    className="rounded-circle container-img-bulle overflow-hidden b-zero"
+                  >
+                    <img
+                      src={thematic.icon_url}
+                      className="w-100 h-100"
+                      alt={thematic.thematic_title}
+                    />
+                  </div>
+                  <p className="text-white pt-3">{thematic.thematic_title}</p>
+                </div>
+              ))}
           </div>
-          <p className="text-white pt-3">{thematic.thematic_title}</p>
-        </div>
-      ))}
-</div>
 
         </div>
       </section>
@@ -915,7 +928,7 @@ const Home = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Entrez votre email"
-              className="form-control w-100 text-dark rounded-pill p-2 m-0 bg-transparent border-0"
+              className="form-control-custom w-100 text-dark rounded-pill p-2 m-0 bg-transparent border-0"
               required
             />
             <button
@@ -929,7 +942,7 @@ const Home = () => {
           {message && <p className="mt-3 text-light position-absolute bottom-0">{message}</p>}
         </div>
       </section>
-      
+
     </div>
   );
 };

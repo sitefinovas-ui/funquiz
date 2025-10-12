@@ -1,14 +1,20 @@
 import api from '../Api/api_axios.js';
 
+const normalizeNewsletterPayload = (payload) => {
+  if (typeof payload === 'string') {
+    return { email: payload.trim() };
+  }
+  if (payload && typeof payload === 'object') {
+    return { email: String(payload.email || '').trim(), user_id: payload.user_id ?? null };
+  }
+  return { email: '' };
+};
+
 const newsletterServices = {
-  // Récupérer toutes les newsletters via l'API quiz
+  // Récupérer toutes les newsletters via l'API
   getAllNewsletter: async () => {
-    try {
-      const response = await api.get('/newsletters');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.get('/newsletters');
+    return response.data;
   },
 
   // Rechercher des newsletters avec filtres
@@ -62,50 +68,32 @@ const newsletterServices = {
 
   // Ajouter une nouvelle newsletter
   addNewsletter: async (data) => {
-    try {
-      console.log("📨 Tentative d'inscription newsletter:", data);
-      const response = await api.post('/newsletters', data);
-      console.log('✅ Réponse inscription:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ Erreur inscription newsletter:', {
-        message: error.message,
-        config: error.config,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      throw error;
+    const body = normalizeNewsletterPayload(data);
+    if (!body.email || typeof body.email !== 'string') {
+      const err = new Error('Le champ email est requis et doit être une chaîne.');
+      err.code = 'INVALID_EMAIL_PAYLOAD';
+      throw err;
     }
+    const response = await api.post('/newsletters', body);
+    return response.data;
   },
 
   // Mettre à jour le statut d'une newsletter
   updateStatus: async (id, confirmed) => {
-    try {
-      const response = await api.put(`/newsletters/${id}/status`, { confirmed });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.put(`/newsletters/${id}/status`, { confirmed });
+    return response.data;
   },
 
   // Supprimer une newsletter
   deleteNewsletter: async (id) => {
-    try {
-      const response = await api.delete(`/newsletters/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.delete(`/newsletters/${id}`);
+    return response.data;
   },
 
   // Envoyer une newsletter en masse
   sendBulk: async (data) => {
-    try {
-      const response = await api.post('/newsletters/send', data);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.post('/newsletters/send', data);
+    return response.data;
   },
 };
 

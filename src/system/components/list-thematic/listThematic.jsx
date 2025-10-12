@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import thematicService from '../../configurations/Services/thematicServices.js';
 
-const Thematic = ({ closePopup, highlightThematicId }) => {
+function Thematic({ closePopup, highlightThematicId }) {
   const [thematics, setThematics] = useState([]);
   const navigate = useNavigate();
 
@@ -40,7 +40,10 @@ const Thematic = ({ closePopup, highlightThematicId }) => {
   };
 
   return (
-    <div className="backdrop-blur position-fixed bg-dark bg-opacity-50 top-0 end-0 bottom-0 start-0 h-100 w-100">
+    <div
+      className="backdrop-blur position-fixed bg-dark bg-opacity-50 top-0 end-0 bottom-0 start-0 h-100 w-100"
+      style={{ zIndex: 1055 }}
+    >
       <div className="position-relative w-100">
         <div
           style={{ top: '-10px' }}
