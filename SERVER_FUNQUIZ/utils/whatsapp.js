@@ -1,6 +1,7 @@
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import puppeteer from "puppeteer";
+import fs from "fs";
 
 const { Client, LocalAuth } = pkg;
 
@@ -9,11 +10,19 @@ let waReady = false;
 let initializing = false;
 let lastQr = null;
 
-const createClient = () =>
-  new Client({
+const createClient = () => {
+  // Chemin Chromium: priorité à CHROMIUM_PATH, sinon /usr/bin/chromium-browser si présent, sinon puppeteer.executablePath()
+  const chromiumEnv = process.env.CHROMIUM_PATH;
+  const chromiumLinuxDefault = "/usr/bin/chromium-browser";
+  const executablePath =
+    chromiumEnv ||
+    (fs.existsSync(chromiumLinuxDefault) ? chromiumLinuxDefault : puppeteer.executablePath());
+
+  return new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
     puppeteer: {
       headless: process.env.HEADLESS !== "false",
+      executablePath,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -21,14 +30,14 @@ const createClient = () =>
         "--disable-accelerated-2d-canvas",
         "--no-first-run",
         "--no-zygote",
+        "--single-process",
         "--disable-gpu",
-        "--disable-extensions",
         "--remote-debugging-port=9222",
         "--user-data-dir=/tmp/chrome-data",
       ],
-      executablePath: process.env.CHROMIUM_PATH || puppeteer.executablePath(),
     },
   });
+};
 
 export const initializeWhatsApp = async (retries = 3) => {
   if (waReady && waClient) return waClient;

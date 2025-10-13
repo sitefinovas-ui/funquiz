@@ -75,8 +75,11 @@ router.get("/auth/whatsapp-status", (req, res) => {
 });
 router.get("/auth/whatsapp-qr", (req, res) => {
   const qr = getLastQr();
-  if (!qr) return res.status(404).json({ message: "QR non disponible (client non initialisé ou déjà prêt)" });
-  // On renvoie la donnée brute du QR pour que le front puisse l'afficher
+  if (!qr) {
+    return res
+      .status(404)
+      .json({ message: "QR non disponible (client non initialisé ou déjà prêt)" });
+  }
   res.json({ qr });
 });
 // -----------------
