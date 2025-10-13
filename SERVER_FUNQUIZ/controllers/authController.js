@@ -497,13 +497,21 @@ export const logout = (req, res) => {
       sameSite: "None", // permet le partage du cookie entre domaines (backend/frontend)
     });
 
-    console.log("✅ Déconnexion réussie, redirection en cours...");
+    console.log("✅ Déconnexion réussie");
 
-    // Redirection vers le frontend
-    return res.redirect('https://funquiz-wn3n.onrender.com'); // tu peux mettre juste / si tu veux la page d’accueil
+    // NE PAS rediriger côté backend avec 2 services séparés
+    // Renvoyer un JSON à la place
+    return res.status(200).json({ 
+      success: true, 
+      message: "Déconnexion réussie" 
+    });
+    
   } catch (error) {
     console.error("❌ Erreur lors de la déconnexion :", error);
-    return res.status(500).json({ message: "Erreur lors de la déconnexion." });
+    return res.status(500).json({ 
+      success: false, 
+      message: "Erreur lors de la déconnexion." 
+    });
   }
 };
 
