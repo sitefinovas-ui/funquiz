@@ -10,19 +10,27 @@ let waReady = false;
 let initializing = false;
 let lastQr = null;
 
-const createClient = () => {
-  // Chemin Chromium: priorité à CHROMIUM_PATH, sinon /usr/bin/chromium-browser si présent, sinon puppeteer.executablePath()
-  const chromiumEnv = process.env.CHROMIUM_PATH;
-  const chromiumLinuxDefault = "/usr/bin/chromium-browser";
-  const executablePath =
-    chromiumEnv ||
-    (fs.existsSync(chromiumLinuxDefault) ? chromiumLinuxDefault : puppeteer.executablePath());
+function resolveChromiumPath() {
+  const envPath = process.env.CHROMIUM_PATH;
+  if (envPath && fs.existsSync(envPath)) return envPath;
 
-  return new Client({
+  const candidates = [
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+  ].filter((p) => fs.existsSync(p));
+  if (candidates.length > 0) return candidates[0];
+
+  return puppeteer.executablePath();
+}
+
+const createClient = () =>
+  new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
     puppeteer: {
       headless: process.env.HEADLESS !== "false",
-      executablePath,
+      executablePath: resolveChromiumPath(),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -30,14 +38,12 @@ const createClient = () => {
         "--disable-accelerated-2d-canvas",
         "--no-first-run",
         "--no-zygote",
-        "--single-process",
         "--disable-gpu",
         "--remote-debugging-port=9222",
         "--user-data-dir=/tmp/chrome-data",
       ],
     },
   });
-};
 
 export const initializeWhatsApp = async (retries = 3) => {
   if (waReady && waClient) return waClient;
@@ -118,5 +124,6 @@ export const getWhatsAppStatus = () => ({
   wid: waClient?.info?.wid || null,
   initializing,
 });
+
 export const getLastQr = () => lastQr;
 export { waClient };
