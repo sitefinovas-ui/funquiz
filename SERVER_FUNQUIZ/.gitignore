@@ -7,3 +7,5 @@ node_modules/
 
 # Environnements
 .env
+# WhatsApp Web JS session/cache
+.wwebjs_auth/

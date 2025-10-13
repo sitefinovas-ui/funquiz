@@ -88,7 +88,6 @@ app.use(
 
       const allowedOrigins = [
         "https://funquiz-7k43.onrender.com", // frontend Render (prod)
-        "https://funquiz-front.onrender.com", // éventuel ancien frontend
         "http://localhost:31",              // front Vite local (corrigé)
         process.env.FRONTEND_URL,             // override via env si défini
       ].filter(Boolean);
