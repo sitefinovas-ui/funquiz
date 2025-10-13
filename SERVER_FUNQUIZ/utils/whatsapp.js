@@ -43,32 +43,14 @@ cleanupSingletonLock();
 
 // Utiliser un dossier temporaire unique pour le profil Chrome
 function getTempChromeDir() {
-  const isRender = process.env.RENDER === 'true';
-  // Sur Render, utiliser un chemin fixe pour la persistance entre redémarrages
-  if (isRender) {
-    const dir = '/tmp/chrome-data';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    return dir;
+  const dir = '/tmp/chrome-data';
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
-  // En local, utiliser un dossier temporaire unique
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'chrome-'));
+  return dir;
 }
 
-// Trouver le meilleur chemin pour Chromium
-function findChromiumPath() {
-  // 1. Préférer le chemin explicite s'il existe
-  if (process.env.PUPPETEER_EXECUTABLE_PATH && 
-      fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
-    return process.env.PUPPETEER_EXECUTABLE_PATH;
-  }
-  
-  // 2. Utiliser le Chromium de Puppeteer
-  return puppeteer.executablePath();
-}
-
-// Simplified client: use Puppeteer's bundled Chromium
+// Simplified client: use ONLY Puppeteer's bundled Chromium
 function createClient() {
   const tempDir = getTempChromeDir();
   console.log("📁 Dossier Chrome:", tempDir);
@@ -76,8 +58,8 @@ function createClient() {
   return new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
     puppeteer: {
-      headless: process.env.HEADLESS !== "false",
-      executablePath: findChromiumPath(),
+      headless: true,
+      // Ne pas spécifier executablePath - laisser Puppeteer utiliser son Chromium
       args: [
         "--no-sandbox", 
         "--disable-setuid-sandbox",
