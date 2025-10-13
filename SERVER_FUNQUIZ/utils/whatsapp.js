@@ -1,11 +1,13 @@
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
+import puppeteer from "puppeteer";
 
 const { Client, LocalAuth } = pkg;
 
 let waClient;
 let waReady = false;
 let initializing = false;
+let lastQr = null;
 
 const createClient = () =>
   new Client({
@@ -19,11 +21,12 @@ const createClient = () =>
         "--disable-accelerated-2d-canvas",
         "--no-first-run",
         "--no-zygote",
-        "--single-process",
         "--disable-gpu",
+        "--disable-extensions",
         "--remote-debugging-port=9222",
+        "--user-data-dir=/tmp/chrome-data",
       ],
-      executablePath: process.env.CHROMIUM_PATH || undefined,
+      executablePath: process.env.CHROMIUM_PATH || puppeteer.executablePath(),
     },
   });
 
@@ -35,6 +38,7 @@ export const initializeWhatsApp = async (retries = 3) => {
     waClient = createClient();
 
     waClient.on("qr", (qr) => {
+      lastQr = qr;
       qrcode.generate(qr, { small: true });
       console.log("📲 QR Code généré. Scannez avec WhatsApp.");
     });
@@ -105,4 +109,5 @@ export const getWhatsAppStatus = () => ({
   wid: waClient?.info?.wid || null,
   initializing,
 });
+export const getLastQr = () => lastQr;
 export { waClient };

@@ -1,15 +1,15 @@
-2025/10/13-14:02:15.169 15d03 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session-FunQuizBot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/13-14:02:15.170 15d03 Recovering log #265
-2025/10/13-14:02:15.243 15d03 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session-FunQuizBot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000265.log 
-2025/10/13-14:02:17.839 20a03 Level-0 table #271: started
-2025/10/13-14:02:17.887 20a03 Level-0 table #271: 188236 bytes OK
-2025/10/13-14:02:17.940 20a03 Delete type=0 #265
-2025/10/13-14:02:17.951 20a03 Manual compaction at level-0 from '\x00K\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00L\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/10/13-14:02:26.563 8403 Compacting 1@1 + 2@2 files
-2025/10/13-14:02:26.818 8403 Generated table #272@1: 42427 keys, 2199892 bytes
-2025/10/13-14:02:26.959 8403 Generated table #273@1: 30248 keys, 1127200 bytes
-2025/10/13-14:02:26.959 8403 Compacted 1@1 + 2@2 files => 3327092 bytes
-2025/10/13-14:02:27.002 8403 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/10/13-14:02:27.003 8403 Delete type=2 #267
-2025/10/13-14:02:27.003 8403 Delete type=2 #271
-2025/10/13-14:02:27.003 8403 Delete type=2 #268
+2025/10/13-14:28:58.561 2a203 Reusing MANIFEST /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session-FunQuizBot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/13-14:28:58.563 2a203 Recovering log #275
+2025/10/13-14:28:58.636 2a203 Reusing old log /Users/Frederick/Desktop/quiz/coding/SERVER_FUNQUIZ/.wwebjs_auth/session-FunQuizBot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000275.log 
+2025/10/13-14:29:02.517 29d03 Level-0 table #281: started
+2025/10/13-14:29:02.556 29d03 Level-0 table #281: 169285 bytes OK
+2025/10/13-14:29:02.607 29d03 Delete type=0 #275
+2025/10/13-14:29:02.610 29d03 Manual compaction at level-0 from '\x00M\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00N\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/13-14:29:12.448 21703 Compacting 1@1 + 2@2 files
+2025/10/13-14:29:12.728 21703 Generated table #282@1: 41751 keys, 2198479 bytes
+2025/10/13-14:29:12.943 21703 Generated table #283@1: 33304 keys, 1206520 bytes
+2025/10/13-14:29:12.943 21703 Compacted 1@1 + 2@2 files => 3404999 bytes
+2025/10/13-14:29:13.000 21703 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/10/13-14:29:13.001 21703 Delete type=2 #277
+2025/10/13-14:29:13.001 21703 Delete type=2 #281
+2025/10/13-14:29:13.001 21703 Delete type=2 #278

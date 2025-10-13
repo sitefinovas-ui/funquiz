@@ -29,6 +29,7 @@ import {
   authorizeRole,
 } from "../middleware/authentification.js";
 import { getWhatsAppStatus } from "../utils/whatsapp.js";
+import { getLastQr } from "../utils/whatsapp.js";
 
 const router = express.Router();
 
@@ -71,6 +72,12 @@ router.post("/verify-otp", verifyOtp);
 router.get("/auth/whatsapp-status", (req, res) => {
   const status = getWhatsAppStatus();
   res.status(200).json(status);
+});
+router.get("/auth/whatsapp-qr", (req, res) => {
+  const qr = getLastQr();
+  if (!qr) return res.status(404).json({ message: "QR non disponible (client non initialisé ou déjà prêt)" });
+  // On renvoie la donnée brute du QR pour que le front puisse l'afficher
+  res.json({ qr });
 });
 // -----------------
 // Multer configuration
