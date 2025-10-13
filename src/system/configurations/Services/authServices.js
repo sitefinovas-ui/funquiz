@@ -54,13 +54,13 @@ const authService = {
       if (response.data.success) {
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/login`;
+        window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/profil`;
       }
     } catch (error) {
       console.error('erreur lors de la déconnexion:', error.response?.data || error.message);
       localStorage.clear();
       sessionStorage.clear();
-      window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/login`;
+      window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/profil`;
     } 
   },
 
