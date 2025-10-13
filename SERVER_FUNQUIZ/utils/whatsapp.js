@@ -7,6 +7,9 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import os from 'os';
 
+// Supprimer la variable d'environnement problématique
+delete process.env.PUPPETEER_EXECUTABLE_PATH;
+
 const { Client, LocalAuth } = pkg;
 let waClient;
 let waReady = false;
@@ -55,11 +58,15 @@ function createClient() {
   const tempDir = getTempChromeDir();
   console.log("📁 Dossier Chrome:", tempDir);
   
+  // Afficher le chemin que Puppeteer va utiliser
+  const chromePath = puppeteer.executablePath();
+  console.log("🔍 Chromium path:", chromePath);
+  
   return new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
     puppeteer: {
       headless: true,
-      // Ne pas spécifier executablePath - laisser Puppeteer utiliser son Chromium
+      // Ne PAS spécifier executablePath pour utiliser celui de Puppeteer
       args: [
         "--no-sandbox", 
         "--disable-setuid-sandbox",
