@@ -100,4 +100,9 @@ export const ensureWhatsAppReady = async () => {
   });
 };
 
+export const getWhatsAppStatus = () => ({
+  ready: waReady,
+  wid: waClient?.info?.wid || null,
+  initializing,
+});
 export { waClient };

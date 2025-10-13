@@ -544,17 +544,17 @@ export async function sendOtp(req, res) {
 
     const waId = formatWhatsAppId(String(number));
     const message = `
-      Bonjour ${user.first_name || user.name || ""} 👋,
-      Vous avez demandé un code de vérification pour accéder à votre compte FunQuiz.
+        Bonjour ${user.first_name || user.name || ""} 👋,
+        🔑 Code OTP : ${otp}
+        ⏰ Valable ${OTP_TTL_MINUTES} minutes.
+    `;
 
-      🔑 Votre code OTP est : ${otp}
+    try {
+      await ensureWhatsAppReady();
+    } catch (e) {
+      return res.status(503).json({ error: "WhatsApp non prêt", details: e.message });
+    }
 
-      ⏰ Ce code est valable pendant ${OTP_TTL_MINUTES} minutes. Veuillez ne pas le partager avec qui que ce soit pour protéger votre compte.
-      Si vous n'avez pas demandé ce code, ignorez simplement ce message.
-      Merci et amusez-vous bien sur FunQuiz ! 🎉
-      `;
-
-    await ensureWhatsAppReady();
     const sendResult = await waClient.sendMessage(waId, message);
 
     return res.json({

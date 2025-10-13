@@ -16017,3 +16017,5 @@
 [2025-10-12T14:54:58.910Z] POST /api/newsletters - IP: ::1
 [2025-10-12T14:55:16.255Z] POST /api/newsletters - IP: ::1
 [2025-10-12T14:56:03.843Z] POST /api/newsletters - IP: ::1
+[2025-10-13T11:56:41.429Z] GET /api/auth/whatsapp-status - IP: ::1
+[2025-10-13T12:01:14.844Z] POST /api/send-otp - IP: ::1
