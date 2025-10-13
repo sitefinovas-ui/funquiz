@@ -25,6 +25,7 @@ import { listPublicites } from "./controllers/publiciteController.js";
 // Configuration initiale
 // -----------------------------
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT ;
 const IP = process.env.IP ;
