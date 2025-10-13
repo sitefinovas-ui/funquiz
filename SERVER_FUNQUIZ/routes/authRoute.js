@@ -53,8 +53,7 @@ router.put(
   authorizeRole(["admin"]),
   updateUserAdmin,
 ); // Modifier profil admin
-router.post("/auth/delete", authenticateToken, deleteUserWithFeedback); // Suppression utilisateur
-
+router.post("/auth/delete", authenticateToken, deleteUserWithFeedback); 
 // =============================
 // Mot de passe
 // =============================
