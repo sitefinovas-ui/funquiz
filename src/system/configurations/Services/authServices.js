@@ -51,8 +51,16 @@ const authService = {
    logout: async () => {
     try {
       await api.post('/auth/logout');
+      if (response.data.success) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/login`;
+      }
     } catch (error) {
-      throw error;
+      console.error('erreur lors de la déconnexion:', error.response?.data || error.message);
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/login`;
     } 
   },
 
