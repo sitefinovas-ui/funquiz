@@ -59,10 +59,12 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authService.logout();
-      await checkAuth();
+    } catch (err) {
+      console.warn('Logout API failed:', err?.message || err);
+    } finally {
+      // Déconnexion locale même si l’API échoue (CORS/redirect)
+      setUser(null);
       navigate('/login');
-    } catch {
-      throw error;
     }
   };
 
