@@ -59,12 +59,13 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authService.logout();
+      navigate(`${import.meta.env.REACT_APP_BASE_URL}/login`);
+      console.log('Logout successful', navigate);
     } catch (err) {
       console.warn('Logout API failed:', err?.message || err);
     } finally {
-      // Déconnexion locale même si l’API échoue (CORS/redirect)
       setUser(null);
-      navigate('/login');
+      navigate(`${import.meta.env.REACT_APP_BASE_URL}/login`);	
     }
   };
 
