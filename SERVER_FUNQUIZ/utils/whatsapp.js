@@ -43,8 +43,23 @@ function ensureNoChromeSingletonLock(dir) {
 
 /* ------------------ 🧭 Détection du bon binaire Chrome ------------------ */
 function resolveChromiumPath() {
+  // Préférer le Chromium embarqué par Puppeteer pour éviter ENOENT
+  const preferSystem = process.env.USE_SYSTEM_CHROME === "true";
+
+  if (!preferSystem) {
+    const p = puppeteer.executablePath();
+    if (p && fs.existsSync(p)) {
+      console.log("🧭 Chromium via Puppeteer:", p);
+      return p;
+    }
+  }
+
+  // Si on force l’usage système, tenter CHROMIUM_PATH puis candidats usuels
   const envPath = process.env.CHROMIUM_PATH;
-  if (envPath && fs.existsSync(envPath)) return envPath;
+  if (envPath && fs.existsSync(envPath)) {
+    console.log("🧭 Chromium via CHROMIUM_PATH:", envPath);
+    return envPath;
+  }
 
   const candidates = [
     "/usr/bin/chromium",
@@ -53,29 +68,43 @@ function resolveChromiumPath() {
     "/usr/bin/google-chrome-stable",
   ].filter((p) => fs.existsSync(p));
 
-  if (candidates.length > 0) return candidates[0];
-  return puppeteer.executablePath();
+  if (candidates.length > 0) {
+    console.log("🧭 Chromium via système:", candidates[0]);
+    return candidates[0];
+  }
+
+  // Dernier fallback: laisser Puppeteer décider même si le fichier n’existe pas
+  const fallback = puppeteer.executablePath();
+  console.warn("⚠️ Aucun Chromium système valide. Fallback Puppeteer:", fallback);
+  return fallback;
 }
 
 /* ------------------ 🤖 Création du client WhatsApp ------------------ */
-const createClient = () =>
-  new Client({
+const createClient = () => {
+  const chromiumPath = resolveChromiumPath();
+
+  const puppeteerOpts = {
+    headless: process.env.HEADLESS !== "false",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-zygote",
+      "--disable-gpu",
+      "--remote-debugging-port=9222",
+      `--user-data-dir=${process.env.CHROME_DATA_DIR || "/tmp/chrome-data"}`,
+    ],
+  };
+
+  // N’ajouter executablePath que s’il est défini
+  if (chromiumPath) puppeteerOpts.executablePath = chromiumPath;
+
+  return new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
-    puppeteer: {
-      headless: process.env.HEADLESS !== "false", // true par défaut
-      executablePath: resolveChromiumPath(),
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-zygote",
-        "--disable-gpu",
-        "--remote-debugging-port=9222",
-        `--user-data-dir=${getChromeDataDir()}`,
-      ],
-    },
+    puppeteer: puppeteerOpts,
   });
+};
 
 /* ------------------ 🚀 Initialisation principale ------------------ */
 export const initializeWhatsApp = async (retries = 3) => {
