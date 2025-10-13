@@ -53,9 +53,7 @@ const authService = {
       await api.post('/auth/logout');
     } catch (error) {
       console.error("Erreur de déconnexion :", error);
-    } finally {
-      localStorage.removeItem('token');
-    }
+    } 
   },
 
   register: async (credentials) => {

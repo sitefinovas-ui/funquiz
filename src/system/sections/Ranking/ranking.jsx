@@ -17,7 +17,10 @@ const Ranking = () => {
     const fetchRankingData = async () => {
       try {
         const data = await pointService.getAllUsersPoints();
-        setRankingData(Array.isArray(data) ? data : data.data || []);
+        const list = Array.isArray(data) ? data : data.data || [];
+        // Tri décroissant par points totaux
+        const sorted = [...list].sort((a, b) => (b?.total_points ?? 0) - (a?.total_points ?? 0));
+        setRankingData(sorted);
       } catch (error) {
         console.error('Error fetching ranking data:', error);
       }

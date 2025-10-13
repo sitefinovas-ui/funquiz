@@ -27,7 +27,7 @@ const Info = () => {
 
   return (
     <div
-      className="bg-dark bg-opacity-50 vh-100 w-100 border position-fixed bottom-0 end-0 d-flex align-items-center justify-content-center"
+      className="bg-dark bg-opacity-50 vh-100 w-100 position-fixed bottom-0 end-0 d-flex align-items-center justify-content-center"
       style={{ zIndex: 9999, backdropFilter: 'blur(10px)' }}
     >
       <div

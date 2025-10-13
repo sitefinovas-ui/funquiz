@@ -15,6 +15,10 @@ const HeadDash = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const lastSeenKey = 'dashNotifLastSeen';
   const [lastSeenAt, setLastSeenAt] = useState(() => Number(localStorage.getItem(lastSeenKey) || 0));
+  // ➕ suivi des messages vus et état d’ouverture du popup messages
+  const msgLastSeenKey = 'dashMsgLastSeen';
+  const [lastMsgSeenAt, setLastMsgSeenAt] = useState(() => Number(localStorage.getItem(msgLastSeenKey) || 0));
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
 
   // ➕ état d’ouverture du menu notifications + ref pour clic extérieur
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -25,7 +29,27 @@ const HeadDash = () => {
     const refresh = async () => {
       try {
         const msgs = await messageServices.getAllMessages();
-        if (!ignore) setMessagesCount(Array.isArray(msgs) ? msgs.length : 0);
+        const seenTs = Number(localStorage.getItem(msgLastSeenKey) || lastMsgSeenAt || 0);
+        let unread = 0;
+        if (Array.isArray(msgs)) {
+          unread = msgs.filter((m) => {
+            // Priorité: flag is_read si présent
+            if (m && typeof m.is_read !== 'undefined') {
+              const v = m.is_read;
+              return !(v === true || v === 1 || v === '1');
+            }
+            // Sinon, comparer un timestamp connu à last seen
+            const ts = (
+              m?.created_at ? new Date(m.created_at).getTime() :
+              m?.sent_at ? new Date(m.sent_at).getTime() :
+              m?.date ? new Date(m.date).getTime() :
+              m?.timestamp ? Number(m.timestamp) :
+              0
+            );
+            return ts > seenTs;
+          }).length;
+        }
+        if (!ignore) setMessagesCount(unread);
       } catch {
         if (!ignore) setMessagesCount(0);
       }
@@ -85,7 +109,14 @@ const HeadDash = () => {
           <button
             className="btn-icon"
             aria-label="Messages"
-            onClick={() => navigate('/dashboard/message')}
+            onClick={() => {
+              const now = Date.now();
+              localStorage.setItem(msgLastSeenKey, String(now));
+              setLastMsgSeenAt(now);
+              setIsMessageOpen(true);
+              setMessagesCount(0);
+              navigate('/dashboard/message');
+            }}
           >
             <MdOutlineMessage className="fs-4" />
             <span className="icon-badge">{messagesCount}</span>

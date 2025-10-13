@@ -43,3 +43,9 @@ dist-ssr/
 # Deployment / CI
 # -------------------------
 .vercel
+ 
+# -------------------------
+# Local helper scripts (ignored)
+# -------------------------
+scripts/deploy-devfront.ps1
+*.ps1

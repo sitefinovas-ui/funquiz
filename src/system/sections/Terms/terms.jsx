@@ -20,6 +20,8 @@ function Terms() {
   const [activeSection, setActiveSection] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [expandedItems, setExpandedItems] = useState({});
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -47,6 +49,25 @@ function Terms() {
         const normalize = (resp) => (Array.isArray(resp) ? resp : []);
 
         const cguItems = normalize(cgu);
+        // Tri CGU: Préambule (ou Preambule) en premier puis Article 1..n
+        const sortCguItems = (items) => {
+          const norm = (s) => String(s || '').toLowerCase();
+          const orderOf = (title, idx) => {
+            const t = norm(title);
+            if (t.includes('préambule') || t.includes('preambule')) return 0;
+            const m = t.match(/article\s*(\d+)/);
+            if (m) {
+              const n = parseInt(m[1], 10);
+              return isNaN(n) ? 1000 + idx : n;
+            }
+            return 1000 + idx; // éléments non reconnus à la fin
+          };
+          return items
+            .map((it, idx) => ({ it, idx }))
+            .sort((a, b) => orderOf(a.it?.title, a.idx) - orderOf(b.it?.title, b.idx))
+            .map((x) => x.it);
+        };
+        const cguItemsSorted = sortCguItems(cguItems);
         const privacyItems = normalize(privacy);
         const cookiesItems = normalize(cookies);
         const contactItems = normalize(contact);
@@ -60,7 +81,7 @@ function Terms() {
             p:'Découvrez nos conditions et politiques afin d’assurer une utilisation claire et sécurisée de notre service.',
             title: cguItems[0]?.title ,
             icon: icons.cgu,
-            items: cguItems.map((it) => ({
+            items: cguItemsSorted.map((it) => ({
               id: it?.id ? `cgu-${it.id}` : undefined,
               title: it?.title || 'Sans titre',
               content: it?.content || 'Contenu indisponible.',
@@ -130,6 +151,15 @@ function Terms() {
     loadData();
   }, []);
 
+  // Détecter le viewport mobile pour activer l'accordéon et la navigation adaptée
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 900px)');
+    const handler = (e) => setIsMobile(e.matches);
+    handler(mql);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
   // Sélectionner la section depuis l'URL (hash ou query param)
   useEffect(() => {
     if (!sections || sections.length === 0) return;
@@ -155,11 +185,28 @@ function Terms() {
     setActiveSection(found || null);
   }, [location.hash, location.search, sections]);
 
+  // Ouvrir automatiquement l'item ciblé par l'ancre (ex: faq-123) en mobile
+  useEffect(() => {
+    const hash = (location.hash || '').replace('#', '').trim();
+    if (isMobile && hash && hash.includes('-')) {
+      setExpandedItems((prev) => ({ ...prev, [hash]: true }));
+      setTimeout(() => {
+        const el = document.getElementById(hash);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [isMobile, location.hash]);
+
+  const toggleItem = (id) => {
+    if (!isMobile || !id) return;
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <div className="terms-container">
       <div className="terms-header text-center">
         <h1 className="text-head">Termes et Conditions</h1>
-        <p className="text-p">
+        <p className="text-center text-mobile">
           Découvrez nos conditions et politiques afin d’assurer une
           utilisation claire et sécurisée de notre service.
         </p>
@@ -189,13 +236,34 @@ function Terms() {
 
         {/* Contenu principal */}
         <main className="terms-content">
-          <header className="content-header">
-            <h1>{activeSection?.head || 'Termes et Conditions'}</h1>
-            <p>
-              Découvrez nos conditions et politiques afin d’assurer une
-              utilisation claire et sécurisée de notre service.
+          <header className="content-header ">
+            <h1 className="text-mobile">{activeSection?.head || 'Termes et Conditions'}</h1>
+            <p className="w-100 text-mobile">
+              {activeSection?.p || 'Découvrez nos conditions et politiques afin d’assurer une utilisation claire et sécurisée de notre service.'}
             </p>
           </header>
+
+          {/* Navigation mobile (sélecteur) */}
+          <div className="mobile-nav">
+            <label htmlFor="terms-section-select" className="sr-only">Section</label>
+            <select
+              id="terms-section-select"
+              className="mobile-select border border-dark"
+              value={activeSection?.id || ''}
+              onChange={(e) => {
+                const key = e.target.value;
+                const found = sections.find((s) => s.id === key);
+                navigate(`/terms#${key}`);
+                setActiveSection(found || null);
+              }}
+            >
+              {sections.map((section) => (
+                <option className="text-dark bg-transparent" key={section.id} value={section.id}>
+                  {section.head}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {loading && (
             <div className="content-body">
@@ -217,13 +285,28 @@ function Terms() {
                    
                     <div className="section-items">
                       {(activeSection.items && activeSection.items.length > 0)
-                        ? activeSection.items.map((it, idx) => (
-                            <div key={it.id || idx} id={it.id} className="section-item">
-
-                              <h3 className="item-title bg-dark rounded-pill py-2 px-3 bg-opacity-75 text-nowrap fs-5 mt-3">{it.title}</h3>
-                              <div className="item-content ps-2 text-justify" style={{ whiteSpace: 'pre-line' }}>{it.content}</div>
-                            </div>
-                          ))
+                        ? activeSection.items.map((it, idx) => {
+                            const itemId = it.id || `${activeSection.id}-${idx}`;
+                            const isOpen = !isMobile || !!expandedItems[itemId];
+                            return (
+                              <div key={itemId} id={itemId} className={`section-item ${isMobile ? 'accordion' : ''}`}>
+                                <h3
+                                  className="item-title bg-dark rounded-pill py-2 px-3 bg-opacity-75 text-nowrap mt-3"
+                                  onClick={() => toggleItem(itemId)}
+                                  role={isMobile ? 'button' : undefined}
+                                  aria-expanded={isOpen}
+                                >
+                                  {it.title}
+                                </h3>
+                                <div
+                                  className={`item-content ps-2 text-justify ${isOpen ? 'show' : 'hide'}`}
+                                  style={{ whiteSpace: 'pre-line' }}
+                                >
+                                  {it.content}
+                                </div>
+                              </div>
+                            );
+                          })
                         : (
                             <div className="item-content" style={{ whiteSpace: 'pre-line' }}>
                               Contenu indisponible.
