@@ -66,9 +66,6 @@ router.post("/auth/password/reset", resetUserPassword, authenticateToken); // RÃ
 router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
 
-// Alias sous /auth pour compatibilitÃ© frontend
-router.post("/auth/send-otp", sendOtp);
-router.post("/auth/verify-otp", verifyOtp);
 
 // Statut WhatsApp pour diagnostic
 router.get("/auth/whatsapp-status", (req, res) => {
