@@ -507,15 +507,22 @@ export const deleteUserFile = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  // Si tu utilises des cookies, tu peux les effacer ici
-  res.clearCookie(
-    "token",
-    (message = "Déconnexion réussie"),
-    (httpOnly = true),
-    (secure = true),
-    (sameSite = "None"),
-  );
-  res.redirect(`${process.env.FRONTEND_URL}`);
+  try {
+    // Suppression sécurisée du cookie "token"
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true, // true si HTTPS
+      sameSite: "None", // permet le partage du cookie entre domaines (backend/frontend)
+    });
+
+    console.log("✅ Déconnexion réussie, redirection en cours...");
+
+    // Redirection vers le frontend
+    return res.redirect(`${process.env.FRONTEND_URL}/login`); // tu peux mettre juste / si tu veux la page d’accueil
+  } catch (error) {
+    console.error("❌ Erreur lors de la déconnexion :", error);
+    return res.status(500).json({ message: "Erreur lors de la déconnexion." });
+  }
 };
 
 // -----------------------------
