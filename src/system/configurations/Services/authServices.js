@@ -52,7 +52,7 @@ const authService = {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      console.error("Erreur de déconnexion :", error);
+      throw error;
     } 
   },
 

@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "prepare": "husky install",
     "predeploy": "vite build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "powershell -ExecutionPolicy Bypass -File scripts/deploy-devfront.ps1 -CommitMessage 'e'"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
