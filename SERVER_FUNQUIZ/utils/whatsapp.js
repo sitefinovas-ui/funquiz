@@ -1,176 +1,138 @@
+// Module util WhatsApp: createClient, initializeWhatsApp, QR handlers
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import puppeteer from "puppeteer";
-import fs from "fs";
-import os from "os";
-import path from "path";
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import os from 'os';
 
 const { Client, LocalAuth } = pkg;
-
 let waClient;
 let waReady = false;
 let initializing = false;
 let lastQr = null;
-let chromeDataDir = null;
 
-/* ------------------ 📁 Gestion du dossier Chrome ------------------ */
-function getChromeDataDir() {
-  if (chromeDataDir) return chromeDataDir;
+// Obtenir __dirname en ES6
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  const fromEnv = process.env.CHROME_DATA_DIR;
-  if (fromEnv) {
-    chromeDataDir = fromEnv;
-    return chromeDataDir;
-  }
+// Créer un dossier unique pour chaque session
+const SESSION_DIR = path.join(__dirname, '.wwebjs_auth');
 
-  // Docker : crée un répertoire temporaire isolé pour Chrome
-  chromeDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "wwebjs-chrome-"));
-  return chromeDataDir;
+// S'assurer que le dossier existe
+if (!fs.existsSync(SESSION_DIR)) {
+  fs.mkdirSync(SESSION_DIR, { recursive: true });
 }
 
-/* ------------------ 🔓 Correction bug SingletonLock ------------------ */
-function ensureNoChromeSingletonLock(dir) {
+// Supprimer le fichier SingletonLock s'il existe
+function cleanupSingletonLock() {
   try {
-    const lockPath = path.join(dir, "SingletonLock");
+    const lockPath = path.join(SESSION_DIR, 'session-FunQuizBot', 'SingletonLock');
     if (fs.existsSync(lockPath)) {
       fs.unlinkSync(lockPath);
-      console.log("🔓 SingletonLock supprimé :", lockPath);
+      console.log("🔓 SingletonLock supprimé");
     }
-  } catch (e) {
-    console.warn("⚠️ Impossible de supprimer SingletonLock :", e.message);
+  } catch (err) {
+    console.warn("⚠️ Impossible de supprimer SingletonLock:", err.message);
   }
 }
 
-/* ------------------ 🧭 Détection du bon binaire Chrome ------------------ */
-function resolveChromiumPath() {
-  // Préférer le Chromium embarqué par Puppeteer pour éviter ENOENT
-  const preferSystem = process.env.USE_SYSTEM_CHROME === "true";
+// Nettoyer avant de créer le client
+cleanupSingletonLock();
 
-  if (!preferSystem) {
-    const p = puppeteer.executablePath();
-    if (p && fs.existsSync(p)) {
-      console.log("🧭 Chromium via Puppeteer:", p);
-      return p;
+// Utiliser un dossier temporaire unique pour le profil Chrome
+function getTempChromeDir() {
+  const isRender = process.env.RENDER === 'true';
+  // Sur Render, utiliser un chemin fixe pour la persistance entre redémarrages
+  if (isRender) {
+    const dir = '/tmp/chrome-data';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
+    return dir;
   }
-
-  // Si on force l’usage système, tenter CHROMIUM_PATH puis candidats usuels
-  const envPath = process.env.CHROMIUM_PATH;
-  if (envPath && fs.existsSync(envPath)) {
-    console.log("🧭 Chromium via CHROMIUM_PATH:", envPath);
-    return envPath;
-  }
-
-  const candidates = [
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/google-chrome",
-    "/usr/bin/google-chrome-stable",
-  ].filter((p) => fs.existsSync(p));
-
-  if (candidates.length > 0) {
-    console.log("🧭 Chromium via système:", candidates[0]);
-    return candidates[0];
-  }
-
-  // Dernier fallback: laisser Puppeteer décider même si le fichier n’existe pas
-  const fallback = puppeteer.executablePath();
-  console.warn("⚠️ Aucun Chromium système valide. Fallback Puppeteer:", fallback);
-  return fallback;
+  // En local, utiliser un dossier temporaire unique
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'chrome-'));
 }
 
-/* ------------------ 🤖 Création du client WhatsApp ------------------ */
-const createClient = () => {
-  const chromiumPath = resolveChromiumPath();
+// Trouver le meilleur chemin pour Chromium
+function findChromiumPath() {
+  // 1. Préférer le chemin explicite s'il existe
+  if (process.env.PUPPETEER_EXECUTABLE_PATH && 
+      fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+  
+  // 2. Utiliser le Chromium de Puppeteer
+  return puppeteer.executablePath();
+}
 
-  const puppeteerOpts = {
-    headless: process.env.HEADLESS !== "false",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-zygote",
-      "--disable-gpu",
-      "--remote-debugging-port=9222",
-      `--user-data-dir=${process.env.CHROME_DATA_DIR || "/tmp/chrome-data"}`,
-    ],
-  };
-
-  // N’ajouter executablePath que s’il est défini
-  if (chromiumPath) puppeteerOpts.executablePath = chromiumPath;
-
+// Simplified client: use Puppeteer's bundled Chromium
+function createClient() {
+  const tempDir = getTempChromeDir();
+  console.log("📁 Dossier Chrome:", tempDir);
+  
   return new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
-    puppeteer: puppeteerOpts,
+    puppeteer: {
+      headless: process.env.HEADLESS !== "false",
+      executablePath: findChromiumPath(),
+      args: [
+        "--no-sandbox", 
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--disable-gpu",
+        `--user-data-dir=${tempDir}`
+      ],
+    },
   });
-};
+}
 
-/* ------------------ 🚀 Initialisation principale ------------------ */
-export const initializeWhatsApp = async (retries = 3) => {
+// Initialise et branche les handlers (QR/ready)
+export const initializeWhatsApp = async () => {
   if (!waClient) {
     waClient = createClient();
 
-    waClient.on("loading_screen", (percent, message) => {
-      initializing = true;
-      console.log(`⏳ WhatsApp loading: ${percent}% - ${message}`);
-    });
-
     waClient.on("qr", (qr) => {
       lastQr = qr;
-      console.log("📲 QR Code reçu. Scannez-le dans WhatsApp !");
+      console.log("QR RECEIVED:", qr);
       try {
         qrcode.generate(qr, { small: true });
       } catch (e) {
-        console.warn("⚠️ Impossible d'afficher le QR en ASCII:", e.message);
+        console.warn("QR ASCII render failed:", e.message);
       }
-    });
-
-    waClient.on("authenticated", () => {
-      console.log("🔐 WhatsApp authentifié !");
+      console.log("📲 QR Code généré. Scannez avec WhatsApp.");
     });
 
     waClient.on("ready", () => {
       waReady = true;
       initializing = false;
-      console.log("✅ WhatsApp client prêt !");
+      console.log("✅ WhatsApp client prêt.");
     });
 
     waClient.on("auth_failure", (msg) => {
-      waReady = false;
       initializing = false;
-      console.error("❌ Échec d’authentification WhatsApp:", msg);
+      waReady = false;
+      console.error("❌ Échec d'auth WhatsApp:", msg);
     });
 
-    waClient.on("disconnected", async (reason) => {
-      console.warn("⚠️ WhatsApp déconnecté:", reason);
+    waClient.on("disconnected", (reason) => {
       waReady = false;
       initializing = false;
-      console.log("↻ Tentative de reconnexion...");
-      await initializeWhatsApp();
+      console.warn("⚠️ WhatsApp déconnecté:", reason);
     });
   }
 
   if (!initializing && !waReady) {
-    try {
-      const dir = getChromeDataDir();
-      ensureNoChromeSingletonLock(dir);
-      console.log("🗂️ Profil Chrome utilisé:", dir);
-      initializing = true;
-      await waClient.initialize();
-    } catch (err) {
-      initializing = false;
-      console.error("❌ Erreur d’initialisation WhatsApp:", err.message);
-      if (retries > 0) {
-        console.log(`↻ Nouvelle tentative (${retries - 1} restantes)`);
-        return initializeWhatsApp(retries - 1);
-      }
-      throw err;
-    }
+    initializing = true;
+    await waClient.initialize();
   }
-};
+}
 
-/* ------------------ 🧩 Fonctions utilitaires ------------------ */
+// Vérifie que le client WhatsApp est prêt
 export const ensureWhatsAppReady = async () => {
   if (waReady) return;
   await initializeWhatsApp();
@@ -184,6 +146,7 @@ export const ensureWhatsAppReady = async () => {
   });
 };
 
+// Attendre état CONNECTED (plus strict que "ready")
 export const ensureWhatsAppConnected = async (timeoutMs = 30000) => {
   await ensureWhatsAppReady();
   const start = Date.now();
@@ -194,7 +157,7 @@ export const ensureWhatsAppConnected = async (timeoutMs = 30000) => {
     } catch {}
     await new Promise((r) => setTimeout(r, 1000));
   }
-  throw new Error("WhatsApp non connecté");
+  throw new Error("WhatsApp non connecté (state != CONNECTED)");
 };
 
 export const getWhatsAppStatus = () => ({
@@ -205,3 +168,6 @@ export const getWhatsAppStatus = () => ({
 
 export const getLastQr = () => lastQr;
 export { waClient };
+
+// Supprimer cette ligne qui cause l'erreur
+// export default client;

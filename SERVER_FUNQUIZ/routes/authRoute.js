@@ -24,6 +24,7 @@ import {
   authorizeRole,
 } from "../middleware/authentification.js";
 // Ce bloc est dans le module Express router de authRoute.js
+// Express router: ajoute le lien PNG direct (si pas déjà présent)
 import { getWhatsAppStatus } from "../utils/whatsapp.js";
 import { getLastQr } from "../utils/whatsapp.js";
 import QRCode from "qrcode";
