@@ -36,7 +36,7 @@ import { OAuth2Client } from "google-auth-library";
 import path from "path";
 import fs from "fs"; // si tu supprimes des fichiers
 
-import { waClient, ensureWhatsAppReady } from "../utils/whatsapp.js";
+import { waClient, ensureWhatsAppReady, ensureWhatsAppConnected } from "../utils/whatsapp.js";
 
 dotenv.config();
 const { Client, LocalAuth } = pkg;
@@ -539,10 +539,8 @@ export async function sendOtp(req, res) {
 
     const otp = generateOTP(6);
     const expiry = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
-
     await updateResetCode(user.user_id, otp, expiry);
 
-    const waId = formatWhatsAppId(String(number));
     const message = `
         Bonjour ${user.first_name || user.name || ""} 👋,
         🔑 Code OTP : ${otp}
@@ -551,11 +549,17 @@ export async function sendOtp(req, res) {
 
     try {
       await ensureWhatsAppReady();
+      await ensureWhatsAppConnected(); // état strict CONNECTED
     } catch (e) {
       return res.status(503).json({ error: "WhatsApp non prêt", details: e.message });
     }
 
-    const sendResult = await waClient.sendMessage(waId, message);
+    const numberId = await waClient.getNumberId(String(number)).catch(() => null);
+    if (!numberId || !numberId._serialized) {
+      return res.status(400).json({ error: "Numéro WhatsApp invalide ou non trouvable" });
+    }
+
+    const sendResult = await waClient.sendMessage(numberId._serialized, message);
 
     return res.json({
       success: true,
@@ -564,9 +568,7 @@ export async function sendOtp(req, res) {
     });
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json({ error: "Erreur serveur", details: err.message });
+    return res.status(500).json({ error: "Erreur serveur", details: err.message });
   }
 }
 

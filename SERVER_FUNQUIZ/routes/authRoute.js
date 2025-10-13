@@ -1,9 +1,4 @@
-import {
-  getUserPoints,
-  sendOtp,
-  verifyOtp,
-} from "../controllers/authController.js";
-
+import { getUserPoints, sendOtp, verifyOtp } from "../controllers/authController.js";
 import express from "express";
 import multer from "multer";
 import path from "path";
@@ -28,8 +23,10 @@ import {
   authenticateToken,
   authorizeRole,
 } from "../middleware/authentification.js";
+// Ce bloc est dans le module Express router de authRoute.js
 import { getWhatsAppStatus } from "../utils/whatsapp.js";
 import { getLastQr } from "../utils/whatsapp.js";
+import QRCode from "qrcode";
 
 const router = express.Router();
 
@@ -53,7 +50,7 @@ router.put(
   authorizeRole(["admin"]),
   updateUserAdmin,
 ); // Modifier profil admin
-router.post("/auth/delete", authenticateToken, deleteUserWithFeedback); 
+router.post("/auth/delete", authenticateToken, deleteUserWithFeedback);
 // =============================
 // Mot de passe
 // =============================
@@ -72,6 +69,7 @@ router.get("/auth/whatsapp-status", (req, res) => {
   const status = getWhatsAppStatus();
   res.status(200).json(status);
 });
+
 router.get("/auth/whatsapp-qr", (req, res) => {
   const qr = getLastQr();
   if (!qr) {
@@ -80,6 +78,23 @@ router.get("/auth/whatsapp-qr", (req, res) => {
       .json({ message: "QR non disponible (client non initialisé ou déjà prêt)" });
   }
   res.json({ qr });
+});
+
+router.get("/auth/whatsapp-qr.png", async (req, res) => {
+  const qr = getLastQr();
+  if (!qr) {
+    return res
+      .status(404)
+      .json({ message: "QR non disponible (client non initialisé ou déjà prêt)" });
+  }
+  try {
+    const buffer = await QRCode.toBuffer(qr, { type: "png", width: 320, margin: 1 });
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "no-store");
+    return res.send(buffer);
+  } catch (e) {
+    return res.status(500).json({ error: "Génération du QR échouée", details: e.message });
+  }
 });
 // -----------------
 // Multer configuration
