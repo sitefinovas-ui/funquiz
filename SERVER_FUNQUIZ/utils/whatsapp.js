@@ -13,19 +13,22 @@ let initializing = false;
 let lastQr = null;
 let chromeDataDir = null;
 
+/* ------------------ 📁 Gestion du dossier Chrome ------------------ */
 function getChromeDataDir() {
   if (chromeDataDir) return chromeDataDir;
-  // Si CHROME_DATA_DIR est défini (ex: en prod), on l'utilise
+
   const fromEnv = process.env.CHROME_DATA_DIR;
   if (fromEnv) {
     chromeDataDir = fromEnv;
     return chromeDataDir;
   }
-  // Sinon, créer un dossier temporaire unique pour éviter SingletonLock
+
+  // Docker : crée un répertoire temporaire isolé pour Chrome
   chromeDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "wwebjs-chrome-"));
   return chromeDataDir;
 }
 
+/* ------------------ 🔓 Correction bug SingletonLock ------------------ */
 function ensureNoChromeSingletonLock(dir) {
   try {
     const lockPath = path.join(dir, "SingletonLock");
@@ -38,11 +41,28 @@ function ensureNoChromeSingletonLock(dir) {
   }
 }
 
+/* ------------------ 🧭 Détection du bon binaire Chrome ------------------ */
+function resolveChromiumPath() {
+  const envPath = process.env.CHROMIUM_PATH;
+  if (envPath && fs.existsSync(envPath)) return envPath;
+
+  const candidates = [
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+  ].filter((p) => fs.existsSync(p));
+
+  if (candidates.length > 0) return candidates[0];
+  return puppeteer.executablePath();
+}
+
+/* ------------------ 🤖 Création du client WhatsApp ------------------ */
 const createClient = () =>
   new Client({
     authStrategy: new LocalAuth({ clientId: "FunQuizBot" }),
     puppeteer: {
-      headless: process.env.HEADLESS !== "false",
+      headless: process.env.HEADLESS !== "false", // true par défaut
       executablePath: resolveChromiumPath(),
       args: [
         "--no-sandbox",
@@ -57,20 +77,7 @@ const createClient = () =>
     },
   });
 
-function resolveChromiumPath() {
-  const envPath = process.env.CHROMIUM_PATH;
-  if (envPath && fs.existsSync(envPath)) return envPath;
-  const candidates = [
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/google-chrome",
-    "/usr/bin/google-chrome-stable",
-  ].filter((p) => fs.existsSync(p));
-  if (candidates.length > 0) return candidates[0];
-  return puppeteer.executablePath();
-}
-
-// Méthode: initializeWhatsApp()
+/* ------------------ 🚀 Initialisation principale ------------------ */
 export const initializeWhatsApp = async (retries = 3) => {
   if (!waClient) {
     waClient = createClient();
@@ -82,35 +89,36 @@ export const initializeWhatsApp = async (retries = 3) => {
 
     waClient.on("qr", (qr) => {
       lastQr = qr;
-      console.log("QR RECEIVED:", qr);
+      console.log("📲 QR Code reçu. Scannez-le dans WhatsApp !");
       try {
         qrcode.generate(qr, { small: true });
       } catch (e) {
-        console.warn("QR ASCII render failed:", e.message);
+        console.warn("⚠️ Impossible d'afficher le QR en ASCII:", e.message);
       }
-      console.log("📲 QR Code généré. Scannez avec WhatsApp.");
     });
 
     waClient.on("authenticated", () => {
-      console.log("🔐 WhatsApp authentifié.");
+      console.log("🔐 WhatsApp authentifié !");
     });
 
     waClient.on("ready", () => {
       waReady = true;
       initializing = false;
-      console.log("✅ WhatsApp client prêt.");
+      console.log("✅ WhatsApp client prêt !");
     });
 
     waClient.on("auth_failure", (msg) => {
-      initializing = false;
       waReady = false;
-      console.error("❌ Échec d’auth WhatsApp:", msg);
+      initializing = false;
+      console.error("❌ Échec d’authentification WhatsApp:", msg);
     });
 
-    waClient.on("disconnected", (reason) => {
+    waClient.on("disconnected", async (reason) => {
+      console.warn("⚠️ WhatsApp déconnecté:", reason);
       waReady = false;
       initializing = false;
-      console.warn("⚠️ WhatsApp déconnecté:", reason);
+      console.log("↻ Tentative de reconnexion...");
+      await initializeWhatsApp();
     });
   }
 
@@ -123,9 +131,9 @@ export const initializeWhatsApp = async (retries = 3) => {
       await waClient.initialize();
     } catch (err) {
       initializing = false;
-      console.error("❌ Échec initialisation WhatsApp:", err.message);
+      console.error("❌ Erreur d’initialisation WhatsApp:", err.message);
       if (retries > 0) {
-        console.log(`↻ Retry init WhatsApp (${retries} restants)`);
+        console.log(`↻ Nouvelle tentative (${retries - 1} restantes)`);
         return initializeWhatsApp(retries - 1);
       }
       throw err;
@@ -133,6 +141,7 @@ export const initializeWhatsApp = async (retries = 3) => {
   }
 };
 
+/* ------------------ 🧩 Fonctions utilitaires ------------------ */
 export const ensureWhatsAppReady = async () => {
   if (waReady) return;
   await initializeWhatsApp();
@@ -146,7 +155,6 @@ export const ensureWhatsAppReady = async () => {
   });
 };
 
-// Attendre état CONNECTED (plus strict que "ready")
 export const ensureWhatsAppConnected = async (timeoutMs = 30000) => {
   await ensureWhatsAppReady();
   const start = Date.now();
@@ -157,7 +165,7 @@ export const ensureWhatsAppConnected = async (timeoutMs = 30000) => {
     } catch {}
     await new Promise((r) => setTimeout(r, 1000));
   }
-  throw new Error("WhatsApp non connecté (state != CONNECTED)");
+  throw new Error("WhatsApp non connecté");
 };
 
 export const getWhatsAppStatus = () => ({
