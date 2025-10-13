@@ -1,3 +1,4 @@
+// Top-level imports et suppression de l'init locale
 import {
   registerUser,
   loginUser,
@@ -35,6 +36,8 @@ import { OAuth2Client } from "google-auth-library";
 import path from "path";
 import fs from "fs"; // si tu supprimes des fichiers
 
+import { waClient, ensureWhatsAppReady } from "../utils/whatsapp.js";
+
 dotenv.config();
 const { Client, LocalAuth } = pkg;
 
@@ -43,51 +46,6 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET;
 const OTP_TTL_MINUTES = parseInt(process.env.OTP_TTL_MINUTES);
 
-
-// --- Initialisation WhatsApp client
-const waClient = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-gpu"
-    ],
-  },
-});
-
-// --- QR Code pour la connexion
-waClient.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
-  console.log("📱 Scanne ce QR Code avec WhatsApp pour connecter le bot.");
-});
-
-// --- Événements WhatsApp
-waClient.on("ready", () => console.log("✅ WhatsApp client prêt"));
-waClient.on("auth_failure", (msg) =>
-  console.error("❌ Échec d'authentification :", msg)
-);
-waClient.on("disconnected", (reason) => {
-  console.warn("⚠️ WhatsApp déconnecté :", reason);
-  console.log("♻️ Tentative de reconnexion dans 10 secondes...");
-  setTimeout(() => waClient.initialize(), 10000);
-});
-
-// --- Initialisation protégée
-(async () => {
-  try {
-    await waClient.initialize();
-    console.log("🚀 Initialisation WhatsApp réussie !");
-  } catch (err) {
-    console.error("💥 Erreur lors de l'initialisation WhatsApp :", err.message);
-  }
-})();
 // --- Helpers
 function generateOTP(length = 6) {
   const digits = "0703562459";
@@ -107,7 +65,7 @@ export const me = (req, res) => {
 };
 // -----------------------------
 // 1️⃣ Récupérer tous les utilisateurs
-// -----------------------------
+// -----------
 export const allUsers = async (req, res) => {
   try {
     const users = await getAllUsers();
@@ -596,6 +554,7 @@ export async function sendOtp(req, res) {
       Merci et amusez-vous bien sur FunQuiz ! 🎉
       `;
 
+    await ensureWhatsAppReady();
     const sendResult = await waClient.sendMessage(waId, message);
 
     return res.json({

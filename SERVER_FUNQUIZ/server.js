@@ -5,6 +5,7 @@ import createError from "http-errors";
 import { connectDB } from "./config/db.js";
 import { logger } from "./middleware/logger.js";
 import compression from "compression";
+import { initializeWhatsApp } from "./utils/whatsapp.js";
 
 import authRoutes from "./routes/authRoute.js";
 import quizRoutes from "./routes/quizRoute.js";
@@ -224,6 +225,7 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     await connectDB();
+    await initializeWhatsApp();
     const server = app.listen(PORT, IP, () => {
       console.log(
         `🚀 Serveur FunQuiz optimisé lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`
