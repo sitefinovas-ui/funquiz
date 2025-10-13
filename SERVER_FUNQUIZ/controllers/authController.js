@@ -43,27 +43,51 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET;
 const OTP_TTL_MINUTES = parseInt(process.env.OTP_TTL_MINUTES);
 
+
 // --- Initialisation WhatsApp client
 const waClient = new Client({
   authStrategy: new LocalAuth(),
-  puppeteer: { headless: true },
+  puppeteer: {
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-gpu"
+    ],
+  },
 });
 
+// --- QR Code pour la connexion
 waClient.on("qr", (qr) => {
   qrcode.generate(qr, { small: true });
-  console.log("Scanner ce QR Code avec WhatsApp pour connecter le bot.");
+  console.log("📱 Scanne ce QR Code avec WhatsApp pour connecter le bot.");
 });
 
+// --- Événements WhatsApp
 waClient.on("ready", () => console.log("✅ WhatsApp client prêt"));
-waClient.on("auth_failure", (msg) => console.error("❌ Auth failure:", msg));
-waClient.on("disconnected", (reason) =>
-  console.log("⚠️ WhatsApp déconnecté:", reason),
+waClient.on("auth_failure", (msg) =>
+  console.error("❌ Échec d'authentification :", msg)
 );
+waClient.on("disconnected", (reason) => {
+  console.warn("⚠️ WhatsApp déconnecté :", reason);
+  console.log("♻️ Tentative de reconnexion dans 10 secondes...");
+  setTimeout(() => waClient.initialize(), 10000);
+});
 
-waClient
-  .initialize()
-  .catch((err) => console.error("Erreur init WhatsApp:", err));
-
+// --- Initialisation protégée
+(async () => {
+  try {
+    await waClient.initialize();
+    console.log("🚀 Initialisation WhatsApp réussie !");
+  } catch (err) {
+    console.error("💥 Erreur lors de l'initialisation WhatsApp :", err.message);
+  }
+})();
 // --- Helpers
 function generateOTP(length = 6) {
   const digits = "0703562459";
@@ -518,7 +542,7 @@ export const logout = (req, res) => {
     console.log("✅ Déconnexion réussie, redirection en cours...");
 
     // Redirection vers le frontend
-    return res.redirect(`https://funquiz-wn3n.onrender.com`); // tu peux mettre juste / si tu veux la page d’accueil
+    return res.redirect('https://funquiz-wn3n.onrender.com'); // tu peux mettre juste / si tu veux la page d’accueil
   } catch (error) {
     console.error("❌ Erreur lors de la déconnexion :", error);
     return res.status(500).json({ message: "Erreur lors de la déconnexion." });

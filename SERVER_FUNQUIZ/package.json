@@ -11,7 +11,7 @@
     "format:check": "prettier --check ."
   },
   "keywords": [],
-  "author": "",
+  "author": "Frederick",
   "license": "ISC",
   "description": "",
   "dependencies": {
