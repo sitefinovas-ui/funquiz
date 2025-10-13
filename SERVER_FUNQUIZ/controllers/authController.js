@@ -518,7 +518,7 @@ export const logout = (req, res) => {
     console.log("✅ Déconnexion réussie, redirection en cours...");
 
     // Redirection vers le frontend
-    return res.redirect(`${process.env.FRONTEND_URL}/login`); // tu peux mettre juste / si tu veux la page d’accueil
+    return res.redirect(`https://funquiz-wn3n.onrender.com`); // tu peux mettre juste / si tu veux la page d’accueil
   } catch (error) {
     console.error("❌ Erreur lors de la déconnexion :", error);
     return res.status(500).json({ message: "Erreur lors de la déconnexion." });
