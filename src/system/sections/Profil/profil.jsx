@@ -367,7 +367,7 @@ function ProfilePage() {
           <div className="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center mb-3">
             <div className="btn-group" role="group" aria-label="Filtres">
               <button className={`btn btn-sm ${quizFilter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setQuizFilter('all')}>Tous</button>
-              <button className={`btn btn-sm ${quizFilter === 'en_cours' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setQuizFilter('en_cours')}>En cours</button>
+              <button className={`btn btn-sm ${quizFilter === 'en_cours' ? 'btn-primary text-nowrap' : 'btn-outline-primary text-nowrap'}`} onClick={() => setQuizFilter('en_cours')}>En cours</button>
               <button className={`btn btn-sm ${quizFilter === 'termine' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setQuizFilter('termine')}>Terminés</button>
             </div>
             <input

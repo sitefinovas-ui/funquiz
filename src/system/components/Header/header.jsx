@@ -164,6 +164,7 @@ const Header = ({ openPopup }) => {
               {/* Logo */}
               <div
                 style={{ width: '100px' }}
+                onClick={() => navigate('/')}
                 className="logo d-flex align-items-center justify-content-center"
               >
                 <img src={Logo} className="w-100 h-100" alt="" />

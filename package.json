@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "prepare": "husky install",
     "predeploy": "vite build",
-    "deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-devfront.ps1 -CommitMessage \"Correction logout\"" 
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-devfront.ps1 -CommitMessage \"Correction logout\""
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
@@ -39,10 +39,12 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
     "@eslint/js": "^9.33.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -53,6 +55,6 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
-    "vite": "^7.1.2"
+    "vite": "^5.4.10"
   }
 }
