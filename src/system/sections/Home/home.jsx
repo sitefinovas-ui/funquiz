@@ -14,6 +14,7 @@ import { CiHeart } from "react-icons/ci";
 import { MdGamepad, MdNavigateNext } from 'react-icons/md';
 import { FaUserPlus, FaGift, FaInfo, FaPlus } from 'react-icons/fa';
 import { SlActionRedo } from 'react-icons/sl'; 
+import { MdAccountCircle } from 'react-icons/md';
 
 import thematicService from '../../configurations/Services/thematicServices';
 import pointService from '../../configurations/Services/pointService';
@@ -224,18 +225,34 @@ const Home = () => {
       {/* HERO */}
       <section className="section container hero position-relative">
         <div className=" w-100 d-flex flex-column align-items-center justify-content-center mt-4">
-          <p
-            style={{ fontSize: '12px' }}
-            className="text-white d-flex gap-1 align-items-center justify-content-center text-center fw-normal w-100"
-          >
-            <span
-              style={{ color: 'var(--yellow)' }}
-              className="d-flex align-items-center justify-content-center gap-1"
-            >
-              <FaGift /> 1 mois
-            </span>{' '}
-            - <span style={{color: 'var(--site-text-muted)'}} className=" font-bold">Accès gratuit</span>
-          </p>
+        <div className="auth-links text-center w-100 mt-3">
+  <p
+    className="text-white d-flex gap-3 align-items-center justify-content-center fw-normal flex-wrap"
+    style={{ fontSize: '13px' }}
+  >
+    <button
+      onClick={() => navigate('/register')}
+      className="auth-btn border-0 bg-transparent d-flex align-items-center justify-content-center gap-1 fw-semibold"
+      style={{ color: 'var(--yellow)', cursor: 'pointer' }}
+      aria-label="S'inscrire"
+    >
+      <FaGift className="icon-sm" /> Inscription
+    </button>
+
+    <span className="text-muted">•</span>
+
+    <button
+      onClick={() => navigate('/login')}
+      className="auth-btn border-0 bg-transparent d-flex align-items-center justify-content-center gap-1 fw-semibold"
+      style={{ color: 'var(--site-text-muted)', cursor: 'pointer' }}
+      aria-label="Se connecter"
+    >
+      <MdAccountCircle className="icon-sm" /> Connexion
+    </button>
+  </p>
+</div>
+
+
           <h1 style={{color: 'var(--site-text)'}} className="  text-center title-home fw-bold">
             Jouez et devenez
             <br /> Incollable

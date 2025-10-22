@@ -108,7 +108,7 @@ const Header = ({ openPopup }) => {
       {!isGame && !isDash && !isSignUp && !isLogin && (
         <div className="position-relative z-3">
           {/* === Header Desktop === */}
-          <header className="d-none d-lg-block">
+          <header className="d-none d-lg-block position-sticky top-0 left-0 right-0 z-3">
             <div
               style={{ backgroundColor: 'var(--site-bg)' }}
               className="header-desktop d-flex align-items-center justify-content-between p-5"
