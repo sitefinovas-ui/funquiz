@@ -89,7 +89,7 @@ const Footer = ({ openPopup }) => {
                       </Link>
                     </li>
                     <li>
-                      <Link to="/classements">{t('footer.ranking')}</Link>
+                      <Link to="/raking">{t('footer.ranking')}</Link>
                     </li>
                     <li>
                       <Link className='' to="/about">À propos</Link>

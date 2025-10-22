@@ -16,7 +16,9 @@
 .search-bar {
   min-width: 350px;
 }
-
+.logo:hover {
+  transform: scale(1.1);
+}
 .search-input {
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid transparent;

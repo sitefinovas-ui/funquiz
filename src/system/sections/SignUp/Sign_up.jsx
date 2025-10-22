@@ -197,31 +197,37 @@ const SignUp = () => {
             {/* Téléphone + Email */}
             <div className="d-flex gap-3">
               <div className="mb-3 w-100">
-                <label htmlFor="number" className="form-label">
-                  Téléphone
-                </label>
-                <input
-                  type="tel"
-                  placeholder="225XXXXXXXXXX"
-                  className="form-control"
-                  id="number"
-                  value={number}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    const digits = raw.replace(/\D/g, '');
-                    const withoutCode = digits.replace(/^225/, '');
-                    const limited = withoutCode.slice(0, 10);
-                    setNumber(`225${limited}`);
-                  }}
-                  pattern="^225\d{10}$"
-                  title="Format requis: 225 suivi de 10 chiffres"
-                  inputMode="numeric"
-                  required
-                />
-              </div>
+  <label htmlFor="number" className="form-label">
+    Téléphone (facultatif)
+  </label>
+  <input
+    type="tel"
+    placeholder="+225XXXXXXXXXX"
+    className="form-control"
+    id="number"
+    value={number}
+    onChange={(e) => {
+      let raw = e.target.value;
+
+      // On garde le "+" au début s’il existe
+      const plus = raw.startsWith('+') ? '+' : '';
+      // On retire tout sauf les chiffres
+      const digits = raw.replace(/\D/g, '');
+      // On limite à 10 chiffres max (numéro principal)
+      const limited = digits.slice(0, 10);
+      // On reconstruit la valeur complète
+      setNumber(`${plus}${limited}`);
+    }}
+    // Pattern assoupli : accepte un "+" optionnel, un code pays et jusqu’à 10 chiffres
+    pattern="^\+?[0-9]{1,15}$"
+    title="Entrez un numéro de téléphone valide (ex: +2250102030405)"
+    inputMode="tel"
+  />
+</div>
+
               <div className="mb-3 w-100">
                 <label htmlFor="email" className="form-label">
-                  Email
+                  Email (facultatif)
                 </label>
                 <input
                   type="email"
@@ -230,7 +236,7 @@ const SignUp = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
+                  
                 />
               </div>
             </div>
