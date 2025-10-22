@@ -83,35 +83,40 @@ const SignUp = () => {
 
   
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      setLoading(false);
-      return;
-    }
+  // Vérification correspondance des mots de passe
+  if (password !== confirmPassword) {
+    setError('Les mots de passe ne correspondent pas');
+    setLoading(false);
+    return;
+  }
 
-    try {
-      await register({
-        name: lastName,
-        first_name: firstName,
-        email,
-        number,
-        // Utilisation d'une date par défaut
-        date_of_birth: DEFAULT_DOB,
-        password,
-      });
-      navigate('/'); // redirection après inscription
-    } catch (err) {
-      console.error("Erreur lors de l'inscription :", err);
-      setError(err.response?.data?.message || 'Erreur lors de l’inscription. Réessayez.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    // Numéro facultatif : si vide, met "0"
+    const finalNumber = number.trim() || 'none';
+
+    await register({
+      name: lastName,
+      first_name: firstName,
+      email,
+      number: finalNumber,
+      date_of_birth: DEFAULT_DOB,
+      password,
+    });
+
+    navigate('/'); // redirection après inscription
+  } catch (err) {
+    console.error("Erreur lors de l'inscription :", err);
+    setError(err.response?.data?.message || 'Erreur lors de l’inscription. Réessayez.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
@@ -227,7 +232,7 @@ const SignUp = () => {
 
               <div className="mb-3 w-100">
                 <label htmlFor="email" className="form-label">
-                  Email (facultatif)
+                  Email 
                 </label>
                 <input
                   type="email"
@@ -236,7 +241,7 @@ const SignUp = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  
+                  required
                 />
               </div>
             </div>

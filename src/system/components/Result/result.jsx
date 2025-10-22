@@ -51,17 +51,31 @@ export default function ResultPopup({ closePopup }) {
         if (ignore || attempts >= 4) return;
         attempts++;
         try {
+          console.log(`🔄 Tentative de rafraîchissement ${attempts}/4 pour session ${sid}`);
           const s = await quizSessionService.getSessionById(sid);
+          
+          console.log('📥 Session reçue du serveur:', s);
+          
           const apiScore = asNum(s?.current_score ?? s?.score);
           const apiTotal = asNum(s?.total_questions ?? s?.questions_count ?? s?.max_score);
           const apiCompleted = Number(s?.is_completed) === 1;
 
+          console.log('Analyse:', {
+            apiScore,
+            apiTotal,
+            apiCompleted,
+            expectedScore: asNum(expectedScore)
+          });
+
           if (apiCompleted && apiScore >= asNum(expectedScore)) {
+            console.log('✅ Session complète et à jour, mise à jour de l\'état');
             if (!ignore) setSession(s);
           } else {
+            console.log(`⏳ Session pas encore à jour, réessai dans ${attempts * 300}ms`);
             setTimeout(tryRefresh, attempts * 300);
           }
-        } catch {
+        } catch (err) {
+          console.error('❌ Erreur lors du rafraîchissement:', err);
           setTimeout(tryRefresh, attempts * 300);
         }
       };
@@ -69,6 +83,11 @@ export default function ResultPopup({ closePopup }) {
     };
 
     const load = async () => {
+      console.log('════════════════════════════════════════');
+      console.log('🎬 DÉBUT CHARGEMENT RESULT POPUP');
+      console.log('════════════════════════════════════════');
+      console.log('Payload reçu:', payload);
+      
       try {
         setLoading(true);
 
@@ -76,7 +95,11 @@ export default function ResultPopup({ closePopup }) {
           Number.isFinite(Number(payload?.score)) &&
           Number.isFinite(Number(payload?.total));
 
+        console.log('✅ Payload a score et total?', hasPayloadBasics);
+
         if (hasPayloadBasics) {
+          console.log('📦 Création de session synthétique depuis payload');
+          
           const syntheticSession = {
             session_id: payload.sessionId || null,
             current_score: asNum(payload.score),
@@ -86,19 +109,25 @@ export default function ResultPopup({ closePopup }) {
             thematic_title: payload.thematicTitle,
             sub_thematic_title: payload.subTitle,
           };
+
+          console.log('Session synthétique créée:', syntheticSession);
+
           if (!ignore) {
             setSession(syntheticSession);
             setLoading(false);
           }
 
           if (payload.sessionId) {
+            console.log('🔄 Rafraîchissement depuis serveur...');
             refreshFromServerWithBackoff(payload.sessionId, payload.score);
           }
           return;
         }
 
         if (payload?.sessionId) {
+          console.log('📥 Récupération session depuis ID:', payload.sessionId);
           const s = await quizSessionService.getSessionById(payload.sessionId);
+          console.log('Session récupérée:', s);
           if (!ignore) setSession(s);
           return;
         }
@@ -107,25 +136,41 @@ export default function ResultPopup({ closePopup }) {
           throw new Error('Utilisateur non authentifié ou introuvable.');
         }
 
+        console.log('👤 Récupération sessions pour user:', currentUserId);
         const sessions = await quizSessionService.getUserSessions(currentUserId);
+        console.log('Sessions utilisateur:', sessions);
+
         const pickLatest = (arr) => {
           const sorted = [...arr].sort(
             (a, b) => new Date(b.last_activity) - new Date(a.last_activity)
           );
           return sorted[0] || null;
         };
+
         const completed = sessions.filter((s) => Number(s.is_completed) === 1);
+        console.log('Sessions complétées:', completed);
+        
         const s = pickLatest(completed.length ? completed : sessions);
+        console.log('Session sélectionnée:', s);
+        
         if (!s) throw new Error('Aucune session de quiz trouvée.');
+
         if (!ignore) setSession(s);
       } catch (e) {
+        console.error('❌ ERREUR lors du chargement:', e);
         if (!ignore) setError(e?.message || 'Erreur lors du chargement du résultat.');
       } finally {
-        if (!ignore) setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+          console.log('════════════════════════════════════════');
+          console.log('🏁 FIN CHARGEMENT RESULT POPUP');
+          console.log('════════════════════════════════════════');
+        }
       }
     };
 
     load();
+
     return () => {
       ignore = true;
     };
@@ -142,7 +187,11 @@ export default function ResultPopup({ closePopup }) {
         0
       );
       const percent = total > 0 ? (score / total) * 100 : 0;
+      
+      console.log('🎊 Vérification confetti:', { score, total, percent });
+      
       if (percent >= 80) {
+        console.log('✨ Activation des confettis!');
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 4000);
       }
@@ -160,6 +209,7 @@ export default function ResultPopup({ closePopup }) {
       document.body
     );
   }
+
   const close = () => {
     if (closing) return;
     setClosing(true);
@@ -190,6 +240,15 @@ export default function ResultPopup({ closePopup }) {
     );
   }
 
+  // ════════════════════════════════════════════════════
+  // 🔍 CALCUL DES RÉSULTATS AVEC DEBUGGING COMPLET
+  // ════════════════════════════════════════════════════
+
+  console.log('\n════════════════════════════════════════');
+  console.log('📊 CALCUL DES RÉSULTATS');
+  console.log('════════════════════════════════════════');
+  console.log('Session complète:', JSON.stringify(session, null, 2));
+
   const score = Number(session?.current_score ?? session?.score ?? 0);
   const correct = Number(session?.correct_answers_count ?? 0);
   const total = Number(
@@ -198,13 +257,40 @@ export default function ResultPopup({ closePopup }) {
     session?.max_score ??
     0
   );
+
+  console.log('\n📈 VALEURS EXTRAITES:');
+  console.log('-----------------------------------');
+  console.log('current_score (brut):', session?.current_score, '| Type:', typeof session?.current_score);
+  console.log('score (brut):', session?.score, '| Type:', typeof session?.score);
+  console.log('✅ SCORE FINAL:', score);
+  console.log('-----------------------------------');
+  console.log('correct_answers_count (brut):', session?.correct_answers_count, '| Type:', typeof session?.correct_answers_count);
+  console.log('✅ CORRECT FINAL:', correct);
+  console.log('-----------------------------------');
+  console.log('total_questions (brut):', session?.total_questions, '| Type:', typeof session?.total_questions);
+  console.log('questions_count (brut):', session?.questions_count, '| Type:', typeof session?.questions_count);
+  console.log('max_score (brut):', session?.max_score, '| Type:', typeof session?.max_score);
+  console.log('✅ TOTAL FINAL:', total);
+  console.log('-----------------------------------');
+
   const percent = total > 0 ? (score / total) * 100 : 0;
   const percentFormatted = percent.toFixed(1);
+
+  console.log('\n🎯 CALCULS:');
+  console.log('Pourcentage brut:', percent);
+  console.log('Pourcentage formaté:', percentFormatted + '%');
+  console.log('Mauvaises réponses:', total - correct);
 
   const playedAt = session?.last_activity || session?.updated_at || session?.created_at;
   const playedDateStr = playedAt
     ? new Date(playedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
     : '—';
+
+  console.log('\n📅 DATE:');
+  console.log('last_activity:', session?.last_activity);
+  console.log('updated_at:', session?.updated_at);
+  console.log('created_at:', session?.created_at);
+  console.log('Date affichée:', playedDateStr);
 
   // Déterminer le niveau de performance
   let performanceLevel = 'beginner';
@@ -214,12 +300,12 @@ export default function ResultPopup({ closePopup }) {
 
   if (percent >= 90) {
     performanceLevel = 'perfect';
-    performanceMessage = 'Performance exceptionnelle ! 🎉';
+    performanceMessage = 'Performance exceptionnelle ! 🏆';
     performanceColor = '#722ed1';
     performanceIcon = <TrophyOutlined />;
   } else if (percent >= 80) {
     performanceLevel = 'excellent';
-    performanceMessage = 'Excellent travail ! 🌟';
+    performanceMessage = 'Excellent travail ! 🎉';
     performanceColor = '#52c41a';
     performanceIcon = <CheckCircleOutlined />;
   } else if (percent >= 60) {
@@ -234,10 +320,30 @@ export default function ResultPopup({ closePopup }) {
     performanceIcon = <StarOutlined />;
   } else {
     performanceLevel = 'beginner';
-    performanceMessage = 'Tu peux faire mieux ! 📚';
+    performanceMessage = 'Tu peux faire mieux ! 🔥';
     performanceColor = '#ff4d4f';
     performanceIcon = <FireOutlined />;
   }
+
+  console.log('\n🎨 PERFORMANCE:');
+  console.log('Niveau:', performanceLevel);
+  console.log('Message:', performanceMessage);
+  console.log('Couleur:', performanceColor);
+
+  console.log('\n💡 DIAGNOSTIC:');
+  if (score !== correct) {
+    console.warn('⚠️ ATTENTION: score !== correct');
+    console.warn('Score:', score, '| Correct:', correct);
+    console.warn('Il y a probablement un problème avec correct_answers_count');
+  } else {
+    console.log('✅ score === correct, tout est cohérent');
+  }
+
+  if (total === 0) {
+    console.error('❌ ERREUR: total === 0, impossible de calculer le pourcentage');
+  }
+
+  console.log('════════════════════════════════════════\n');
 
   return createPortal(
     <div className="result-popup-overlay">
@@ -254,7 +360,6 @@ export default function ResultPopup({ closePopup }) {
       )}
 
       <div className={`result-popup-card ${performanceLevel}`}>
-
         {/* Header avec icône animée */}
         <div className="result-header">
           <div className="result-icon" style={{ color: performanceColor }}>
@@ -352,7 +457,6 @@ export default function ResultPopup({ closePopup }) {
           >
             Accueil
           </Button>
-
           <Button
             type="primary"
             size="large"
@@ -367,7 +471,7 @@ export default function ResultPopup({ closePopup }) {
           </Button>
         </div>
 
-        {/* Session ID (désormais à l’intérieur du card) */}
+        {/* Session ID */}
         <div className="result-session-id">Session #{session?.session_id || '—'}</div>
       </div>
     </div>,

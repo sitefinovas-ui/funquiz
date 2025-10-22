@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Form, Input, InputNumber, Upload, Button, message, Radio, Space, Modal } from 'antd';
 import { UploadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { downloadExampleExcel } from './download_quiz.js';
 import thematicService from '../../../../../configurations/Services/thematicServices.js';
 import subThematicServices from '../../../../../configurations/Services/subThematicServices.js';
 import questionServices from '../../../../../configurations/Services/questionServices.js';
@@ -462,16 +463,28 @@ function QuizCreate() {
           {/* Import / Export Excel */}
           <div style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 8 }}>Importer via Excel</h3>
-            <Upload
-              beforeUpload={handleExcelImport}
-              showUploadList={false}
-              accept=".xlsx,.xls"
-              maxCount={1}
-            >
-              <Button icon={<UploadOutlined />} loading={excelLoading}>
-                Importer Excel (XLSX)
+              <div className="d-flex gap-2">
+              {/* Bouton d'import */}
+              <Upload
+                beforeUpload={handleExcelImport}
+                showUploadList={false}
+                accept=".xlsx,.xls"
+                maxCount={1}
+              >
+                <Button icon={<UploadOutlined />} loading={excelLoading}>
+                  Importer Excel (XLSX)
+                </Button>
+              </Upload>
+
+              {/* Bouton d'export séparé */}
+              <Button
+                icon={<UploadOutlined />}
+                loading={excelLoading}
+                onClick={downloadExampleExcel}
+              >
+                Exporter un exemple (XLSX)
               </Button>
-            </Upload>
+            </div>
             <p style={{ fontSize: 12, marginTop: 8 }}>
               Schéma attendu: Thématique, Description thématique, Couleur, Ordre thématique, Sous‑thématique,
               Description sous‑thématique, Difficulté, Ordre sous‑thématique, Question, Explication, Type,

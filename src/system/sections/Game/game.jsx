@@ -29,7 +29,7 @@ const QuizComponent = () => {
   const [subThematicId, setSubThematicId] = useState(null);
   const [orderedQuestions, setOrderedQuestions] = useState([]);
 
-  // Mélange d’ordre des questions
+  // Mélange d'ordre des questions ET des réponses
   const shuffle = (arr) => {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -37,6 +37,40 @@ const QuizComponent = () => {
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
+  };
+
+  // Mélange les réponses d'une question et retourne la nouvelle position de la bonne réponse
+  const shuffleAnswers = (question) => {
+    if (!question?.answers?.[0]) return question;
+
+    const answersObj = question.answers[0];
+    const correctOption = Number(answersObj.correct_option);
+    
+    // Extraire les réponses
+    const answerKeys = Object.keys(answersObj).filter(key => key.startsWith('answer_option'));
+    const answers = answerKeys.map((key, index) => ({
+      text: answersObj[key],
+      originalIndex: index + 1, // Position originale (1-based)
+      isCorrect: (index + 1) === correctOption
+    }));
+
+    // Mélanger les réponses
+    const shuffledAnswers = shuffle(answers);
+
+    // Trouver la nouvelle position de la bonne réponse
+    const newCorrectIndex = shuffledAnswers.findIndex(a => a.isCorrect) + 1;
+
+    // Reconstruire l'objet réponse
+    const newAnswersObj = { correct_option: newCorrectIndex };
+    shuffledAnswers.forEach((answer, index) => {
+      newAnswersObj[`answer_option_${index + 1}`] = answer.text;
+    });
+
+    return {
+      ...question,
+      answers: [newAnswersObj],
+      _originalCorrectOption: correctOption // Pour debug si besoin
+    };
   };
 
   const normalize = (s) =>
@@ -48,6 +82,35 @@ const QuizComponent = () => {
       const correct = q?.answers?.[0]?.correct_option;
       return acc + (a.selectedOption === correct ? 1 : 0);
     }, 0);
+
+  // ✨ FONCTION CENTRALISÉE DE SAUVEGARDE
+  const saveProgress = async (answeredList, scoreValue, questionIndex, completed = false) => {
+    if (!sessionId) {
+      console.warn('⚠️ Aucun sessionId disponible pour la sauvegarde');
+      return false;
+    }
+
+    try {
+      await quizSessionService.updateSession(sessionId, {
+        current_question_index: questionIndex,
+        answered_questions: answeredList,
+        current_score: scoreValue,
+        correct_answers_count: computeCorrectCount(answeredList),
+        is_completed: completed ? 1 : 0,
+      });
+
+      console.log(`💾 Progression sauvegardée:`, {
+        réponses: answeredList.length,
+        score: scoreValue,
+        index: questionIndex,
+        terminé: completed
+      });
+      return true;
+    } catch (e) {
+      console.error('❌ Erreur sauvegarde:', e?.message);
+      return false;
+    }
+  };
 
   const resolveIdsByTitles = async () => {
     const thematics = await thematicService.getAllParamThematics();
@@ -105,9 +168,28 @@ const QuizComponent = () => {
             const reordered = orderIds
               .map((id) => (questions || []).find((q) => q.question_id === id))
               .filter(Boolean);
-            setOrderedQuestions(reordered.length ? reordered : [...questions]);
+            
+            // Récupérer les réponses mélangées de la session
+            const savedShuffled = (() => {
+              try {
+                const sd = typeof target.session_data === 'string'
+                  ? JSON.parse(target.session_data || '{}')
+                  : target.session_data || {};
+                return sd?.shuffled_questions || null;
+              } catch { return null; }
+            })();
+
+            if (savedShuffled && savedShuffled.length) {
+              // Utiliser les questions déjà mélangées de la session
+              setOrderedQuestions(savedShuffled);
+            } else {
+              // Mélanger les réponses pour la première fois
+              const withShuffledAnswers = reordered.map(q => shuffleAnswers(q));
+              setOrderedQuestions(withShuffledAnswers);
+            }
           } else {
-            setOrderedQuestions([...questions]);
+            const withShuffledAnswers = questions.map(q => shuffleAnswers(q));
+            setOrderedQuestions(withShuffledAnswers);
           }
 
           setSessionId(target.session_id);
@@ -120,8 +202,11 @@ const QuizComponent = () => {
           setCurrentIndex(safeIndex);
           setScore(Number(target.current_score || 0));
         } else {
+          // Nouvelle session : mélanger questions ET réponses
           const shuffled = shuffle(questions || []);
-          setOrderedQuestions(shuffled);
+          const withShuffledAnswers = shuffled.map(q => shuffleAnswers(q));
+          setOrderedQuestions(withShuffledAnswers);
+          
           const orderIds = shuffled.map((q) => q.question_id);
           const res = await quizSessionService.createSession({
             user_id: uid,
@@ -129,7 +214,12 @@ const QuizComponent = () => {
             sub_thematic_id: stId || null,
             total_questions: (questions || []).length,
             difficulty_level: null,
-            session_data: { thematicTitle, subTitle, question_order: orderIds },
+            session_data: { 
+              thematicTitle, 
+              subTitle, 
+              question_order: orderIds,
+              shuffled_questions: withShuffledAnswers // Sauvegarder l'ordre mélangé
+            },
           });
           setSessionId(res?.sessionId || null);
         }
@@ -151,66 +241,71 @@ const QuizComponent = () => {
   }
 
   const currentQuestion = orderedQuestions[currentIndex] || questions[currentIndex];
+  const totalQuestions = orderedQuestions.length || questions.length;
 
+  // 🎯 GESTION DE LA RÉPONSE
   const handleSelectAnswer = async (index) => {
     if (isValidated) return;
 
     setSelectedAnswer(index);
     setIsValidated(true);
 
-    const isCorrect = index + 1 === currentQuestion.answers[0].correct_option;
+    const correctOptionRaw = currentQuestion.answers[0]?.correct_option;
+    const correctOption = Number(correctOptionRaw);
+    const isCorrect = (index + 1) === correctOption;
+
     const scoreNext = score + (isCorrect ? 1 : 0);
     setScore(scoreNext);
 
-    const answeredNext = [...answered, { questionId: currentQuestion.question_id, selectedOption: index + 1 }];
+    const answeredNext = [
+      ...answered,
+      { questionId: currentQuestion.question_id, selectedOption: index + 1 }
+    ];
     setAnswered(answeredNext);
 
-    try {
-      if (sessionId) {
-        await quizSessionService.updateSession(sessionId, {
-          current_question_index: currentIndex + 1,
-          answered_questions: answeredNext,
-          current_score: scoreNext,
-          correct_answers_count: computeCorrectCount(answeredNext),
-          is_completed: 0,
-        });
-      }
-    } catch (e) {
-      console.warn('Sauvegarde progression échouée:', e?.message);
-    }
+    const isLastQuestion = currentIndex + 1 >= totalQuestions;
+    const nextIndex = currentIndex + 1;
 
-    setTimeout(() => handleNext(), 500);
-  };
+    console.log('📝 Réponse enregistrée:', {
+      question: currentIndex + 1,
+      dernière: isLastQuestion,
+      score: scoreNext,
+      optionSélectionnée: index + 1,
+      bonneRéponse: correctOption
+    });
 
-  const handleNext = async () => {
-    if (currentIndex < (orderedQuestions.length || questions.length) - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setIsValidated(false);
+    // 💾 Sauvegarde immédiate après chaque réponse
+    await saveProgress(answeredNext, scoreNext, nextIndex, isLastQuestion);
+
+    if (!isLastQuestion) {
+      // ⏭️ Question suivante
+      setTimeout(() => {
+        setCurrentIndex(nextIndex);
+        setSelectedAnswer(null);
+        setIsValidated(false);
+      }, 500);
     } else {
-      const finalScore = computeCorrectCount(answered);
+      // 🏁 Dernière question : finalisation
       try {
-        if (sessionId) {
-          await quizSessionService.updateSession(sessionId, {
-            current_question_index: currentIndex,
-            answered_questions: answered,
-            current_score: finalScore,
-            correct_answers_count: finalScore,
-            is_completed: 1,
-          });
-          await quizSessionService.completeSession(sessionId);
-        }
-
-        await quizAnswerService.pushFinalPoints({ userId, subThematicId, answered, questions });
+        await quizSessionService.completeSession(sessionId);
+        await quizAnswerService.pushFinalPoints({
+          userId,
+          subThematicId,
+          answered: answeredNext,
+          questions
+        });
         window.dispatchEvent(new CustomEvent('points:updated'));
+
+        console.log('✅ Quiz terminé et finalisé');
       } catch (e) {
-        console.warn('Finalisation session échouée:', e?.message);
+        console.error('❌ Erreur finalisation:', e?.message);
       }
 
+      // Afficher les résultats
       openPopup('result', {
         sessionId,
-        score: finalScore,
-        total: (questions || []).length,
+        score: computeCorrectCount(answeredNext),
+        total: totalQuestions,
         thematicTitle,
         subTitle,
         userId,
@@ -219,19 +314,16 @@ const QuizComponent = () => {
     }
   };
 
+  // 🚪 QUITTER LE QUIZ
   const handleQuit = async () => {
+    console.log('🚪 Tentative de quitter le quiz');
+    
     try {
-      if (sessionId) {
-        await quizSessionService.updateSession(sessionId, {
-          current_question_index: currentIndex,
-          answered_questions: answered,
-          current_score: score,
-          correct_answers_count: computeCorrectCount(answered),
-          is_completed: 0,
-        });
-      }
+      // Sauvegarde avant de quitter (non terminé)
+      await saveProgress(answered, score, currentIndex, false);
+      console.log('✅ Progression sauvegardée avant de quitter');
     } catch (e) {
-      console.warn('Sauvegarde avant quit échouée:', e?.message);
+      console.error('❌ Sauvegarde avant quit échouée:', e?.message);
     } finally {
       navigate('/');
     }
@@ -264,7 +356,7 @@ const QuizComponent = () => {
             <h2 className="fw-bold fs-md-4 fs-custom position-relative">
               Question{' '}
               <span className="fs-4 position-absolute end-0">
-                {Math.min(currentIndex + 1, (orderedQuestions.length || questions.length))}/{(orderedQuestions.length || questions.length)}
+                {Math.min(currentIndex + 1, totalQuestions)}/{totalQuestions}
               </span>
             </h2>
             <h4 className="mt-3 text-dark">{currentQuestion?.content ?? ''}</h4>
@@ -282,6 +374,7 @@ const QuizComponent = () => {
                     key={i}
                     type="button"
                     onClick={() => handleSelectAnswer(i)}
+                    disabled={isValidated}
                     className={`quiz-btn d-flex gap-2 align-items-center mb-2 ${getCardClass(i)}`}
                   >
                     <span className="fw-bold text-uppercase letter">{String.fromCharCode(65 + i)}</span>
@@ -291,7 +384,16 @@ const QuizComponent = () => {
             </div>
           ) : (
             <div className="d-flex justify-content-end mt-4">
-              <button onClick={handleNext} className="w-100 rounded-pill py-2 border-0 btn-submit-quiz">Continuer</button>
+              <button 
+                onClick={() => {
+                  setCurrentIndex(prev => prev + 1);
+                  setSelectedAnswer(null);
+                  setIsValidated(false);
+                }} 
+                className="w-100 rounded-pill py-2 border-0 btn-submit-quiz"
+              >
+                Continuer
+              </button>
             </div>
           )}
         </div>
