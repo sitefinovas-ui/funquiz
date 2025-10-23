@@ -9,13 +9,6 @@
       content="width=device-width, initial-scale=1.0, user-scalable=no"
     />
 
-    <!-- Sécurité -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none';" />
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-
     <!-- Titre et description -->
     <title>FunQuiz - Quiz Interactif | Testez vos Connaissances en Jouant</title>
     <meta
@@ -29,29 +22,16 @@
     <meta name="author" content="Frederick - FunQuiz Team" />
     <meta name="application-name" content="FunQuiz" />
     <meta name="theme-color" content="#6C63FF" />
-    <meta name="google-site-verification" content="cJZFhymUjSP3f-vaPaKpPYHUkApWIBPz5Iw8-vRzFtE" />
+    <meta
+      name="google-site-verification"
+      content="cJZFhymUjSP3f-vaPaKpPYHUkApWIBPz5Iw8-vRzFtE"
+    />
 
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FunQuiz" />
-
-    <!-- Favicons multiples -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon_log_fun_quiz.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon_log_fun_quiz.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon_log_fun_quiz.png" />
-    <link rel="shortcut icon" href="/favicon_log_fun_quiz.png" />
 
-    <!-- Preload et DNS Prefetch -->
-    <link rel="preload" href="/police.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/src/main.jsx" as="script" />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-    
     <!-- Fonts -->
+    <link rel="preload" href="/police.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
@@ -108,54 +88,18 @@
           }
         },
         "image": "https://funquiz-7k43.onrender.com/wall.png",
-        "inLanguage": "fr-FR",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "EUR"
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "reviewCount": "1247"
-        }
+        "inLanguage": "fr-FR"
       }
     </script>
-
-    
   </head>
 
   <body>
-    <!-- Fallback pour navigateurs sans JavaScript -->
-    <noscript>
-      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-        <h1>JavaScript requis</h1>
-        <p>FunQuiz nécessite JavaScript pour fonctionner. Veuillez activer JavaScript dans votre navigateur.</p>
-      </div>
-    </noscript>
-
-    <!-- Conteneur principal avec spinner de chargement -->
-    <div id="root">
-    </div>
-
-    <!-- Scripts avec gestion d'erreurs -->
-    <script type="module" src="/src/main.jsx" onerror="document.getElementById('root').innerHTML='<div style=\'padding:20px;text-align:center;\'><h2>Erreur de chargement</h2><p>Impossible de charger l\'application. Veuillez rafraîchir la page.</p></div>'"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
       crossorigin="anonymous"
-      defer
     ></script>
-
-    <!-- Service Worker pour PWA (optionnel) -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js').catch(function() {
-            // Service worker non disponible, application fonctionne quand même
-          });
-        });
-      }
-    </script>
   </body>
 </html>
