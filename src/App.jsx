@@ -51,9 +51,7 @@ function App() {
               <Route
                 path="/step"
                 element={
-                  <RequireAuth>
                     <Game />
-                  </RequireAuth>
                 }
               />
               <Route

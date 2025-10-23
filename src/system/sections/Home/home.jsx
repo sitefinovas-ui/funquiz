@@ -231,7 +231,7 @@ const Home = () => {
     style={{ fontSize: '13px' }}
   >
     <button
-      onClick={() => navigate('/register')}
+      onClick={() => navigate('/sign-up')}
       className="auth-btn border-0 bg-transparent d-flex align-items-center justify-content-center gap-1 fw-semibold"
       style={{ color: 'var(--yellow)', cursor: 'pointer' }}
       aria-label="S'inscrire"

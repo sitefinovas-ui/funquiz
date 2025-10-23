@@ -73,16 +73,19 @@ const Info = () => {
             <span className="Logo_funquiz color-shift text-dark">FunQuiz</span>
             <span className="sous-log"></span>
           </h2>
+        
+        
 
           <p
             className="text-secondary text-center mb-4 mt-3 fade-in-text"
             style={{ fontSize: '13px' }}
           >
-            Prouvez votre talent, empochez des points et dominez vos amis partout en Côte d'Ivoire !{' '}
+            Prouvez votre talent, empochez des points et dominez vos amis partout !{' '}
             <br />
             <br />
-            Inscrivez-vous et démarrez l'aventure !
+            Inscrivez-vous dès maintenant pour accéder à vos points, suivre votre progression et ne rien perdre de votre expérience.
           </p>
+
 
           <button className="button-popup pulse-effect" onClick={() => setShowPopup(false)}>
             Continuer
