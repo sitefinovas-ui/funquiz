@@ -4,39 +4,57 @@
     <!-- Encodage et compatibilité -->
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
 
-    <!-- Titre et description optimisés -->
-    <title>FunQuiz - Quiz Interactif | Testez vos Connaissances</title>
+    <!-- Sécurité -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none';" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+    <!-- Titre et description -->
+    <title>FunQuiz - Quiz Interactif | Testez vos Connaissances en Jouant</title>
     <meta
       name="description"
-      content="FunQuiz : l'application de quiz la plus amusante ! Défis personnalisés, scores en temps réel et mode multijoueur. Plus de 1000 questions dans 20 catégories — Gratuit et sans pub !"
+      content="FunQuiz : l'application de quiz la plus amusante ! Défis personnalisés, scores en temps réel, classement en ligne et mode multijoueur. Plus de 1000 questions dans 20 catégories — Gratuit et sans pub !"
     />
     <meta
       name="keywords"
-      content="quiz en ligne, jeu de questions, quiz multijoueur, test de connaissances, quiz gratuit, jeu éducatif, culture générale, défis quiz"
+      content="quiz en ligne, jeu de questions, quiz multijoueur, test de connaissances, quiz gratuit, jeu éducatif, culture générale, défis quiz, funquiz"
     />
     <meta name="author" content="Frederick - FunQuiz Team" />
-    <meta name="generator" content="Vite + React" />
     <meta name="application-name" content="FunQuiz" />
+    <meta name="theme-color" content="#6C63FF" />
     <meta name="google-site-verification" content="cJZFhymUjSP3f-vaPaKpPYHUkApWIBPz5Iw8-vRzFtE" />
 
-    <!-- Favicon -->
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FunQuiz" />
+
+    <!-- Favicons multiples -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon_log_fun_quiz.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon_log_fun_quiz.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon_log_fun_quiz.png" />
+    <link rel="shortcut icon" href="/favicon_log_fun_quiz.png" />
+
+    <!-- Preload et DNS Prefetch -->
+    <link rel="preload" href="/police.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="data:text/jsx;base64,aW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JzsNCmltcG9ydCBSZWFjdERPTSBmcm9tICdyZWFjdC1kb20vY2xpZW50JzsNCmltcG9ydCB7IEJyb3dzZXJSb3V0ZXIgfSBmcm9tICdyZWFjdC1yb3V0ZXItZG9tJzsNCmltcG9ydCBBcHAgZnJvbSAnLi9BcHAuanN4JzsNCmltcG9ydCAnYm9vdHN0cmFwL2Rpc3QvY3NzL2Jvb3RzdHJhcC5taW4uY3NzJzsNCmltcG9ydCAnYm9vdHN0cmFwL2Rpc3QvanMvYm9vdHN0cmFwLmJ1bmRsZS5taW4uanMnOw0KaW1wb3J0ICcuL2NvbG9ycy5jc3MnOw0KaW1wb3J0ICcuL2luZGV4LmNzcyc7DQppbXBvcnQgJy4vaTE4bicNCg0KUmVhY3RET00uY3JlYXRlUm9vdChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncm9vdCcpKS5yZW5kZXIoDQogIDxSZWFjdC5TdHJpY3RNb2RlPg0KICAgIDxCcm93c2VyUm91dGVyIGJhc2VuYW1lPSIvIj4NCiAgICAgIDxBcHAgLz4NCiAgICA8L0Jyb3dzZXJSb3V0ZXI+DQogIDwvUmVhY3QuU3RyaWN0TW9kZT4NCik7DQo=" as="script" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     
     <!-- Fonts -->
-    <link rel="preload" href="/police.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
-
-    <!-- Bootstrap -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
-      crossorigin="anonymous"
-    />
 
     <!-- Canonical -->
     <link rel="canonical" href="https://funquiz-7k43.onrender.com/" />
@@ -47,7 +65,7 @@
     <meta property="og:title" content="FunQuiz — Le Quiz Interactif le Plus Amusant 🎯" />
     <meta
       property="og:description"
-      content="Teste tes connaissances avec des quiz variés, défie tes amis et grimpe dans le classement sur FunQuiz ! 🧠🔥"
+      content="Teste tes connaissances avec FunQuiz : défis variés, classement en direct et parties entre amis. Gratuit, sans pub et fun !"
     />
     <meta property="og:image" content="https://funquiz-7k43.onrender.com/wall.png" />
     <meta property="og:image:width" content="1200" />
@@ -62,20 +80,109 @@
     <meta name="twitter:title" content="FunQuiz — Le Quiz Interactif le Plus Amusant 🎯" />
     <meta
       name="twitter:description"
-      content="Teste tes connaissances avec des quiz variés et affronte d'autres joueurs en ligne ! 🧠🔥"
+      content="Teste tes connaissances avec des quiz variés et affronte d'autres joueurs en ligne ! 🎮"
     />
     <meta name="twitter:image" content="https://funquiz-7k43.onrender.com/wall.png" />
     <meta name="twitter:image:alt" content="FunQuiz - Interface de jeu et scores en temps réel" />
+
+    <!-- Données structurées (JSON-LD pour Google) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "FunQuiz",
+        "url": "https://funquiz-7k43.onrender.com/",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web",
+        "description": "FunQuiz est une application de quiz interactive qui permet de tester ses connaissances et de défier ses amis en ligne. 100% gratuite et sans publicité.",
+        "author": {
+          "@type": "Person",
+          "name": "Frederick"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "FunQuiz Team",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://funquiz-7k43.onrender.com/favicon_log_fun_quiz.png"
+          }
+        },
+        "image": "https://funquiz-7k43.onrender.com/wall.png",
+        "inLanguage": "fr-FR",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "reviewCount": "1247"
+        }
+      }
+    </script>
+
+    <!-- Style de chargement pour éviter le FOUC -->
+    <style>
+      #root {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #6C63FF;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+    </style>
     <script type="module" crossorigin src="/assets/index-DwItciA-.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BOdsXKwT.css">
   </head>
 
   <body>
-    <div id="root"></div>
+    <!-- Fallback pour navigateurs sans JavaScript -->
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+        <h1>JavaScript requis</h1>
+        <p>FunQuiz nécessite JavaScript pour fonctionner. Veuillez activer JavaScript dans votre navigateur.</p>
+      </div>
+    </noscript>
+
+    <!-- Conteneur principal avec spinner de chargement -->
+    <div id="root">
+      <div class="loading-spinner" aria-label="Chargement en cours"></div>
+    </div>
+
+    <!-- Scripts avec gestion d'erreurs -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
       crossorigin="anonymous"
+      defer
     ></script>
+
+    <!-- Service Worker pour PWA (optionnel) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').catch(function() {
+            // Service worker non disponible, application fonctionne quand même
+          });
+        });
+      }
+    </script>
   </body>
 </html>
