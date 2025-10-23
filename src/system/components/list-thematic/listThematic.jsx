@@ -90,10 +90,10 @@ function Thematic({ closePopup, highlightThematicId }) {
                     {thematic.thematic_title}
                   </h4>
 
-                  <ul className="list-unstyled">
+                  <ul className="list-unstyled text-start">
                     {Array.isArray(thematic.sub_thematics) && thematic.sub_thematics.length > 0 ? (
                       thematic.sub_thematics.map((sub) => (
-                        <li className="hover-custom" key={sub.sub_thematic_id}>
+                        <li className="hover-custom text-start" key={sub.sub_thematic_id}>
                           <button
                             onClick={() => (handleSubThematicClick(sub, thematic), closePopup())}
                             className="text-decoration-none bg-transparent border-0 text-primary"
