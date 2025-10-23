@@ -35,6 +35,21 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://funquiz-7k43.onrender.com/" />
 
+    <!-- ✅ Google Tag Manager (dans le <head>, le plus haut possible) -->
+    <script>
+      (function(w,d,s,l,i){
+        w[l]=w[l]||[];
+        w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+        var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),
+            dl=l!='dataLayer'?'&l='+l:'';
+        j.async=true;
+        j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+        f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-PFD56X4N');
+    </script>
+    <!-- End Google Tag Manager -->
+
     <!-- Open Graph (Facebook, WhatsApp, LinkedIn...) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://funquiz-7k43.onrender.com/" />
@@ -61,13 +76,6 @@
     <meta name="twitter:image" content="https://funquiz-7k43.onrender.com/wall.png" />
     <meta name="twitter:image:alt" content="FunQuiz - Interface de jeu et scores en temps réel" />
 
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-PFD56X4N');
-    </script>
-
     <!-- Données structurées (JSON-LD pour Google) -->
     <script type="application/ld+json">
       {
@@ -78,10 +86,7 @@
         "applicationCategory": "GameApplication",
         "operatingSystem": "Web",
         "description": "FunQuiz est une application de quiz interactive qui permet de tester ses connaissances et de défier ses amis en ligne. 100% gratuite et sans publicité.",
-        "author": {
-          "@type": "Person",
-          "name": "Frederick"
-        },
+        "author": { "@type": "Person", "name": "Frederick" },
         "publisher": {
           "@type": "Organization",
           "name": "FunQuiz Team",
@@ -97,11 +102,19 @@
   </head>
 
   <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PFD56X4N"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- ✅ Google Tag Manager (noscript) — juste après l’ouverture du <body> -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-PFD56X4N"
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"
+      ></iframe>
+    </noscript>
     <!-- End Google Tag Manager (noscript) -->
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
