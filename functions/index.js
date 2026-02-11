@@ -33,7 +33,8 @@ const filterResponseHeaders = (headers) => {
 };
 
 export const api = onRequest(async (req, res) => {
-  const backendOrigin = process.env.BACKEND_ORIGIN;
+  const backendOrigin =
+    process.env.BACKEND_ORIGIN || "https://funquiz-production-8095.up.railway.app";
   if (!backendOrigin) {
     res.status(500).json({
       error: "BACKEND_ORIGIN manquant",
@@ -69,4 +70,3 @@ export const api = onRequest(async (req, res) => {
   const buf = Buffer.from(await upstream.arrayBuffer());
   res.send(buf);
 });
-

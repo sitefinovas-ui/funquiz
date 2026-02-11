@@ -23,6 +23,13 @@ function computeBackendOrigin() {
 }
 
 function computeBaseURL() {
+  const useProxy = String(import.meta.env.VITE_USE_PROXY || '').toLowerCase() === 'true';
+  const sameOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+
+  if (useProxy && sameOrigin) {
+    return `${sameOrigin}/api`;
+  }
+
   const origin = computeBackendOrigin();
   const apiBase = origin.endsWith('/api') ? origin : `${origin}/api`;
   return apiBase.replace(/\/+$/, '');
