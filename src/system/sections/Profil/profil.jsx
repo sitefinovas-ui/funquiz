@@ -17,6 +17,7 @@ import './profil.css';
 
 import pointService from '../../configurations/Services/pointService.js';
 import quizSessionService from '../../configurations/Services/quizSessionService.js';
+import { computeBackendOrigin } from '../../configurations/Api/api_axios.js';
 
 function ProfilePage() {
   // --- UI / flags ---
@@ -72,6 +73,13 @@ function ProfilePage() {
   const [deleteComment, setDeleteComment] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  const backendOrigin = computeBackendOrigin();
+  const resolveMediaUrl = (value) => {
+    if (!value || typeof value !== 'string') return value;
+    if (value.startsWith('/uploads/') || value.startsWith('/public/')) return `${backendOrigin}${value}`;
+    return value;
+  };
 
   const handleDeleteAccount = async () => {
     if (!user?.user_id) {
@@ -397,7 +405,7 @@ function ProfilePage() {
     number: user?.number || '',
     is_verify: user?.is_verify ?? 0,
     joinDate: user?.joinDate || user?.created_at || user?.createdAt || null,
-    avatar: user?.avatar || user?.avatar_url || '',
+    avatar: resolveMediaUrl(user?.avatar || user?.avatar_url || ''),
     favoriteCategory: user?.favoriteCategory || user?.favorite_thematic || '—',
   };
 
