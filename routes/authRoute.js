@@ -68,12 +68,21 @@ router.post("/verify-otp", verifyOtp);
 
 
 // Statut WhatsApp pour diagnostic
-router.get("/auth/whatsapp-status", (req, res) => {
+router.get(
+  "/auth/whatsapp-status",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  (req, res) => {
   const status = getWhatsAppStatus();
   res.status(200).json(status);
-});
+  }
+);
 
-router.get("/auth/whatsapp-qr", (req, res) => {
+router.get(
+  "/auth/whatsapp-qr",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  (req, res) => {
   const qr = getLastQr();
   if (!qr) {
     return res
@@ -81,9 +90,14 @@ router.get("/auth/whatsapp-qr", (req, res) => {
       .json({ message: "QR non disponible (client non initialisé ou déjà prêt)" });
   }
   res.json({ qr });
-});
+  }
+);
 
-router.get("/auth/whatsapp-qr.png", async (req, res) => {
+router.get(
+  "/auth/whatsapp-qr.png",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  async (req, res) => {
   const qr = getLastQr();
   if (!qr) {
     return res
@@ -98,7 +112,8 @@ router.get("/auth/whatsapp-qr.png", async (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: "Génération du QR échouée", details: e.message });
   }
-});
+  }
+);
 // -----------------
 // Multer configuration
 // -----------------
