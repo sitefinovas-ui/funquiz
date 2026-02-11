@@ -9,13 +9,22 @@ import './privateMessages.css';
 
 const computeSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL || '';
+  const useProxy = String(import.meta.env.VITE_USE_PROXY || '').toLowerCase() === 'true';
   const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
   const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-  const lan =
-    host && host !== 'localhost'
-      ? `${protocol}//${host}:${import.meta.env.VITE_API_PORT || '5100'}`
-      : '';
-  const raw = lan || envUrl || 'http://localhost:5100';
+
+  const isIpv4 = /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host);
+  const isPrivateIpv4 =
+    isIpv4 &&
+    (host.startsWith('10.') ||
+      host.startsWith('192.168.') ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(host));
+
+  const useLan = host === 'localhost' || host === '127.0.0.1' || isPrivateIpv4;
+  const lan = useLan ? `${protocol}//${host}:${import.meta.env.VITE_API_PORT || '5100'}` : '';
+
+  const sameOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  const raw = envUrl || lan || (useProxy ? sameOrigin : '') || 'http://localhost:5100';
   return raw.replace(/\/api\/?$/, '');
 };
 
