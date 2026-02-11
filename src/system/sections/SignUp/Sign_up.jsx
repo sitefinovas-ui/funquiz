@@ -67,7 +67,12 @@ const SignUp = () => {
       navigate('/');
     } catch (err) {
       console.error("Erreur lors de l'inscription :", err);
-      setError(err.response?.data?.message || "Erreur lors de l'inscription. Réessayez.");
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Erreur lors de l'inscription. Réessayez."
+      );
     } finally {
       setLoading(false);
     }
