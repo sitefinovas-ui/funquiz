@@ -1,16 +1,18 @@
-﻿import './reset.css';
+import './reset.css';
 import { useEffect, useState } from 'react';
 import { FaEye, FaEyeSlash, FaRedo } from 'react-icons/fa';
 import authService from '../../configurations/Services/authServices';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function ResetPassword() {
   useEffect(() => {
     document.title = 'FUNQUIZ | Réinitialiser mon mot de passe';
   }, []);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState('');
+  const [emailLocked, setEmailLocked] = useState(false);
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,6 +47,16 @@ export default function ResetPassword() {
     const id = setInterval(() => setCooldown((c) => (c > 0 ? c - 1 : 0)), 1000);
     return () => clearInterval(id);
   }, [cooldown]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const prefillEmail = params.get('email');
+    if (!prefillEmail) return;
+    const normalized = String(prefillEmail).trim();
+    if (!normalized) return;
+    setEmail(normalized);
+    setEmailLocked(true);
+  }, [location.search]);
 
   const handleRequestCode = async () => {
     setError('');
@@ -140,7 +152,7 @@ export default function ResetPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
-                  disabled={loading || step > 1}
+                  disabled={loading || step > 1 || emailLocked}
                 />
                 <button
                   className="btn-gradient w-100 mt-3"

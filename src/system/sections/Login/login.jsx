@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../configurations/Context/useAuth';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -149,7 +149,15 @@ const Login = () => {
             </form>
             
              <div className="anthropic-footer-links">
-               <Link to="/reset">Mot de passe oublié ?</Link>
+               <Link
+                 to={
+                   email && email.trim().length > 0
+                     ? `/reset?email=${encodeURIComponent(email.trim())}`
+                     : '/reset'
+                 }
+               >
+                 Mot de passe oublié ?
+               </Link>
                <span>•</span>
                <Link to="/sign-up">S'inscrire</Link>
             </div>
