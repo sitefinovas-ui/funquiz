@@ -2,6 +2,9 @@
 node_modules/
 **/node_modules/
 
+# Logs
+*.log
+
 # Puppeteer local Chromium
 **/.local-chromium/
 

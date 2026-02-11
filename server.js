@@ -49,17 +49,11 @@ const getUserRoleById = async (userId) => {
   return rows?.[0]?.role || null;
 };
 
-const allowedOrigins = [
-  "http://192.168.1.26:31",
-  "https://funquiz2k25.web.app",
-  "http://localhost:31",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-const isOriginAllowed = (origin) => {
-  const allowLan = origin && origin.startsWith("http://192.168.");
-  return !origin || allowedOrigins.includes(origin) || allowLan;
-};
+const parseOrigins = (value) =>
+  String(value || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -117,10 +111,12 @@ app.use(
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
       const allowedOrigins = [
-        "http://192.168.1.26:31", // frontend Render (prod)
-        "http://localhost:5173",              // front Vite local
-        "http://localhost:31",                // fallback si PORT dev est 31
-        process.env.FRONTEND_URL,             // override via env si défini
+        "https://funquiz2k25.web.app",
+        "https://funquiz2k25.firebaseapp.com",
+        "http://localhost:5173",
+        "http://localhost:31",
+        ...parseOrigins(process.env.FRONTEND_URL),
+        ...parseOrigins(process.env.FRONTEND_URLS),
       ].filter(Boolean);
 
       const allowLan = origin && origin.startsWith("http://192.168.");
