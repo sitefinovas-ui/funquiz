@@ -1,0 +1,149 @@
+.app-loader {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-loader-card {
+  width: min(520px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 22px;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.app-loader-mark {
+  width: 56px;
+  height: 56px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.app-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: rgba(255, 153, 0, 0.9);
+  animation: appLoaderSpin 900ms linear infinite;
+}
+
+.app-loader-ring.ring-2 {
+  inset: 10px;
+  border-top-color: rgba(139, 92, 246, 0.9);
+  animation-duration: 1200ms;
+  animation-direction: reverse;
+}
+
+.app-loader-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(6, 212, 123, 0.35), rgba(6, 212, 123, 0) 70%);
+  filter: blur(1px);
+  animation: appLoaderPulse 1100ms ease-in-out infinite;
+}
+
+.app-loader-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%);
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.app-loader-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-loader-title {
+  font-weight: 900;
+  color: var(--site-text, #fff);
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.app-loader-subtitle {
+  color: var(--site-text-muted, rgba(255, 255, 255, 0.72));
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.app-loader-bar {
+  margin-top: 0.35rem;
+  width: min(280px, 100%);
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.app-loader-bar-fill {
+  display: block;
+  height: 100%;
+  width: 60%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 153, 0, 0.15), rgba(255, 153, 0, 0.8), rgba(139, 92, 246, 0.75), rgba(255, 153, 0, 0.15));
+  background-size: 200% 100%;
+  animation: appLoaderBar 900ms ease-in-out infinite;
+}
+
+@keyframes appLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes appLoaderPulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+@keyframes appLoaderBar {
+  0% {
+    transform: translateX(-40%);
+    background-position: 0% 50%;
+  }
+  100% {
+    transform: translateX(70%);
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loader-ring {
+    animation: none;
+  }
+  .app-loader-glow {
+    animation: none;
+  }
+  .app-loader-bar-fill {
+    animation: none;
+  }
+}

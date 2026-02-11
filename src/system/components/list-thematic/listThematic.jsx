@@ -43,15 +43,30 @@ function Thematic({ closePopup, highlightThematicId }) {
     <div
       className="backdrop-blur position-fixed bg-dark bg-opacity-50 top-0 end-0 bottom-0 start-0 h-100 w-100"
       style={{ zIndex: 1055 }}
+      onClick={() => {
+        closePopup?.();
+      }}
     >
       <div className="position-relative w-100">
         <div
           style={{ top: '-10px' }}
           className="text-dark p-5 start-0 end-0 bg-white position-absolute"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           <div className="d-flex align-items-center justify-content-between mx-5">
             <h2 className="title-selec-quiz fw-bold">Toutes les thématiques</h2>
-            <button onClick={closePopup} className="border-0 btn-close"></button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                closePopup?.();
+              }}
+              style={{color:'#0000008c'}}
+              className="border-0 btn-close"
+            >
+              x
+            </button>
           </div>
 
           <div className="dropdown-menu-large w-100">
@@ -81,6 +96,9 @@ function Thematic({ closePopup, highlightThematicId }) {
                   >
                     <img
                       src={thematic.icon_url}
+                      loading="lazy"
+                      decoding="async"
+                      fetchpriority="low"
                       className="rounded-circle w-100 h-100 object-fit-cover"
                       alt="Thematic category"
                     />
@@ -95,7 +113,10 @@ function Thematic({ closePopup, highlightThematicId }) {
                       thematic.sub_thematics.map((sub) => (
                         <li className="hover-custom text-start" key={sub.sub_thematic_id}>
                           <button
-                            onClick={() => (handleSubThematicClick(sub, thematic), closePopup())}
+                            onClick={() => {
+                              handleSubThematicClick(sub, thematic);
+                              closePopup?.();
+                            }}
                             className="text-decoration-none bg-transparent border-0 text-primary"
                           >
                             {sub.title}

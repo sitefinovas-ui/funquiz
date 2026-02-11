@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../../../../configurations/Context/AuthProvider';
 import './header-dash.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import LogoFunQuiz from '../../../../../../assets/Log.png';
 import { LuChevronUp } from 'react-icons/lu';
 import { FiChevronDown, FiChevronsRight, FiChevronsLeft } from 'react-icons/fi';
@@ -17,12 +17,12 @@ import {
   FaHome,
 } from 'react-icons/fa';
 
-const Sidebar = () => {
+const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState('dashboard');
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const isAuthenticated = !!user;
 
   const menuItems = [
     { id: 'dashboard', icon: FaTachometerAlt, label: "Vue d'ensemble", link: '/dashboard/' },
@@ -35,24 +35,23 @@ const Sidebar = () => {
     { id: 'settings', icon: FaCog, label: 'Réglage du système', link: '/dashboard/settings' },
   ];
 
-  const handleItemClick = (itemId) => setActiveItem(itemId);
-  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+  useEffect(() => {
+    setIsOpen(false);
+    if (onCloseMobile) onCloseMobile();
+  }, [location.pathname, onCloseMobile]);
 
   return (
-    <div
-      className={`sidebar-pro d-flex flex-column position-sticky top-0 vh-100 ${
-        isCollapsed ? 'collapsed' : 'expanded'
-      }`}
-      style={{
-        width: isCollapsed ? '80px' : '280px',
-        transition: 'width 0.3s ease-in-out',
-        zIndex: 1050,
-        backgroundColor: 'var(--bg-sidebar-dash)',
-        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-      }}
-    >
+    <div className={`sidebar-pro d-flex flex-column ${isCollapsed ? 'collapsed' : 'expanded'}`}>
       {/* Header */}
       <div className="sidebar-header d-flex align-items-center justify-content-between px-3 py-4">
+        <button
+          type="button"
+          className="sidebar-mobile-close"
+          aria-label="Fermer le menu"
+          onClick={() => onCloseMobile && onCloseMobile()}
+        >
+          ×
+        </button>
         {!isCollapsed ? (
           <>
             <div className="d-flex align-items-center">
@@ -67,30 +66,22 @@ const Sidebar = () => {
               </div>
             </div>
             <button
-              className="btn p-0 border-0"
-              onClick={toggleSidebar}
-              style={{ fontSize: '18px', lineHeight: 1 }}
+              type="button"
+              className="sidebar-collapse-btn position-relative z-10"
+              onClick={onToggleCollapse}
             >
-              <FiChevronsLeft size={24} style={{ color: '#ffffff' }} />
+              <FiChevronsLeft size={24} />
             </button>
           </>
         ) : (
           <div className="w-100 position-relative d-flex flex-column align-items-center">
             <img src={LogoFunQuiz} width="40" height="40" alt="FunQuiz Logo" className="mb-2" />
             <button
-              className="btn position-absolute p-0 border-0"
-              onClick={toggleSidebar}
-              style={{ fontSize: '20px', lineHeight: 1, right: '-40px', top: '60%' }}
+              type="button"
+              className="sidebar-expand-btn position-absolute z-10"
+              onClick={onToggleCollapse}
             >
-              <FiChevronsRight
-                size={28}
-                style={{
-                  color: '#ffffff',
-                  backgroundColor: 'var(--bg-sidebar-dash)',
-                  borderRadius: '50%',
-                  padding: '6px',
-                }}
-              />
+              <FiChevronsRight size={28} />
             </button>
           </div>
         )}
@@ -110,23 +101,21 @@ const Sidebar = () => {
               const IconComponent = item.icon;
               return (
                 <li key={item.id} className="nav-item mb-1">
-                  <Link
+                  <NavLink
                     to={item.link}
-                    className={`nav-link nav-link-pro d-flex align-items-center justify-content-${
-                      isCollapsed ? 'center' : 'start'
-                    } px-3 py-3 rounded-2 position-relative ${
-                      activeItem === item.id ? 'active' : ''
-                    }`}
-                    onClick={() => handleItemClick(item.id)}
+                    end={item.link === '/dashboard/' || item.link === '/dashboard'}
+                    className={({ isActive }) =>
+                      `nav-link nav-link-pro d-flex align-items-center justify-content-${
+                        isCollapsed ? 'center' : 'start'
+                      } px-3 py-3 rounded-2 position-relative ${isActive ? 'active' : ''}`
+                    }
                     title={isCollapsed ? item.label : ''}
-                    style={{ transition: 'all 0.2s ease' }}
                   >
                     <IconComponent
                       className="nav-icon"
                       size={20}
                       style={{
-                        color:
-                          activeItem === item.id ? '#ffffff' : 'var(--site-text-muted)',
+                        color: 'inherit',
                         minWidth: '20px',
                       }}
                     />
@@ -140,7 +129,7 @@ const Sidebar = () => {
                         )}
                       </>
                     )}
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}
@@ -155,13 +144,7 @@ const Sidebar = () => {
             </div>
             <div className="px-2">
               <button
-                className="btn w-100 mb-2 py-2 fw-medium"
-                style={{
-                  fontSize: '0.85rem',
-                  backgroundColor: 'var(--brand-accent)',
-                  borderColor: 'var(--brand-accent)',
-                  color: '#fff',
-                }}
+                className="sidebar-action primary mb-2"
                 onClick={() => navigate('/dashboard/logs')}
               >
                 <i className="bi bi-plus-lg me-2"></i>
@@ -169,8 +152,7 @@ const Sidebar = () => {
               </button>
               <button
                 onClick={() => navigate('/')}
-                className="btn btn-outline-light w-100 py-2 fw-medium text-muted-custom border-secondary d-flex gap-2 align-items-center justify-content-center"
-                style={{ fontSize: '0.85rem' }}
+                className="sidebar-action ghost"
               >
                 <FaHome className="me-2" />
                 Accueil
@@ -186,7 +168,9 @@ const Sidebar = () => {
           <div className="d-flex align-items-center">
             <div className="position-relative">
               <img
-                src={user.avatar_url || 'https://ui-avatars.com/api/?name=' + user.name}
+                src={
+                  user?.avatar_url || (isAuthenticated ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || '')}` : '')
+                }
                 alt="User Avatar"
                 className="rounded-circle"
                 style={{ width: '40px', height: '40px', objectFit: 'cover' }}
@@ -199,12 +183,12 @@ const Sidebar = () => {
 
             <div className="ms-3 flex-grow-1">
               <div className="text-white small fw-medium mb-0" style={{ fontSize: '0.85rem' }}>
-                {user.name} {user.first_name}
+                {user?.name} {user?.first_name}
               </div>
               <div className="text-muted-custom" style={{ fontSize: '0.7rem' }}>
-                {user.role === 'admin' && 'System Administrator'}
-                {user.role === 'moderator' && 'Moderator'}
-                {user.role === 'user' && 'Utilisateur'}
+                {user?.role === 'admin' && 'System Administrator'}
+                {user?.role === 'moderator' && 'Moderator'}
+                {user?.role === 'user' && 'Utilisateur'}
               </div>
             </div>
 
@@ -220,7 +204,7 @@ const Sidebar = () => {
                 className={`dropdown-menu dropdown-menu-dark position-absolute  end-0 shadow-lg border-0 rounded-3 ${
                   isOpen ? 'show' : ''
                 }`}
-                style={{ zIndex: 1100, top:'-180px', display: isOpen ? 'block' : 'none' }}
+                style={{ zIndex: 1100 }}
               >
                 <li>
                   <a className="dropdown-item py-2" href="/profil" onClick={() => setIsOpen(false)}>
@@ -255,7 +239,9 @@ const Sidebar = () => {
           <div className="d-flex flex-column align-items-center position-relative">
             <div className="position-relative mb-2">
               <img
-                src={user.avatar_url || 'https://ui-avatars.com/api/?name=' + user.name}
+                src={
+                  user?.avatar_url || (isAuthenticated ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || '')}` : '')
+                }
                 alt="User Avatar"
                 className="rounded-circle"
                 style={{ width: '36px', height: '36px', objectFit: 'cover' }}
@@ -275,7 +261,7 @@ const Sidebar = () => {
               className={`dropdown-menu dropdown-menu-dark position-absolute top-100 end-0 shadow-lg border-0 rounded-3 ${
                 isOpen ? 'show' : ''
               }`}
-              style={{ zIndex: 1100, display: isOpen ? 'block' : 'none' }}
+              style={{ zIndex: 1100 }}
             >
               <li>
                 <a className="dropdown-item py-2" href="/profil" onClick={() => setIsOpen(false)}>
@@ -302,28 +288,6 @@ const Sidebar = () => {
           </div>
         )}
       </div>
-
-      {/* ✅ CSS intégré */}
-      <style>{`
-        .sidebar-pro .nav-link-pro {
-          color: var(--site-text-muted);
-        }
-        .sidebar-pro .nav-link-pro:hover {
-          background-color: rgba(255, 255, 255, 0.08);
-          color: #ffffff;
-        }
-        .sidebar-pro .nav-link-pro.active {
-          background-color: var(--brand-accent);
-          color: #ffffff;
-        }
-        .sidebar-pro::-webkit-scrollbar {
-          width: 6px;
-        }
-        .sidebar-pro::-webkit-scrollbar-thumb {
-          background-color: rgba(255, 255, 255, 0.2);
-          border-radius: 3px;
-        }
-      `}</style>
     </div>
   );
 };

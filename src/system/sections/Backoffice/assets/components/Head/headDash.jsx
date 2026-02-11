@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './headDash.css';
 import { PiBellRingingDuotone } from 'react-icons/pi';
-import { CiSearch } from 'react-icons/ci';
 import { MdOutlineMessage } from 'react-icons/md';
 import messageServices from '../../../../../configurations/Services/messageServices.js';
 import quizStatsServices from '../../../../../configurations/Services/quizStatsServices.js';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const HeadDash = () => {
+const HeadDash = ({ onOpenSidebar }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [messagesCount, setMessagesCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState([]);
   const [notifCount, setNotifCount] = useState(0);
@@ -100,11 +100,37 @@ const HeadDash = () => {
     setUnreadCount(latestUnread);
   }, [recentActivity, lastSeenAt]);
 
+  const getTitle = (path) => {
+    if (path === '/dashboard' || path === '/dashboard/') return "Vue d'ensemble";
+    if (path.startsWith('/dashboard/users')) return 'Utilisateurs';
+    if (path.startsWith('/dashboard/comment')) return 'Commentaires';
+    if (path.startsWith('/dashboard/message')) return 'Messages';
+    if (path.startsWith('/dashboard/newsletter')) return 'Newsletter';
+    if (path.startsWith('/dashboard/quiz')) return 'Quiz';
+    if (path.startsWith('/dashboard/legal')) return 'Légal';
+    if (path.startsWith('/dashboard/logs')) return 'Logs';
+    if (path.startsWith('/dashboard/settings')) return 'Réglages';
+    return 'Backoffice';
+  };
+
   return (
-    <header className="bg-head-custom p-3 rounded-3 mb-">
-      <div style={{height: '60px'}} className="d-flex justify-content-between align-items-center position-relative">
-        
-        <div className="header-menu position- end-0 d-flex align-items-center end-0 gap-3">
+    <header className="head-dash d-flex align-items-center justify-content-between gap-3">
+      <div className="d-flex align-items-center gap-2 min-w-0">
+        <button
+          type="button"
+          className="head-dash-burger"
+          aria-label="Ouvrir le menu"
+          onClick={() => onOpenSidebar && onOpenSidebar()}
+        >
+          ≡
+        </button>
+        <div className="head-dash-title-wrap min-w-0">
+          <div className="head-dash-title text-truncate">{getTitle(location.pathname)}</div>
+          <div className="head-dash-subtitle text-truncate">Admin Console</div>
+        </div>
+      </div>
+
+      <div className="header-menu d-flex align-items-center gap-3">
           {/* Bouton Messages */}
           <button
             className="btn-icon"
@@ -119,7 +145,7 @@ const HeadDash = () => {
             }}
           >
             <MdOutlineMessage className="fs-4" />
-            <span className="icon-badge">{messagesCount}</span>
+            {messagesCount > 0 && <span className="icon-badge">{messagesCount}</span>}
           </button>
 
           {/* Notifications (cloche) */}
@@ -143,7 +169,7 @@ const HeadDash = () => {
               }}
             >
               <PiBellRingingDuotone className="fs-4" />
-              <span className="icon-badge bg-danger">{unreadCount}</span>
+              {unreadCount > 0 && <span className="icon-badge bg-danger">{unreadCount}</span>}
             </button>
             <ul
               className={`dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 ${isNotifOpen ? 'show' : ''}`}
@@ -189,7 +215,6 @@ const HeadDash = () => {
             </ul>
           </div>
         </div>
-      </div>
     </header>
   );
 };

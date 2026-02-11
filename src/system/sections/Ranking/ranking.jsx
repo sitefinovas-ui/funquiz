@@ -8,6 +8,8 @@ import pointService from '../../configurations/Services/pointService';
 
 const Ranking = () => {
   const [rankingData, setRankingData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     document.title = 'FUNQUIZ | Classement';
@@ -21,8 +23,11 @@ const Ranking = () => {
         // Tri décroissant par points totaux
         const sorted = [...list].sort((a, b) => (b?.total_points ?? 0) - (a?.total_points ?? 0));
         setRankingData(sorted);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching ranking data:', error);
+        setError("Impossible de charger le classement.");
+        setLoading(false);
       }
     };
 
@@ -30,7 +35,7 @@ const Ranking = () => {
   }, []);
 
   return (
-    <div className="w-100 h-100 mb-5 overflow-hidden">
+    <div className="w-100 mb-5">
       {/* Header classement */}
       <div
         style={{ height: '17rem' }}
@@ -59,106 +64,126 @@ const Ranking = () => {
         />
       </div>
 
-      {/* Top 3 joueurs */}
-      <div
-        className="ranking-content gap-2 w-100 d-flex flex-row flex-nowrap align-items-center justify-content-between pt-5">
-        {/* 2ème */}
-        {rankingData.length > 1 && (
-          <div className="j-2 align-items-center justify-content-center d-flex flex-column">
-            <div className="user-animation rounded-circle overflow-hidden">
-              <img
-                src={rankingData[1].avatar_url}
-                className="w-100 h-100 objectif-fit-cover"
-                alt={rankingData[1].full_name}
-              />
-            </div>
-            <h2 className="text-capitalize text-light fs-custom-raking-name mt-4">
-              {rankingData[1].first_name}
-            </h2>
-            <span className="text-light fw-bold">
-              {rankingData[1].total_points} <img src={piece} width={29} alt="pièce" />
-            </span>
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-light" role="status">
+            <span className="visually-hidden">Chargement...</span>
           </div>
-        )}
-        {/* 1er */}
-        {rankingData.length > 0 && (
-          <div className="position-relative">
-            {[...Array(20)].map((_, i) => (
-              <span
-                key={i}
-                className="confetti"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDuration: `${2 + Math.random() * 3}s`,
-                  animationDelay: `${Math.random() * 2}s`,
-                }}
-              />
-            ))}
-
-            <div className="card-cus-raking align-items-center justify-content-center mx-3 d-flex flex-column">
-              <div
-                className="user-animation bg-success j-1 rounded-circle overflow-hidden b-2"
-              >
-                <img
-                  src={rankingData[0].avatar_url}
-                  className="w-100 h-100 objectif-fit-cover"
-                  alt={rankingData[0].full_name}
-                />
+          <p className="text-light mt-3">Chargement du classement...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-5 text-light">
+          <h3 className="fs-4">{error}</h3>
+        </div>
+      ) : rankingData.length === 0 ? (
+        <div className="text-center py-5 text-light">
+          <h3 className="fs-4">Aucun joueur dans le classement pour le moment.</h3>
+        </div>
+      ) : (
+        <>
+          {/* Top 3 joueurs */}
+          <div className="ranking-content gap-2 w-100 d-flex flex-row flex-nowrap align-items-center justify-content-between pt-5">
+            {/* 2ème */}
+            {rankingData.length > 1 && (
+              <div className="j-2 align-items-center justify-content-center d-flex flex-column">
+                <div className="user-animation rounded-circle overflow-hidden">
+                  <img
+                    src={rankingData[1].avatar_url}
+                    className="w-100 h-100"
+                    style={{ objectFit: 'cover' }}
+                    alt={rankingData[1].full_name}
+                  />
+                </div>
+                <h2 className="text-capitalize text-light fs-custom-raking-name mt-4">
+                  {rankingData[1].first_name}
+                </h2>
+                <span className="text-light fw-bold">
+                  {rankingData[1].total_points} <img src={piece} width={29} alt="pièce" />
+                </span>
               </div>
-              <h2 className="text-capitalize text-light mt-4 felicitation-card fs-custom-raking-name">
-                {rankingData[0].first_name}
-              </h2>
-              <span className="text-light fw-bold">
-                {rankingData[0].total_points} <img src={piece} width={29} alt="pièce" />
-              </span>
-            </div>
-          </div>
-        )}
-        {/* 3ème */}
-        {rankingData.length > 2 && (
-          <div className="align-items-center justify-content-center d-flex flex-column j-3">
-            <div className="user-animation rounded-circle overflow-hidden">
-              <img
-                src={rankingData[2].avatar_url}
-                className="w-100 h-100 objectif-fit-cover"
-                alt={rankingData[2].full_name}
-              />
-            </div>
-            <h2 className="text-capitalize text-light mt-4 fs-custom-raking-name">
-              {rankingData[2].first_name}
-            </h2>
-            <span className="text-light fw-bold">
-              {rankingData[2].total_points} <img src={piece} width={29} alt="pièce" />
-            </span>
-          </div>
-        )}
-      </div>
+            )}
 
-      {/* Liste des autres joueurs */}
-      <div
-        style={{ height: '500px' }}
-        className="overflow-auto list-gamer d-flex flex-column gap-4 container ranking-list mt-5"
-      >
-        
-        {rankingData.slice(3).map((rank, index) => (
-          <div
-            key={rank.user_id}
-            className={`ranking-item d-flex align-items-center px-5 justify-content-between`}
-          >
-            <div className="d-flex text-white align-items-center gap-3">
-              <span className="rank-number">{index + 4}</span>
-              <img
-                src={rank.avatar_url}
-                alt={rank.full_name}
-                className="rounded-circle border border-light shadow"
-                style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-              />
-              <span className="fw-semibold text-capitalize">{rank.full_name}</span>
-            </div>
-            <span className="fw-bold text-white score">{rank.total_points} 🪙</span>
+            {/* 1er */}
+            {rankingData.length > 0 && (
+              <div className="position-relative">
+                {[...Array(20)].map((_, i) => (
+                  <span
+                    key={i}
+                    className="confetti"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      animationDuration: `${2 + Math.random() * 3}s`,
+                      animationDelay: `${Math.random() * 2}s`,
+                    }}
+                  />
+                ))}
+
+                <div className="card-cus-raking align-items-center justify-content-center mx-3 d-flex flex-column">
+                  <div className="user-animation bg-success j-1 rounded-circle overflow-hidden b-2">
+                    <img
+                      src={rankingData[0].avatar_url}
+                      className="w-100 h-100"
+                      style={{ objectFit: 'cover' }}
+                      alt={rankingData[0].full_name}
+                    />
+                  </div>
+                  <h2 className="text-capitalize text-light mt-4 felicitation-card fs-custom-raking-name">
+                    {rankingData[0].first_name}
+                  </h2>
+                  <span className="text-light fw-bold">
+                    {rankingData[0].total_points} <img src={piece} width={29} alt="pièce" />
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 3ème */}
+            {rankingData.length > 2 && (
+              <div className="align-items-center justify-content-center d-flex flex-column j-3">
+                <div className="user-animation rounded-circle overflow-hidden">
+                  <img
+                    src={rankingData[2].avatar_url}
+                    className="w-100 h-100"
+                    style={{ objectFit: 'cover' }}
+                    alt={rankingData[2].full_name}
+                  />
+                </div>
+                <h2 className="text-capitalize text-light mt-4 fs-custom-raking-name">
+                  {rankingData[2].first_name}
+                </h2>
+                <span className="text-light fw-bold">
+                  {rankingData[2].total_points} <img src={piece} width={29} alt="pièce" />
+                </span>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+
+          {/* Liste des autres joueurs */}
+          <div
+            style={{ height: '500px' }}
+            className="overflow-auto list-gamer d-flex flex-column gap-4 container ranking-list mt-5"
+          >
+            {rankingData.slice(3).map((rank, index) => (
+              <div
+                key={rank.user_id}
+                className="ranking-item d-flex align-items-center px-5 justify-content-between"
+              >
+                <div className="d-flex text-white align-items-center gap-3">
+                  <span className="rank-number">{index + 4}</span>
+                  <img
+                    src={rank.avatar_url}
+                    alt={rank.full_name}
+                    className="rounded-circle border border-light shadow"
+                    style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                  />
+                  <span className="fw-semibold text-capitalize">{rank.full_name}</span>
+                </div>
+                <span className="fw-bold text-white score">{rank.total_points} 🪙</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };

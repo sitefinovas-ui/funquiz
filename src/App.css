@@ -12,6 +12,10 @@
   font-style: normal;
 }
 
+html {
+  font-size: calc(16px * var(--site-font-scale, 1));
+}
+
 .bg-custom-app {
   background: var(--site-bg);
 }
@@ -34,4 +38,21 @@ a {
   background: var(--site-accent-default-strong);
   border-color: var(--site-accent-default-strong);
   color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 16px);
+  }
+}
+
+html[data-reduce-motion='true'] {
+  scroll-behavior: auto;
+}
+
+html[data-reduce-motion='true'] .bg-custom-app * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

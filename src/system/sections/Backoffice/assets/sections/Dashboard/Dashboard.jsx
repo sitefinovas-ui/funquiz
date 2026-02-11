@@ -165,7 +165,7 @@ const HomeDash = () => {
 
       setWeeklyData(weeklyStats);
 
-      const colors = ['#2563eb', '#7c3aed', '#dc2626', '#ea580c', '#16a34a', '#0891b2'];
+      const colors = ['#7a3db8', '#9f7aea', '#c4b5fd', '#94a3b8', '#64748b', '#b794f4'];
       const categoryStats = thematics
         .map((thematic, index) => ({
           name: thematic.thematic_title,
@@ -202,7 +202,7 @@ const HomeDash = () => {
 
           return {
             name: thematic.thematic_title || 'Quiz sans titre',
-            color: thematic.color_code || '#2563eb',
+            color: thematic.color_code || '#7a3db8',
             participants: thematicUsers.length,
             totalGames: totalGames,
             note: avgCompletion > 0 ? (avgCompletion / 20).toFixed(1) : '0.0',
@@ -397,7 +397,7 @@ const HomeDash = () => {
         {/* Main Grid */}
         <div className="content-grid">
           {/* Weekly Chart */}
-          <div className="chart-box chart-wide">
+          <div className="chart-box chart-weekly">
             <div className="box-header">
               <h3>Activité hebdomadaire</h3>
               <span className="box-subtitle">7 derniers jours</span>
@@ -406,38 +406,38 @@ const HomeDash = () => {
               <AreaChart data={weeklyData}>
                 <defs>
                   <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563eb" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#7a3db8" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#7a3db8" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#9f7aea" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#9f7aea" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="grad3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#16a34a" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#94a3b8" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0d3c7" vertical={false} />
                 <XAxis
                   dataKey="jour"
-                  stroke="#6b7280"
+                  stroke="#7a6f64"
                   style={{ fontSize: '12px', fontWeight: '500' }}
                 />
-                <YAxis stroke="#6b7280" style={{ fontSize: '12px', fontWeight: '500' }} />
+                <YAxis stroke="#7a6f64" style={{ fontSize: '12px', fontWeight: '500' }} />
                 <Tooltip
                   contentStyle={{
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
+                    background: '#fff9f3',
+                    border: '1px solid #e6d9cd',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.08)',
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '13px', fontWeight: '500' }} />
                 <Area
                   type="monotone"
                   dataKey="inscriptions"
-                  stroke="#2563eb"
+                  stroke="#7a3db8"
                   strokeWidth={2}
                   fill="url(#grad1)"
                   name="Inscriptions"
@@ -445,7 +445,7 @@ const HomeDash = () => {
                 <Area
                   type="monotone"
                   dataKey="messages"
-                  stroke="#7c3aed"
+                  stroke="#9f7aea"
                   strokeWidth={2}
                   fill="url(#grad2)"
                   name="Messages"
@@ -453,7 +453,7 @@ const HomeDash = () => {
                 <Area
                   type="monotone"
                   dataKey="commentaires"
-                  stroke="#16a34a"
+                  stroke="#64748b"
                   strokeWidth={2}
                   fill="url(#grad3)"
                   name="Commentaires"
@@ -463,34 +463,34 @@ const HomeDash = () => {
           </div>
 
           {/* Monthly Growth */}
-          <div style={{ height: '400px' }} className="chart-box">
+          <div className="chart-box chart-monthly">
             <div className="box-header">
               <h3>Croissance mensuelle</h3>
               <span className="box-subtitle">Nouveaux utilisateurs</span>
             </div>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0d3c7" vertical={false} />
                 <XAxis
                   dataKey="mois"
-                  stroke="#6b7280"
+                  stroke="#7a6f64"
                   style={{ fontSize: '12px', fontWeight: '500' }}
                 />
-                <YAxis stroke="#6b7280" style={{ fontSize: '12px', fontWeight: '500' }} />
+                <YAxis stroke="#7a6f64" style={{ fontSize: '12px', fontWeight: '500' }} />
                 <Tooltip
                   contentStyle={{
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
+                    background: '#fff9f3',
+                    border: '1px solid #e6d9cd',
                     borderRadius: '8px',
                   }}
                 />
-                <Bar dataKey="utilisateurs" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="utilisateurs" fill="#7a3db8" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Categories */}
-          <div style={{ height: '400px' }} className="chart-box ">
+          <div className="chart-box chart-categories">
             <div className="box-header">
               <h3>Répartition par catégorie</h3>
             </div>
@@ -511,8 +511,8 @@ const HomeDash = () => {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
+                    background: '#fff9f3',
+                    border: '1px solid #e6d9cd',
                     borderRadius: '8px',
                   }}
                 />
@@ -530,7 +530,7 @@ const HomeDash = () => {
           </div>
 
           {/* Top Quiz */}
-          <div style={{ height: '400px' }} className="chart-box">
+          <div className="chart-box chart-top">
             <div className="box-header">
               <FaTrophy className="header-icon" />
               <h3>Top Quiz</h3>
@@ -560,7 +560,7 @@ const HomeDash = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="chart-box activity-box">
+          <div className="chart-box chart-activity">
             <div className="box-header">
               <FaClock className="header-icon" />
               <h3>Activité récente</h3>
@@ -584,476 +584,6 @@ const HomeDash = () => {
         </div>
       </div>
 
-      <style>{`
-        .enterprise-dashboard {
-          min-height: 100vh;
-          background: #f8fafc;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
-        .dashboard-container {
-          max-width: 100%;
-          margin: 0 auto;
-          padding: 2rem;
-        }
-
-        .enterprise-loading, .enterprise-error {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background: #f8fafc;
-          color: #475569;
-        }
-
-        .loading-spinner {
-          width: 48px;
-          height: 48px;
-          border: 4px solid #e2e8f0;
-          border-top-color: #2563eb;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-          margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .error-icon {
-          width: 64px;
-          height: 64px;
-          background: #fee2e2;
-          color: #dc2626;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-        }
-
-        .dashboard-header {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 2rem;
-          margin-bottom: 2rem;
-          
-          display: flex;
-          justify-content: space-between;
-          position: sticky;
-          top: 0;
-          background: white;
-          z-index: 100;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          align-items: center;
-        }
-
-        .header-title h1 {
-          font-size: 1.875rem;
-          font-weight: 700;
-          color: #0f172a;
-          margin: 0 0 0.5rem 0;
-        }
-
-        .header-title p {
-          color: #64748b;
-          margin: 0;
-          font-size: 0.9375rem;
-        }
-
-        .header-metrics {
-          display: flex;
-          gap: 3rem;
-        }
-
-        .header-metric {
-          text-align: right;
-        }
-
-        .metric-value {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #0f172a;
-          line-height: 1;
-          margin-bottom: 0.5rem;
-        }
-
-        .metric-label {
-          font-size: 0.8125rem;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-        }
-
-        .kpi-cards {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-
-        .kpi-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 1.5rem;
-          transition: all 0.2s ease;
-        }
-
-        .kpi-card:hover {
-          border-color: #cbd5e1;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .kpi-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-
-        .kpi-icon {
-          width: 48px;
-          height: 48px;
-          background: #f1f5f9;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #475569;
-          font-size: 1.25rem;
-        }
-
-        .kpi-change {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          padding: 0.375rem 0.75rem;
-          border-radius: 6px;
-        }
-
-        .kpi-change.positive {
-          background: #dcfce7;
-          color: #16a34a;
-        }
-
-        .kpi-change.negative {
-          background: #fee2e2;
-          color: #dc2626;
-        }
-
-        .kpi-value {
-          font-size: 2.25rem;
-          font-weight: 700;
-          color: #0f172a;
-          margin-bottom: 0.25rem;
-        }
-
-        .kpi-title {
-          color: #64748b;
-          font-size: 0.9375rem;
-          font-weight: 500;
-        }
-
-        .content-grid {
-          display: grid;
-          grid-template-columns: repeat(1, 1fr);
-          gap: 1.5rem;
-        }
-
-        .chart-box {
-          background: white;
-          overflow: hidden;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 1.5rem;
-          grid-column: span 2;
-        }
-
-        .chart-wide {
-          grid-column: span 8;
-        }
-
-        .activity-box {
-          grid-column: span 9;
-        }
-
-        .box-header {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .box-header h3 {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: #0f172a;
-          margin: 0;
-          flex: 1;
-        }
-
-        .header-icon {
-          color: #64748b;
-          font-size: 1.125rem;
-        }
-
-        .box-subtitle {
-          font-size: 0.8125rem;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-        }
-
-        .category-list {
-          margin-top: 1.5rem;
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-        }
-
-        .category-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .category-dot {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-
-        .category-name {
-          flex: 1;
-          font-size: 0.9375rem;
-          color: #475569;
-          font-weight: 500;
-        }
-
-        .category-value {
-          font-size: 0.9375rem;
-          color: #0f172a;
-          font-weight: 600;
-        }
-
-        .quiz-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          max-height: 400px;
-          overflow-y: auto;
-        }
-
-        .quiz-item {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: #f8fafc;
-          border-radius: 8px;
-          transition: all 0.2s ease;
-        }
-
-        .quiz-item:hover {
-          background: #f1f5f9;
-        }
-
-        .quiz-rank {
-          width: 32px;
-          height: 32px;
-          background: #0f172a;
-          color: white;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 0.9375rem;
-          flex-shrink: 0;
-        }
-
-        .quiz-details {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .quiz-name {
-          font-weight: 600;
-          color: #0f172a;
-          font-size: 0.9375rem;
-          margin-bottom: 0.25rem;
-        }
-
-        .quiz-stats {
-          font-size: 0.8125rem;
-          color: #64748b;
-        }
-
-        .quiz-score {
-          background: #f1f5f9;
-          color: #475569;
-          padding: 0.5rem 1rem;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 0.9375rem;
-          white-space: nowrap;
-        }
-
-        .empty-content {
-          text-align: center;
-          padding: 3rem 1rem;
-          color: #94a3b8;
-        }
-
-        .empty-content svg {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
-          opacity: 0.4;
-        }
-
-        .empty-content p {
-          margin: 0;
-          font-size: 0.9375rem;
-        }
-
-        .activity-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .activity-row {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: #f8fafc;
-          border-radius: 8px;
-          transition: all 0.2s ease;
-        }
-
-        .activity-row:hover {
-          background: #f1f5f9;
-        }
-
-        .activity-avatar {
-          width: 40px;
-          height: 40px;
-          background: #0f172a;
-          color: white;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          font-size: 1rem;
-          flex-shrink: 0;
-        }
-
-        .activity-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .activity-user {
-          color: #0f172a;
-          font-size: 0.9375rem;
-          margin-bottom: 0.25rem;
-        }
-
-        .activity-user strong {
-          font-weight: 600;
-        }
-
-        .activity-details {
-          color: #64748b;
-          font-size: 0.8125rem;
-        }
-
-        .quiz-list::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .quiz-list::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 4px;
-        }
-
-        .quiz-list::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 4px;
-        }
-
-        .quiz-list::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-
-        @media (max-width: 1400px) {
-          .chart-wide {
-            grid-column: span 12;
-          }
-        }
-
-        @media (max-width: 1024px) {
-          .chart-box {
-            grid-column: span 12;
-          }
-
-          .dashboard-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1.5rem;
-          }
-
-          .header-metrics {
-            width: 100%;
-            justify-content: space-between;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .dashboard-container {
-            padding: 1rem;
-          }
-
-          .dashboard-header {
-            padding: 1.5rem;
-          }
-
-          .header-title h1 {
-            font-size: 1.5rem;
-          }
-
-          .header-metrics {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .header-metric {
-            text-align: left;
-          }
-
-          .kpi-cards {
-            grid-template-columns: 1fr;
-          }
-
-          .category-list {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
     </div>
   );
 };

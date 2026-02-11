@@ -59,12 +59,17 @@ const QuizStats = () => {
   const fetchAllStats = async () => {
     try {
       setLoading(true);
-      const [global, thematics, rank, activity] = await Promise.all([
+      const [globalRes, thematicsRes, rankRes, activityRes] = await Promise.allSettled([
         quizStatsServices.getGlobalStats(),
         quizStatsServices.getThematicStats(),
         quizStatsServices.getRankings(),
         quizStatsServices.getRecentActivity(),
       ]);
+
+      const global = globalRes.status === 'fulfilled' ? globalRes.value : null;
+      const thematics = thematicsRes.status === 'fulfilled' ? thematicsRes.value : [];
+      const rank = rankRes.status === 'fulfilled' ? rankRes.value : [];
+      const activity = activityRes.status === 'fulfilled' ? activityRes.value : [];
 
       const rawGlobal = global?.data ?? global ?? {};
       const g = Array.isArray(rawGlobal) ? (rawGlobal[0] || {}) : rawGlobal || {};

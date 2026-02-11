@@ -1,240 +1,258 @@
-@import url('../../../colors.css');
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+﻿﻿﻿
+/* Main Wrapper - Split Screen */
+.anthropic-login-wrapper {
+  height: 100% ;
+  display: flex;
+  background-color: #0f0e0d; /* Very dark background */
+  color: #f4f4f0;
+  font-family: 'Inter', sans-serif;
 }
 
-@keyframes ripple {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
+/* Left Panel */
+.anthropic-left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  max-width: 50%;
 }
 
-.bg-effect {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.2;
-  animation: float 6s ease-in-out infinite;
-}
-
-.bg-effect:nth-child(1) {
-  top: 25%;
-  left: 25%;
-  width: 300px;
-  height: 300px;
-  background: #8b5cf6;
-  animation-delay: 0s;
-}
-
-.bg-effect:nth-child(2) {
-  top: 60%;
-  right: 25%;
-  width: 400px;
-  height: 400px;
-  background: #3b82f6;
-  animation-delay: 2s;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(1.1);
-  }
-}
-
-.login-container {
-  backdrop-filter: blur(20px);
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 24px !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 10;
-  max-width: 420px;
+.anthropic-content {
   width: 100%;
-  transition: all 0.8s ease;
-  opacity: 1;
-  transform: translateY(1);
-}
-@media (max-width: 768px) {
-  .login-container {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
-}
-.card-indicator {
-  width: 48px;
-  height: 4px;
-  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
-  border-radius: 2px;
-  margin: 0 auto 2rem auto;
+  max-width: 400px;
+  text-align: center;
 }
 
-.form-control {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 12px !important;
-  color: var(--text-primary) !important;
-  padding: 12px 16px !important;
-  font-size: 14px;
-  transition: all 0.3s ease;
+/* Typography */
+.anthropic-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  color: #f0f0ea;
 }
 
-.form-control:focus {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: #8b5cf6 !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
-  color: var(--text-primary) !important;
+.anthropic-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  color: #a1a1aa;
+  margin-bottom: 3rem;
 }
 
-.form-control::placeholder {
-  color: var(--text-secondary) !important;
+/* Card Container */
+.anthropic-card {
+  width: 100%;
 }
 
-.form-label {
-  color: var(--text-secondary) !important;
-  font-weight: 500 !important;
-  margin-bottom: 8px !important;
-  font-size: 14px;
+/* Google Button Wrapper */
+.anthropic-google-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-.btn-primary-custom {
-  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 600;
-  color: rgb(249, 246, 246) !important;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary-custom:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
-}
-
-.btn-social {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--text-primary);
-  padding: 12px;
-  transition: all 0.3s ease;
-  font-size: 14px;
+/* Divider */
+.anthropic-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+  color: #666;
+  font-size: 0.75rem;
   font-weight: 500;
+  letter-spacing: 0.05em;
 }
 
-.btn-social:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  transform: translateY(-1px);
-}
-
-.divider {
-  position: relative;
-  text-align: center;
-  margin: 2rem 0;
-}
-
-.divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
+.anthropic-divider::before,
+.anthropic-divider::after {
+  content: "";
+  flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+  background-color: #333;
+  margin: 0 1rem;
 }
 
-.divider span {
-  background: var(--card-bg);
-  padding: 0 16px;
-  color: var(--text-secondary);
-  font-size: 14px;
+/* Form Inputs */
+.anthropic-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.welcome-title {
-  color: var(--text-primary);
-  font-size: 2rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 2rem;
+.anthropic-input-group {
+  position: relative;
 }
 
-.link-custom {
-  color: #8b5cf6;
-  text-decoration: none;
-  font-size: 13px;
-  transition: color 0.3s ease;
+.anthropic-input {
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #272727; /* Dark Grey Input Background */
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
 }
 
-.link-custom:hover {
-  color: #a855f7;
+.anthropic-input:focus {
+  outline: none;
+  background-color: #333;
+  border-color: #555;
 }
 
-.text-muted-custom {
-  color: var(--text-secondary) !important;
-  font-size: 13px;
+.anthropic-input::placeholder {
+  color: #888;
 }
 
-.password-toggle {
+.anthropic-password-wrapper {
+  position: relative;
+}
+
+.anthropic-eye-btn {
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: 16px;
+  color: #888;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: color 0.3s ease;
-}
-
-.password-toggle:hover {
-  color: var(--text-primary);
-}
-
-.btn-link-custom {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 14px;
   padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.anthropic-eye-btn:hover {
+  color: #ccc;
+}
+
+/* Primary Button */
+.anthropic-btn-primary {
+  width: 100%;
+  padding: 14px;
+  background-color: #f4f4f0; /* Off-white button */
+  color: #000;
   border: none;
-  background: none;
-  transition: color 0.3s ease;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.2s;
 }
 
-.btn-link-custom:hover {
-  color: var(--text-primary);
+.anthropic-btn-primary:hover {
+  background-color: #e5e5e5;
 }
 
-.container-wrapper {
+.anthropic-btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Footer Links */
+.anthropic-footer-links {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.anthropic-footer-links a {
+  color: #888;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.anthropic-footer-links a:hover {
+  color: #ccc;
+  text-decoration: underline;
+}
+
+.anthropic-disclaimer {
+  margin-top: 2rem;
+  font-size: 0.75rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.anthropic-disclaimer a {
+  color: #777;
+  text-decoration: underline;
+}
+
+/* Right Panel (Image) */
+.anthropic-right-panel {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.anthropic-art-container {
+  width: 100%;
+  background-size: cover;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
-  min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
-@media (max-width: 576px) {
-  .login-container {
-    margin: 20px;
-    padding: 2rem 1.5rem !important;
+/* Use a pseudo-element to add some texture/grain if possible, or just a simple gradient for now */
+.anthropic-art-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 70% 20%, rgba(255,255,255,0.1), transparent 40%);
+  pointer-events: none;
+}
+
+.anthropic-art-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 20px rgba(0,0,0,0.3));
+}
+
+.anthropic-error {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .anthropic-login-wrapper {
+    flex-direction: column;
+  }
+  
+  .anthropic-left-panel {
+    max-width: 100%;
+    padding: 3rem 1.5rem;
+  }
+  
+  .anthropic-right-panel {
+    display: none; /* Hide image on mobile like typical auth screens, or show small */
+  }
+
+  .anthropic-title {
+    font-size: 2.5rem;
   }
 }

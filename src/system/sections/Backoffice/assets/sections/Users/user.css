@@ -1,0 +1,74 @@
+.user-management {
+  padding: 0.5rem 0.25rem 2rem;
+  min-height: 100%;
+  margin-top: 0 !important;
+  font-family: 'Lexend', 'Gantari', 'Open Sans', sans-serif;
+}
+
+.user-management h1 {
+  font-family: 'Gantari', 'Lexend', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.user-management .card {
+  background: var(--bo-panel);
+  border: 1px solid var(--bo-border);
+  border-radius: 18px;
+  box-shadow: var(--bo-shadow-soft);
+}
+
+.user-management .card .text-muted {
+  color: var(--bo-muted) !important;
+}
+
+.user-management .table {
+  color: var(--bo-text);
+}
+
+.user-management .table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--bo-muted);
+}
+
+.user-management .table-hover tbody tr:hover {
+  background-color: rgba(26, 122, 120, 0.08);
+  position: relative;
+}
+
+.user-management .badge {
+  padding: 0.35rem 0.6rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.user-management .modal-content {
+  background: var(--bo-panel);
+  border: 1px solid var(--bo-border);
+  border-radius: 20px;
+  box-shadow: var(--bo-shadow);
+}
+
+.user-management .modal-header,
+.user-management .modal-footer {
+  border-color: var(--bo-border);
+}
+
+.user-management .modal-title {
+  font-family: 'Gantari', 'Lexend', sans-serif;
+  font-weight: 700;
+}
+
+.user-management .form-control,
+.user-management .form-select {
+  background: var(--bo-panel);
+  border-color: var(--bo-border);
+  color: var(--bo-text);
+}
+
+.user-management .form-control:focus,
+.user-management .form-select:focus {
+  border-color: var(--bo-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bo-accent) 18%, transparent);
+}

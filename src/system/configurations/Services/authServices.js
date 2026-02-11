@@ -132,5 +132,17 @@ const authService = {
       throw error;
     }
   },
+
+  hardDeleteUser: async (user_id) => {
+    try {
+      const response = await api.delete('/auth/hard-delete', {
+        data: { user_id }, // axios DELETE body
+      });
+      return response.data;
+    } catch (error) {
+      console.error('❌ hardDeleteUser:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || error.message);
+    }
+  },
 };
 export default authService;

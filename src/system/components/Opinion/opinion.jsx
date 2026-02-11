@@ -102,10 +102,20 @@ const Opinion = ({ closePopup }) => {
   };
 
   return (
-    <div className="opinion-backdrop">
-      <div className="opinion-popup">
+    <div
+      className="opinion-backdrop"
+      onClick={() => {
+        closePopup?.();
+      }}
+    >
+      <div
+        className="opinion-popup relative"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         {/* Bouton fermer */}
-        <button onClick={closePopup} className="btn-close bg-white rounded-circle p-2"></button>
+        <button onClick={closePopup} className="text-black bg-white py-2 px-3 top-0 right-0 absolute rounded-circle focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">x</button>
 
         <h1 className="opinion-title text-light">Avis des Joueurs</h1>
         {loginMessage && <p className="text-warning text-center mt-2">{loginMessage}</p>}
@@ -133,7 +143,7 @@ const Opinion = ({ closePopup }) => {
           <div className="opinion-form mb-3">
             <h2 className="text-light">Laissez votre avis</h2>
             {submissionStatus === 'success' && (
-              <div className="alert alert-success">✅ Merci pour votre avis !</div>
+              <div className="alert alert-success">✅ Merci ! Votre avis sera visible après validation.</div>
             )}
             {submissionStatus === 'error' && (
               <div className="alert alert-danger">❌ Une erreur est survenue.</div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../configurations/Context/AuthProvider';
 import publiciteServices from '../../configurations/Services/publiciteServices';
+import adminServices from '../../configurations/Services/adminServices.js';
 import { SlActionRedo } from 'react-icons/sl'; 
 
 export default function ThemeSwitcherAdminPage() {
@@ -15,6 +16,8 @@ export default function ThemeSwitcherAdminPage() {
   const [textPrimary, setTextPrimary] = useState('#ffffff');
   const [textMuted, setTextMuted] = useState('#a0a9c0');
   const [linkColor, setLinkColor] = useState('#4ea1ff');
+  const [cacheLoading, setCacheLoading] = useState(false);
+  const [cacheStatus, setCacheStatus] = useState(null);
 
   // États CRUD Publicité
   const [publicites, setPublicites] = useState([]);
@@ -401,7 +404,40 @@ export default function ThemeSwitcherAdminPage() {
         <button className="btn btn-outline-light" onClick={() => applyTextPrimary('#e6e6e6')}>
           Texte sombre
         </button>
+        <button
+          className="btn btn-outline-danger"
+          onClick={async () => {
+            try {
+              setCacheLoading(true);
+              setCacheStatus(null);
+              const r = await adminServices.clearCache();
+              setCacheStatus({
+                type: 'success',
+                message: `Cache backend vidé (${r?.cleared ?? 0}).`,
+              });
+            } catch (e) {
+              const msg = e?.response?.data?.error || e?.message || 'Erreur';
+              setCacheStatus({ type: 'error', message: msg });
+            } finally {
+              setCacheLoading(false);
+            }
+          }}
+          disabled={cacheLoading}
+          title="Vide le cache mémoire du serveur"
+        >
+          {cacheLoading ? 'Nettoyage...' : 'Vider cache backend'}
+        </button>
       </div>
+      {cacheStatus?.message && (
+        <div
+          className={`alert ${
+            cacheStatus.type === 'success' ? 'alert-success' : 'alert-danger'
+          } mt-3`}
+          role="alert"
+        >
+          {cacheStatus.message}
+        </div>
+      )}
 
       <h3 className="text-dark mt-4">Publicité du moment</h3>
       <p className="text-muted">Gérez les publicités affichées au public.</p>

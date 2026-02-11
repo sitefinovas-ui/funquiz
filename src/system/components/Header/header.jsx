@@ -108,10 +108,10 @@ const Header = ({ openPopup }) => {
       {!isGame && !isDash && !isSignUp && !isLogin && (
         <div className="position-relative z-3">
           {/* === Header Desktop === */}
-          <header className="d-none d-lg-block position-sticky top-0 left-0 right-0 z-3">
+          <header style={{ backgroundColor: 'var(--site-bg)' }} className="header-desktop d-none d-lg-block position-sticky top-0 left-0 right-0 z-3">
             <div
-              style={{ backgroundColor: 'var(--site-bg)' }}
-              className="header-desktop d-flex align-items-center justify-content-between p-5"
+              
+              className=" container  d-flex align-items-center justify-content-between "
             >
               {/* Navigation */}
               <div className="d-flex align-items-center gap-5">
@@ -250,7 +250,7 @@ const Header = ({ openPopup }) => {
               className="mobile-bottom-nav d-lg-none bg-mobile shadow-lg position-fixed bottom-0 w-100 rounded-pill m-2 mx-auto left-0 right-0 d-flex align-items-center justify-content-between px-3 gap-2"
             >
               {/* Bloc gauche */}
-              <nav className="flex-1">
+              <nav className="flex-grow-1">
                 <ul className="d-flex align-items-center justify-content-center gap-2 list-unstyled m-0 flex-nowrap">
                   
                   <li>
@@ -287,7 +287,7 @@ const Header = ({ openPopup }) => {
               </button>
 
               {/* Bloc droit */}
-              <nav className="flex-1">
+              <nav className="flex-grow-1">
                 <ul className="d-flex align-items-center justify-content-center gap-2 list-unstyled m-0 flex-nowrap">
                   <li>
                     <button
@@ -300,14 +300,25 @@ const Header = ({ openPopup }) => {
                     </button>
                   </li>
                   <li>
-                    <button
-                      onClick={() => navigate('/profil')}
-                      className="btn-mb-header text-decoration-none"
-                      aria-label={t('header.profile')}
-                    >
-                      <MdAccountCircle />
-                      <span className="title-header d-none d-sm-inline">{t('header.profile')}</span>
-                    </button>
+                    {isAuthenticated ? (
+                      <button
+                        onClick={() => navigate('/profil')}
+                        className="btn-mb-header text-decoration-none"
+                        aria-label={t('header.profile')}
+                      >
+                        <MdAccountCircle />
+                        <span className="title-header d-none d-sm-inline">{t('header.profile')}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate('/login')}
+                        className="btn-mb-header text-decoration-none"
+                        aria-label={t('header.login')}
+                      >
+                        <MdAccountCircle />
+                        <span className="title-header d-none d-sm-inline">{t('header.login')}</span>
+                      </button>
+                    )}
                   </li>
                 </ul>
               </nav>

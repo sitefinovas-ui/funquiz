@@ -14,7 +14,6 @@
 body {
   background: var(--site-bg);
   color: var(--site-text) !important;
-  min-height: 100vh;
 }
 
 /* Liens globaux (public) */

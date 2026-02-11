@@ -43,12 +43,30 @@ export default function Layout() {
       const savedText = localStorage.getItem('public.site.text');
       const savedTextMuted = localStorage.getItem('public.site.textMuted');
       const savedLink = localStorage.getItem('public.site.link');
+      const savedSurface = localStorage.getItem('public.site.surface');
+      const savedBorder = localStorage.getItem('public.site.border');
+      const savedPanel = localStorage.getItem('public.site.panel');
+      const getAccentStrong = (accent) => {
+        if (!accent) return '';
+        if (accent === '#3b82f6') return '#2563eb';
+        if (accent === '#06d47b') return '#05b868';
+        if (accent === '#ff9900') return '#c17700';
+        if (accent === '#9b34d3') return '#7e2ab5';
+        if (!accent.startsWith('#') || accent.length !== 7) return '';
+        const r = Math.max(0, Math.min(255, Math.round(parseInt(accent.slice(1, 3), 16) * 0.82)));
+        const g = Math.max(0, Math.min(255, Math.round(parseInt(accent.slice(3, 5), 16) * 0.82)));
+        const b = Math.max(0, Math.min(255, Math.round(parseInt(accent.slice(5, 7), 16) * 0.82)));
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      };
 
       if (savedBg) {
           document.documentElement.style.setProperty('--site-bg', savedBg);
       }
       if (savedAccent) {
           document.documentElement.style.setProperty('--site-accent', savedAccent);
+          document.documentElement.style.setProperty('--site-accent-default', savedAccent);
+          const strong = getAccentStrong(savedAccent);
+          if (strong) document.documentElement.style.setProperty('--site-accent-default-strong', strong);
       }
       if (savedText) {
           document.documentElement.style.setProperty('--site-text', savedText);
@@ -58,6 +76,27 @@ export default function Layout() {
       }
       if (savedLink) {
           document.documentElement.style.setProperty('--site-link', savedLink);
+      }
+      if (savedSurface) {
+          document.documentElement.style.setProperty('--site-surface', savedSurface);
+      }
+      if (savedBorder) {
+          document.documentElement.style.setProperty('--site-border', savedBorder);
+      }
+      if (savedPanel) {
+          document.documentElement.style.setProperty('--site-panel', savedPanel);
+      }
+      if (!savedSurface || !savedBorder || !savedPanel) {
+          const isLight = savedBg === '#f8fafc' || savedBg === '#ffffff' || savedText === '#0b1220';
+          if (isLight) {
+              if (!savedSurface) document.documentElement.style.setProperty('--site-surface', '#ffffff');
+              if (!savedBorder) document.documentElement.style.setProperty('--site-border', 'rgba(0, 0, 0, 0.10)');
+              if (!savedPanel) document.documentElement.style.setProperty('--site-panel', 'rgba(255, 255, 255, 0.85)');
+          } else {
+              if (!savedSurface) document.documentElement.style.setProperty('--site-surface', 'rgba(255, 255, 255, 0.06)');
+              if (!savedBorder) document.documentElement.style.setProperty('--site-border', 'rgba(255, 255, 255, 0.12)');
+              if (!savedPanel) document.documentElement.style.setProperty('--site-panel', 'rgba(0, 0, 0, 0.22)');
+          }
       }
   }, []);
   return (

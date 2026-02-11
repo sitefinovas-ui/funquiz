@@ -1,128 +1,127 @@
-/* ======================================= */
-/* 1. Conteneur Global et Généralités      */
-/* ======================================= */
 .quiz-stats-container {
-  padding: 24px;
-  background-color: #f0f2f5; /* Un gris très clair pour le fond */
-  min-height: calc(100vh - 64px); /* S'assure que le fond couvre toute la hauteur */
+  padding: 1rem;
+  background-color: transparent;
+  min-height: 100%;
+  font-family: 'Lexend', 'Gantari', 'Open Sans', sans-serif;
 }
 
 .quiz-stats-container h1 {
   font-size: 28px;
-  font-weight: 300;
-  color: #1f2937; /* Texte très foncé pour la lisibilité */
-  margin-bottom: 32px;
+  font-weight: 700;
+  color: var(--bo-text);
+  margin-bottom: 24px;
+  font-family: 'Gantari', 'Lexend', sans-serif;
 }
 
-/* Espacement entre les lignes de cartes/tables */
 .stats-row {
-  margin-bottom: 24px !important;
+  margin-bottom: 20px !important;
 }
 
-/* ======================================= */
-/* 2. Style des Cartes (antd Card)         */
-/* ======================================= */
 .ant-card {
-  border-radius: 12px; /* Coins arrondis doux */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Ombre subtile et professionnelle */
-  transition: all 0.3s ease;
+  border-radius: 18px;
+  border: 1px solid var(--bo-border);
+  background: var(--bo-panel);
+  box-shadow: var(--bo-shadow-soft);
+  transition: all 0.25s ease;
 }
 
 .ant-card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--bo-shadow);
   transform: translateY(-2px);
 }
 
 .ant-card-head {
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--bo-border);
   font-weight: 600;
-  color: #333;
+  color: var(--bo-text);
+  background: rgba(26, 122, 120, 0.05);
+  border-radius: 18px 18px 0 0;
 }
 
-/* ======================================= */
-/* 3. Cartes des Statistiques Globales    */
-/* ======================================= */
 .stats-row .ant-card-body {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Aligner les éléments à gauche */
+  align-items: flex-start;
   padding: 20px;
 }
 
 .stats-icon {
-  font-size: 32px;
+  font-size: 30px;
   margin-bottom: 10px;
-  /* Couleurs professionnelles pour chaque icône */
 }
 
-/* Couleurs spécifiques pour les icônes (si possible via CSS, sinon via style inline dans React) */
-.stats-row .ant-col:nth-child(1) .stats-icon { color: #3b82f6; } /* Bleu */
-.stats-row .ant-col:nth-child(2) .stats-icon { color: #10b981; } /* Vert */
-.stats-row .ant-col:nth-child(3) .stats-icon { color: #f59e0b; } /* Jaune/Orange */
-.stats-row .ant-col:nth-child(4) .stats-icon { color: #ef4444; } /* Rouge */
+.stats-row .ant-col:nth-child(1) .stats-icon {
+  color: var(--bo-accent);
+}
+
+.stats-row .ant-col:nth-child(2) .stats-icon {
+  color: #2f8f72;
+}
+
+.stats-row .ant-col:nth-child(3) .stats-icon {
+  color: #f2a65a;
+}
+
+.stats-row .ant-col:nth-child(4) .stats-icon {
+  color: #c85141;
+}
 
 .stats-row h3.fs-6 {
-  font-size: 14px;
-  color: #6b7280; /* Texte secondaire discret */
+  font-size: 12px;
+  color: var(--bo-muted);
   margin: 0;
   text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .stats-number {
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--bo-text);
   margin-top: 5px;
 }
 
-/* ======================================= */
-/* 4. Style des Tables (Classement/Activité)*/
-/* ======================================= */
 .ant-table-wrapper {
-  border-radius: 12px;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .ant-table-header > table > thead > tr > th {
-  background-color: #f7f7f7 !important; /* En-tête de tableau light */
+  background-color: rgba(26, 122, 120, 0.08) !important;
   font-weight: 600;
-  color: #4b5563 !important;
+  color: var(--bo-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
 }
 
 .ant-table-tbody > tr > td {
   font-size: 13px;
 }
 
-/* ======================================= */
-/* 5. Cartes des Thématiques (Grille)      */
-/* ======================================= */
 .stats-row h4 {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--bo-text);
   margin-bottom: 8px;
 }
 
 .stats-row .ant-card-small {
-  background-color: #fafafa; /* Très légèrement plus clair pour se distinguer */
-  border: 1px solid #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px dashed var(--bo-border);
 }
 
 .stats-row .ant-card-small p {
   margin-bottom: 4px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--bo-muted);
 }
 
-
-/* ======================================= */
-/* 6. Mobile Responsiveness (optionnel)  */
-/* ======================================= */
 @media (max-width: 992px) {
   .quiz-stats-container {
-    padding: 16px;
+    padding: 0.75rem;
   }
-  
-  /* Les cartes globales passent en 50% de largeur sur tablette */
+
   .stats-row .ant-col {
     width: 50%;
     margin-bottom: 16px;
@@ -134,18 +133,12 @@
     font-size: 24px;
   }
 
-  /* Les cartes globales passent en pleine largeur sur mobile */
   .stats-row .ant-col {
     width: 100%;
     margin-bottom: 16px;
   }
-  
-  /* Les colonnes des tables passent en 12 colonnes pour un meilleur affichage */
-  .stats-row .ant-col-12 {
-      width: 100%;
-  }
-  
-  /* Les cartes des thématiques passent en 100% de largeur */
+
+  .stats-row .ant-col-12,
   .stats-row .ant-col-8 {
     width: 100%;
   }

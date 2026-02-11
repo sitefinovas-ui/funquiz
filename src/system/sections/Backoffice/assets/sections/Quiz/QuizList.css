@@ -2,33 +2,37 @@
   z-index: 9999 !important;
 }
 
-/* Style pour le select */
 .ant-select {
   width: 100%;
 }
 
-/* Style pour le dropdown du select */
-.ant-select-dropdown {
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+.ant-select-selector {
+  border-radius: 12px !important;
+  border-color: var(--bo-border) !important;
+  background: var(--bo-panel) !important;
+  color: var(--bo-text) !important;
 }
 
-/* Style pour les options */
+.ant-select-dropdown {
+  background-color: var(--bo-panel);
+  border-radius: 12px;
+  border: 1px solid var(--bo-border);
+  box-shadow: var(--bo-shadow-soft);
+}
+
 .ant-select-item-option {
   padding: 8px 12px;
+  color: var(--bo-text);
 }
 
 .ant-select-item-option-selected {
-  background-color: #e6f7ff;
+  background-color: rgba(26, 122, 120, 0.12);
 }
 
-/* Style pour le hover des options */
 .ant-select-item-option:hover {
-  background-color: #f5f5f5;
+  background-color: rgba(26, 122, 120, 0.08);
 }
 
-/* Fix pour les modals */
 .ant-modal-wrap {
   z-index: 1000;
 }
@@ -37,7 +41,6 @@
   z-index: 1001;
 }
 
-/* Assurer que le dropdown est toujours visible */
 .ant-select-dropdown {
   position: fixed;
 }

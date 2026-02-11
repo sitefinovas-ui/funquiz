@@ -5,21 +5,31 @@ import HeadDash from '../Head/headDash.jsx';
 import './LayoutDash.css';
 import { usePopup } from '../../../../../configurations/Context/PopupContext.jsx';
 import ImportUsers from '../../../../../components/ImportUser/import-user.jsx';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const LayoutDash = () => {
   const { activePopup, closePopup } = usePopup();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const savedBg = localStorage.getItem('public.site.bg');
     const savedAccent = localStorage.getItem('public.site.accent');
     const savedSidebar = localStorage.getItem('theme.sidebar');
+    const getAccentStrong = (accent) => {
+      if (!accent) return '';
+      if (accent === '#3b82f6') return '#2563eb';
+      if (accent === '#06d47b') return '#05b868';
+      if (accent === '#ff9900') return '#c17700';
+      if (accent === '#9b34d3') return '#7e2ab5';
+      return accent;
+    };
 
     if (savedBg) document.documentElement.style.setProperty('--site-bg', savedBg);
     if (savedAccent) {
       document.documentElement.style.setProperty('--site-accent', savedAccent);
       document.documentElement.style.setProperty('--brand-accent', savedAccent);
-      document.documentElement.style.setProperty('--brand-accent-strong', savedAccent);
+      document.documentElement.style.setProperty('--brand-accent-strong', getAccentStrong(savedAccent));
     }
     if (savedSidebar) document.documentElement.style.setProperty('--bg-sidebar-dash', savedSidebar);
   }, []);
@@ -28,21 +38,33 @@ const LayoutDash = () => {
   const popupComponents = {
     importUser: <ImportUsers closePopup={closePopup} />,
   };
-  return (
-    <div className="layout-dash position-relative d-flex flex-column min-vh-100">
-      {/* Footer */}
+  const layoutMode = localStorage.getItem('bo.layout') === 'compact' ? 'compact' : 'wide';
 
-      <div className="d-flex flex-grow-1">
-        {/* Sidebar fixe */}
-        <aside className="">
-          <Sidebar />
+  return (
+    <div className={`bo-root layout-${layoutMode}`}>
+      {isMobileSidebarOpen && (
+        <button
+          type="button"
+          className="bo-backdrop"
+          aria-label="Fermer le menu"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      <div className={`bo-shell ${isCollapsed ? 'is-collapsed' : ''}`}>
+        <aside className={`bo-sidebar ${isMobileSidebarOpen ? 'is-open' : ''}`}>
+          <Sidebar
+            isCollapsed={isCollapsed}
+            onToggleCollapse={() => setIsCollapsed((v) => !v)}
+            onCloseMobile={() => setIsMobileSidebarOpen(false)}
+          />
         </aside>
 
-        {/* Contenu principal — prend le reste */}
-        <main className="main-content flex-grow-1 d-flex">
-          {/* wrapper qui permet à Outlet d'utiliser tout l'espace */}
-          <div className="content-wrapper flex-grow-1 p-3">
-            <HeadDash />
+        <main className="bo-main">
+          <div className="bo-topbar">
+            <HeadDash onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
+          </div>
+          <div className="bo-content">
             <Outlet />
           </div>
         </main>

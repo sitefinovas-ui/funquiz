@@ -24,7 +24,6 @@ function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isVisible, setVisible] = useState(false);
   const [isDelete, setDelete] = useState(false);
-  const [checked, setChecked] = useState(false);
 
   // --- avatar upload ---
   const [selectedFile, setSelectedFile] = useState(null);
@@ -37,16 +36,24 @@ function ProfilePage() {
 
   // --- OTP ---
   const [activeOtp, setActiveOtp] = useState(false);
-  const [alert, setAlert] = useState(false);
+  const [showOtpPopup, setShowOtpPopup] = useState(false);
   const [alert0, setAlert0] = useState(true);
   const [otpCode, setOtpCode] = useState('');
   const [status, setStatus] = useState('');
 
   // --- refs / navigation / auth / popup ---
   const fileInputRef = useRef();
+  const prefsMsgTimerRef = useRef(null);
+  const prefsTouchedRef = useRef(false);
   const navigate = useNavigate();
   const { user, logout, loading, refreshUser } = useAuth();
   const { setActivePopup } = usePopup();
+
+  useEffect(() => {
+    return () => {
+      if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
+    };
+  }, []);
 
   const [editData, setEditData] = useState({
     name: '',
@@ -96,18 +103,23 @@ function ProfilePage() {
     }
   };
 
-  // --- Préférences locales (UI seulement, à connecter plus tard à une API)
-  const [prefs, setPrefs] = useState({
+  const PREFS_STORAGE_KEY = 'profile.prefs.v1';
+  const DEFAULT_PREFS = {
     theme: 'system',
-    accent: 'blue',
-    notifications: { email: true, push: false, frequency: 'weekly' },
+    accent: 'purple',
     gameplay: { defaultDifficulty: 'normal', timer: true, hints: false },
     privacy: { visibility: 'friends', leaderboardOptIn: true, hideUsername: false },
     accessibility: { fontScale: 1.0, reduceMotion: false },
-  });
+  };
+
+  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
+  const [prefsReady, setPrefsReady] = useState(false);
+  const [prefsSavedAt, setPrefsSavedAt] = useState(null);
+  const [prefsUiMessage, setPrefsUiMessage] = useState('');
 
   // --- Handlers ---
   const handlePrefChange = (path, value) => {
+    prefsTouchedRef.current = true;
     setPrefs((prev) => {
       const next = { ...prev };
       const keys = path.split('.');
@@ -119,6 +131,155 @@ function ProfilePage() {
       obj[keys[keys.length - 1]] = value;
       return next;
     });
+  };
+
+  const mergePrefs = (base, incoming) => {
+    const next = { ...base, ...(incoming || {}) };
+    next.gameplay = { ...base.gameplay, ...(incoming?.gameplay || {}) };
+    next.privacy = { ...base.privacy, ...(incoming?.privacy || {}) };
+    next.accessibility = { ...base.accessibility, ...(incoming?.accessibility || {}) };
+    return next;
+  };
+
+  const applyPublicThemeVars = (vars) => {
+    const el = document.documentElement;
+    if (vars.bg) {
+      el.style.setProperty('--site-bg', vars.bg);
+      localStorage.setItem('public.site.bg', vars.bg);
+    }
+    if (vars.accent) {
+      el.style.setProperty('--site-accent', vars.accent);
+      el.style.setProperty('--site-accent-default', vars.accent);
+      localStorage.setItem('public.site.accent', vars.accent);
+    }
+    if (vars.accentStrong) {
+      el.style.setProperty('--site-accent-default-strong', vars.accentStrong);
+    }
+    if (vars.text) {
+      el.style.setProperty('--site-text', vars.text);
+      localStorage.setItem('public.site.text', vars.text);
+    }
+    if (vars.textMuted) {
+      el.style.setProperty('--site-text-muted', vars.textMuted);
+      localStorage.setItem('public.site.textMuted', vars.textMuted);
+    }
+    if (vars.link) {
+      el.style.setProperty('--site-link', vars.link);
+      localStorage.setItem('public.site.link', vars.link);
+    }
+    if (vars.surface) {
+      el.style.setProperty('--site-surface', vars.surface);
+      localStorage.setItem('public.site.surface', vars.surface);
+    }
+    if (vars.border) {
+      el.style.setProperty('--site-border', vars.border);
+      localStorage.setItem('public.site.border', vars.border);
+    }
+    if (vars.panel) {
+      el.style.setProperty('--site-panel', vars.panel);
+      localStorage.setItem('public.site.panel', vars.panel);
+    }
+  };
+
+  const getAccentPalette = (accent) => {
+    if (accent === 'blue') return { accent: '#3b82f6', accentStrong: '#2563eb', link: '#3b82f6' };
+    if (accent === 'green') return { accent: '#06d47b', accentStrong: '#05b868', link: '#06d47b' };
+    if (accent === 'orange') return { accent: '#ff9900', accentStrong: '#c17700', link: '#ff9900' };
+    return { accent: '#9b34d3', accentStrong: '#7e2ab5', link: '#9b34d3' };
+  };
+
+  const getThemePalette = (theme) => {
+    if (theme === 'light') {
+      return {
+        bg: '#f8fafc',
+        text: '#0b1220',
+        textMuted: '#4b5563',
+        link: '#2563eb',
+        surface: '#ffffff',
+        border: 'rgba(0, 0, 0, 0.10)',
+        panel: 'rgba(255, 255, 255, 0.85)',
+      };
+    }
+    return {
+      bg: '#0d0d19',
+      text: '#ffffff',
+      textMuted: '#a0a9c0',
+      link: '#4ea1ff',
+      surface: 'rgba(255, 255, 255, 0.06)',
+      border: 'rgba(255, 255, 255, 0.12)',
+      panel: 'rgba(0, 0, 0, 0.22)',
+    };
+  };
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PREFS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setPrefs(mergePrefs(DEFAULT_PREFS, parsed));
+      }
+    } catch {
+    } finally {
+      setPrefsReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!prefsReady) return;
+
+    try {
+      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(prefs));
+      const now = Date.now();
+      setPrefsSavedAt(now);
+      if (prefsTouchedRef.current) {
+        setPrefsUiMessage('Paramètres sauvegardés.');
+        if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
+        prefsMsgTimerRef.current = window.setTimeout(() => setPrefsUiMessage(''), 2500);
+      }
+    } catch {
+    }
+
+    const el = document.documentElement;
+    const scale = Number(prefs.accessibility.fontScale);
+    el.style.setProperty('--site-font-scale', String(Number.isFinite(scale) ? scale : 1));
+    el.dataset.reduceMotion = prefs.accessibility.reduceMotion ? 'true' : 'false';
+
+    const resolvedTheme =
+      prefs.theme === 'system'
+        ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : prefs.theme;
+    const themeVars = getThemePalette(resolvedTheme);
+    const accentVars = getAccentPalette(prefs.accent);
+    applyPublicThemeVars({ ...themeVars, ...accentVars });
+  }, [prefs, prefsReady]);
+
+  useEffect(() => {
+    if (!prefsReady) return;
+    if (!window.matchMedia) return;
+    if (prefs.theme !== 'system') return;
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      const resolvedTheme = mql.matches ? 'dark' : 'light';
+      const themeVars = getThemePalette(resolvedTheme);
+      const accentVars = getAccentPalette(prefs.accent);
+      applyPublicThemeVars({ ...themeVars, ...accentVars });
+    };
+    mql.addEventListener?.('change', handler);
+    return () => mql.removeEventListener?.('change', handler);
+  }, [prefs.theme, prefs.accent, prefsReady]);
+
+  const resetPrefs = () => {
+    try {
+      localStorage.removeItem(PREFS_STORAGE_KEY);
+    } catch {
+    }
+    setPrefs(DEFAULT_PREFS);
+    setPrefsUiMessage('Paramètres réinitialisés.');
+    if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
+    prefsMsgTimerRef.current = window.setTimeout(() => setPrefsUiMessage(''), 2500);
   };
 
   // Filtres / recherche pour "Mes Quiz"
@@ -139,9 +300,9 @@ function ProfilePage() {
     }
   }, [user]);
 
-  // --- Envoi OTP automatiquement quand alert devient true ---
+  // --- Envoi OTP automatiquement quand showOtpPopup devient true ---
   useEffect(() => {
-    if (alert && user?.number) {
+    if (showOtpPopup && user?.number) {
       verification
         .sendOtp(user.number)
         .then(() => {
@@ -150,9 +311,11 @@ function ProfilePage() {
         .catch((error) => {
           console.error('Erreur envoi OTP:', error);
           setStatus('error');
+          const errorMsg = error?.response?.data?.error || "Erreur lors de l'envoi du code.";
+          window.alert('❌ ' + errorMsg);
         });
     }
-  }, [alert, user?.number]);
+  }, [showOtpPopup, user?.number]);
 
   // --- Récupération des points (détails) ---
   useEffect(() => {
@@ -198,7 +361,7 @@ function ProfilePage() {
   const handleVerify = async () => {
     if (!otpCode.trim()) {
       setStatus('error');
-      alert('Veuillez entrer un code.');
+      window.alert('Veuillez entrer un code.');
       return;
     }
 
@@ -208,28 +371,22 @@ function ProfilePage() {
       if (res?.verified || res?.success) {
         setStatus('success');
         setActiveOtp(false);
-        setAlert(false);
+        setShowOtpPopup(false);
         setAlert0(true);
         setOtpCode('');
         if (refreshUser) await refreshUser();
-        alert('✅ Numéro vérifié avec succès !');
+        window.alert('✅ Numéro vérifié avec succès !');
         window.location.reload();
       } else {
         setStatus('error');
-        alert('❌ Code incorrect, veuillez réessayer.');
+        window.alert('❌ Code incorrect, veuillez réessayer.');
       }
     } catch (error) {
       setStatus('error');
       const errorMsg =
         error?.response?.data?.message || error.message || 'Erreur lors de la vérification du code.';
-      alert('❌ ' + errorMsg);
+      window.alert('❌ ' + errorMsg);
     }
-  };
-
-  // --- delete flow (ouvre popup global) ---
-  const handleDelete = async () => {
-    setActivePopup('deleteUser');
-    setDelete(false);
   };
 
   // --- Normalisation userInfo pour le JSX ---
@@ -270,6 +427,8 @@ function ProfilePage() {
     Math.min(100, userStats.levelSpan ? Math.round((userStats.xpInLevel / userStats.levelSpan) * 100) : 0)
   );
 
+  const isSessionCompleted = (s) => Number(s?.is_completed) === 1;
+
   // --- contenu des onglets (fonction interne unique) ---
   const renderTabContent = () => {
     if (activeTab === 'overview') {
@@ -278,70 +437,62 @@ function ProfilePage() {
         userStats.correctAnswers >= 100 ? 'Super progression, vise les 200 réponses correctes.' :
         'Commence par des quiz courts et réguliers pour progresser.';
       return (
-        <div className="p-3 text-dark">
-          <h4 className="mb-3">Vue d&apos;ensemble</h4>
+        <div className="profile-tab-pane fade-in">
+          <h4 className="profile-section-title">Vue d&apos;ensemble</h4>
 
-          <div className="row g-3">
-            <div className="col-6 col-md-3">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold">Niveau</div>
-                <div className="fs-4">Niv {userStats.level}</div>
+          <div className="profile-stats-grid">
+            <div className="profile-stat-card">
+              <div className="stat-label">Niveau</div>
+              <div className="stat-value highlight">Niv {userStats.level}</div>
+            </div>
+            <div className="profile-stat-card">
+              <div className="stat-label">XP</div>
+              <div className="stat-value">{userStats.xpInLevel} <span className="stat-sub">/ {userStats.levelSpan}</span></div>
+              <div className="profile-progress-bar">
+                <div className="profile-progress-fill" style={{ width: `${progressPercentage}%` }} />
               </div>
             </div>
-            <div className="col-6 col-md-3">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold">XP</div>
-                <div className="small mb-2">
-                  {userStats.xpInLevel} / {userStats.levelSpan}
-                </div>
-                <div className="progress" aria-hidden="true">
-                  <div className="progress-bar" style={{ width: `${progressPercentage}%` }} />
-                </div>
-              </div>
+            <div className="profile-stat-card">
+              <div className="stat-label">Série</div>
+              <div className="stat-value">🔥 {userStats.streak}</div>
             </div>
-            <div className="col-6 col-md-3">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold">Série</div>
-                <div className="fs-5">🔥 {userStats.streak}</div>
-              </div>
-            </div>
-            <div className="col-6 col-md-3">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold">Quiz joués</div>
-                <div className="fs-5">📊 {userStats.totalQuizzes}</div>
-              </div>
+            <div className="profile-stat-card">
+              <div className="stat-label">Quiz joués</div>
+              <div className="stat-value">📊 {userStats.totalQuizzes}</div>
             </div>
           </div>
 
-          <div className="mt-4">
-            <h6 className="mb-2">Dernières activités</h6>
-            <ul className="list-unstyled d-flex flex-column gap-2">
-              {quizHistory.slice(0, 3).map((s) => {
-                const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
-                const score = s.current_score ?? s.score ?? 0;
-                const statusText = s.is_completed ? 'Terminé' : 'En cours';
-                return (
-                  <li
-                    key={s.session_id || s.id || `${s.last_activity}-${Math.random()}`}
-                    className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center border rounded-3 p-2"
-                  >
-                    <div className="d-flex flex-column min-w-0">
-                      <strong className="text-truncate">Session #{s.session_id ?? s.id}</strong>
-                      <small className="text-muted text-truncate">{dateStr}</small>
+          <div className="profile-section mt-4">
+            <h6 className="profile-subsection-title">Dernières activités</h6>
+            {quizHistory.length === 0 ? (
+              <p className="profile-empty-text">Aucune activité récente.</p>
+            ) : (
+              <div className="profile-activity-list">
+                {quizHistory.slice(0, 3).map((s, idx) => {
+                  const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
+                  const score = s.current_score ?? s.score ?? 0;
+                  const completed = isSessionCompleted(s);
+                  const statusText = completed ? 'Terminé' : 'En cours';
+                  return (
+                    <div key={s.session_id ?? s.id ?? idx} className="profile-activity-item">
+                      <div className="activity-info">
+                        <strong className="activity-title">Session #{s.session_id ?? s.id}</strong>
+                        <small className="activity-date">{dateStr}</small>
+                      </div>
+                      <div className="activity-badges">
+                        <span className="profile-badge">Score: {score}</span>
+                        <span className={`profile-badge ${completed ? 'success' : 'pending'}`}>{statusText}</span>
+                      </div>
                     </div>
-                    <div className="d-flex flex-wrap gap-2 mt-2 mt-sm-0">
-                      <span className="badge rounded-pill bg-light border text-dark">Score: {score}</span>
-                      <span className="badge rounded-pill bg-light border text-dark">Statut: {statusText}</span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <div className="mt-4 p-3 rounded-3 bg-light border">
-            <div className="fw-bold mb-1">Conseil</div>
-            <div className="small">{accuracyHint}</div>
+          <div className="profile-tip-box mt-4">
+            <div className="tip-title">💡 Conseil</div>
+            <div className="tip-content">{accuracyHint}</div>
           </div>
         </div>
       );
@@ -350,8 +501,9 @@ function ProfilePage() {
     if (activeTab === 'quizzes') {
       const items = quizHistory
         .filter((s) => {
-          if (quizFilter === 'en_cours') return !s.is_completed;
-          if (quizFilter === 'termine') return !!s.is_completed;
+          const completed = isSessionCompleted(s);
+          if (quizFilter === 'en_cours') return !completed;
+          if (quizFilter === 'termine') return completed;
           return true;
         })
         .filter((s) => {
@@ -361,17 +513,17 @@ function ProfilePage() {
         .slice(0, 20);
 
       return (
-        <div className="p-3 text-dark">
-          <h4 className="mb-3">Mes Quiz</h4>
+        <div className="profile-tab-pane fade-in">
+          <h4 className="profile-section-title">Mes Quiz</h4>
 
-          <div className="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center mb-3">
-            <div className="btn-group" role="group" aria-label="Filtres">
-              <button className={`btn btn-sm ${quizFilter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setQuizFilter('all')}>Tous</button>
-              <button className={`btn btn-sm ${quizFilter === 'en_cours' ? 'btn-primary text-nowrap' : 'btn-outline-primary text-nowrap'}`} onClick={() => setQuizFilter('en_cours')}>En cours</button>
-              <button className={`btn btn-sm ${quizFilter === 'termine' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setQuizFilter('termine')}>Terminés</button>
+          <div className="profile-filters">
+            <div className="profile-btn-group">
+              <button type="button" className={`profile-filter-btn ${quizFilter === 'all' ? 'active' : ''}`} onClick={() => setQuizFilter('all')}>Tous</button>
+              <button type="button" className={`profile-filter-btn ${quizFilter === 'en_cours' ? 'active' : ''}`} onClick={() => setQuizFilter('en_cours')}>En cours</button>
+              <button type="button" className={`profile-filter-btn ${quizFilter === 'termine' ? 'active' : ''}`} onClick={() => setQuizFilter('termine')}>Terminés</button>
             </div>
             <input
-              className="form-control form-control-sm"
+              className="profile-search-input"
               placeholder="Recherche par ID/date..."
               value={quizQuery}
               onChange={(e) => setQuizQuery(e.target.value)}
@@ -379,32 +531,33 @@ function ProfilePage() {
           </div>
 
           {items.length === 0 ? (
-            <p className="text-muted">Aucun résultat.</p>
+            <p className="profile-empty-text">Aucun résultat trouvé.</p>
           ) : (
-            <ul className="list-unstyled d-flex flex-column gap-2">
-              {items.map((s) => {
+            <div className="profile-activity-list">
+              {items.map((s, idx) => {
                 const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
                 const score = s.current_score ?? s.score ?? 0;
-                const statusText = s.is_completed ? 'Terminé' : 'En cours';
+                const completed = isSessionCompleted(s);
+                const statusText = completed ? 'Terminé' : 'En cours';
                 return (
-                  <li
-                    key={s.session_id || s.id || `${s.last_activity}-${Math.random()}`}
-                    className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 p-2 border rounded-3"
+                  <div
+                    key={s.session_id ?? s.id ?? idx}
+                    className="profile-activity-item"
                   >
-                    <div className="d-flex flex-column min-w-0">
-                      <strong className="text-truncate">Session #{s.session_id ?? s.id}</strong>
-                      <small className="text-muted text-truncate">{dateStr}</small>
+                    <div className="activity-info">
+                      <strong className="activity-title">Session #{s.session_id ?? s.id}</strong>
+                      <small className="activity-date">{dateStr}</small>
                     </div>
-                    <div className="d-flex flex-wrap gap-2">
-                      <span className={`badge rounded-pill ${s.is_completed ? 'bg-success' : 'bg-warning'} text-dark`}>
+                    <div className="activity-badges">
+                      <span className={`profile-badge ${completed ? 'success' : 'pending'}`}>
                         {statusText}
                       </span>
-                      <span className="badge rounded-pill bg-light border text-dark">Score: {score}</span>
+                      <span className="profile-badge">Score: {score}</span>
                     </div>
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           )}
         </div>
       );
@@ -421,26 +574,24 @@ function ProfilePage() {
         badges.find((b) => !b.unlocked)?.desc || 'Tous les objectifs atteints, superbe !';
 
       return (
-        <div className="p-3 text-dark">
-          <h4 className="mb-3">Succès</h4>
-          <div className="row g-3">
+        <div className="profile-tab-pane fade-in">
+          <h4 className="profile-section-title">Succès</h4>
+          <div className="profile-badges-grid">
             {badges.map((b) => (
-              <div key={b.key} className="col-6 col-md-3">
-                <div className={`border rounded-3 p-3 h-100 d-flex flex-column align-items-center text-center ${b.unlocked ? '' : 'opacity-50'}`}>
-                  <div className="fs-2">{b.emoji}</div>
-                  <div className="fw-bold mt-2">{b.name}</div>
-                  <small className="text-muted">{b.desc}</small>
-                  <span className={`badge mt-2 ${b.unlocked ? 'bg-success' : 'bg-secondary'}`}>
-                    {b.unlocked ? 'Débloqué' : 'Verrouillé'}
-                  </span>
-                </div>
+              <div key={b.key} className={`profile-badge-card ${b.unlocked ? 'unlocked' : 'locked'}`}>
+                <div className="badge-emoji">{b.emoji}</div>
+                <div className="badge-name">{b.name}</div>
+                <div className="badge-desc">{b.desc}</div>
+                <span className={`badge-status ${b.unlocked ? 'success' : ''}`}>
+                  {b.unlocked ? 'Débloqué' : 'Verrouillé'}
+                </span>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 p-3 rounded-3 bg-light border">
-            <div className="fw-bold mb-1">Prochain objectif</div>
-            <div className="small">{nextObjective}</div>
+          <div className="profile-tip-box mt-4">
+            <div className="tip-title">🎯 Prochain objectif</div>
+            <div className="tip-content">{nextObjective}</div>
           </div>
         </div>
       );
@@ -448,198 +599,202 @@ function ProfilePage() {
   
     if (activeTab === 'settings') {
       return (
-        <div className="p-3 text-dark">
-          <h4 className="mb-3">Paramètres</h4>
+        <div className="profile-tab-pane fade-in">
+          <h4 className="profile-section-title">Paramètres</h4>
 
-          <div className="row g-3">
-            <div className="col-12 col-md-6">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold mb-2">Apparence</div>
-                <label className="form-label">Thème</label>
-                <select
-                  className="form-select form-select-sm mb-2"
-                  value={prefs.theme}
-                  onChange={(e) => handlePrefChange('theme', e.target.value)}
-                >
-                  <option value="system">Système</option>
-                  <option value="light">Clair</option>
-                  <option value="dark">Sombre</option>
-                </select>
-                <label className="form-label">Couleur d’accent</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={prefs.accent}
-                  onChange={(e) => handlePrefChange('accent', e.target.value)}
-                >
-                  <option value="blue">Bleu</option>
-                  <option value="purple">Violet</option>
-                  <option value="green">Vert</option>
-                  <option value="orange">Orange</option>
-                </select>
+          <div className="profile-settings-grid">
+            <div className="profile-settings-card">
+              <div className="settings-header">Apparence</div>
+              <label className="profile-label">Thème</label>
+              <select
+                className="profile-select"
+                value={prefs.theme}
+                onChange={(e) => handlePrefChange('theme', e.target.value)}
+              >
+                <option value="system">Système</option>
+                <option value="light">Clair</option>
+                <option value="dark">Sombre</option>
+              </select>
+              <label className="profile-label mt-3">Couleur d’accent</label>
+              <select
+                className="profile-select"
+                value={prefs.accent}
+                onChange={(e) => handlePrefChange('accent', e.target.value)}
+              >
+                <option value="blue">Bleu</option>
+                <option value="purple">Violet</option>
+                <option value="green">Vert</option>
+                <option value="orange">Orange</option>
+              </select>
+            </div>
+
+            <div className="profile-settings-card">
+              <div className="settings-header">Jeu</div>
+              <label className="profile-label">Difficulté par défaut</label>
+              <select
+                className="profile-select"
+                value={prefs.gameplay.defaultDifficulty}
+                onChange={(e) => handlePrefChange('gameplay.defaultDifficulty', e.target.value)}
+              >
+                <option value="easy">Facile</option>
+                <option value="normal">Normal</option>
+                <option value="hard">Difficile</option>
+              </select>
+              <div className="profile-switch-row">
+                <label className="profile-switch-label" htmlFor="timer">Minuteur</label>
+                <input
+                  className="profile-switch-input"
+                  type="checkbox"
+                  id="timer"
+                  checked={prefs.gameplay.timer}
+                  onChange={(e) => handlePrefChange('gameplay.timer', e.target.checked)}
+                />
+              </div>
+              <div className="profile-switch-row">
+                <label className="profile-switch-label" htmlFor="hints">Aides</label>
+                <input
+                  className="profile-switch-input"
+                  type="checkbox"
+                  id="hints"
+                  checked={prefs.gameplay.hints}
+                  onChange={(e) => handlePrefChange('gameplay.hints', e.target.checked)}
+                />
               </div>
             </div>
 
-            <div className="col-12 col-md-6">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold mb-2">Notifications</div>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="notifEmail"
-                    checked={prefs.notifications.email}
-                    onChange={(e) => handlePrefChange('notifications.email', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="notifEmail">Email</label>
-                </div>
-                <div className="form-check form-switch mt-2">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="notifPush"
-                    checked={prefs.notifications.push}
-                    onChange={(e) => handlePrefChange('notifications.push', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="notifPush">Push</label>
-                </div>
-                <label className="form-label mt-2">Fréquence</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={prefs.notifications.frequency}
-                  onChange={(e) => handlePrefChange('notifications.frequency', e.target.value)}
-                >
-                  <option value="immediate">Immédiat</option>
-                  <option value="daily">Journalier</option>
-                  <option value="weekly">Hebdomadaire</option>
-                </select>
+            <div className="profile-settings-card">
+              <div className="settings-header">Confidentialité</div>
+              <label className="profile-label">Visibilité du profil</label>
+              <div className="profile-btn-group mb-2">
+                {['public', 'friends', 'private'].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`profile-filter-btn ${prefs.privacy.visibility === opt ? 'active' : ''}`}
+                    onClick={() => handlePrefChange('privacy.visibility', opt)}
+                  >
+                    {opt === 'public' ? 'Public' : opt === 'friends' ? 'Amis' : 'Privé'}
+                  </button>
+                ))}
+              </div>
+              <div className="profile-switch-row">
+                <label className="profile-switch-label" htmlFor="leaderboardOptIn">Participer aux classements</label>
+                <input
+                  className="profile-switch-input"
+                  type="checkbox"
+                  id="leaderboardOptIn"
+                  checked={prefs.privacy.leaderboardOptIn}
+                  onChange={(e) => handlePrefChange('privacy.leaderboardOptIn', e.target.checked)}
+                />
+              </div>
+              <div className="profile-switch-row">
+                <label className="profile-switch-label" htmlFor="hideUsername">Masquer le pseudo</label>
+                <input
+                  className="profile-switch-input"
+                  type="checkbox"
+                  id="hideUsername"
+                  checked={prefs.privacy.hideUsername}
+                  onChange={(e) => handlePrefChange('privacy.hideUsername', e.target.checked)}
+                />
               </div>
             </div>
 
-            <div className="col-12 col-md-6">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold mb-2">Jeu</div>
-                <label className="form-label">Difficulté par défaut</label>
-                <select
-                  className="form-select form-select-sm mb-2"
-                  value={prefs.gameplay.defaultDifficulty}
-                  onChange={(e) => handlePrefChange('gameplay.defaultDifficulty', e.target.value)}
-                >
-                  <option value="easy">Facile</option>
-                  <option value="normal">Normal</option>
-                  <option value="hard">Difficile</option>
-                </select>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="timer"
-                    checked={prefs.gameplay.timer}
-                    onChange={(e) => handlePrefChange('gameplay.timer', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="timer">Minuteur</label>
-                </div>
-                <div className="form-check form-switch mt-2">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="hints"
-                    checked={prefs.gameplay.hints}
-                    onChange={(e) => handlePrefChange('gameplay.hints', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="hints">Aides</label>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12 col-md-6">
-              <div className="border rounded-3 p-3 h-100">
-                <div className="fw-bold mb-2">Confidentialité</div>
-                <label className="form-label">Visibilité du profil</label>
-                <div className="btn-group mb-2" role="group">
-                  {['public', 'friends', 'private'].map((opt) => (
-                    <button
-                      key={opt}
-                      className={`btn btn-sm ${prefs.privacy.visibility === opt ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => handlePrefChange('privacy.visibility', opt)}
-                    >
-                      {opt === 'public' ? 'Public' : opt === 'friends' ? 'Amis' : 'Privé'}
-                    </button>
-                  ))}
-                </div>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="leaderboardOptIn"
-                    checked={prefs.privacy.leaderboardOptIn}
-                    onChange={(e) => handlePrefChange('privacy.leaderboardOptIn', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="leaderboardOptIn">Participer aux classements</label>
-                </div>
-                <div className="form-check form-switch mt-2">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="hideUsername"
-                    checked={prefs.privacy.hideUsername}
-                    onChange={(e) => handlePrefChange('privacy.hideUsername', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="hideUsername">Masquer le pseudo</label>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12">
-              <div className="border rounded-3 p-3">
-                <div className="fw-bold mb-2">Accessibilité</div>
-                <label className="form-label">Taille du texte</label>
-                <select
-                  className="form-select form-select-sm mb-2"
-                  value={String(prefs.accessibility.fontScale)}
-                  onChange={(e) => handlePrefChange('accessibility.fontScale', Number(e.target.value))}
-                >
-                  {['0.9','1.0','1.1','1.2','1.3','1.4'].map(v => (
-                    <option key={v} value={v}>{v}x</option>
-                  ))}
-                </select>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="reduceMotion"
-                    checked={prefs.accessibility.reduceMotion}
-                    onChange={(e) => handlePrefChange('accessibility.reduceMotion', e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="reduceMotion">Réduire les animations</label>
-                </div>
+            <div className="profile-settings-card full-width">
+              <div className="settings-header">Accessibilité</div>
+              <label className="profile-label">Taille du texte</label>
+              <select
+                className="profile-select"
+                value={String(prefs.accessibility.fontScale)}
+                onChange={(e) => handlePrefChange('accessibility.fontScale', Number(e.target.value))}
+              >
+                {['0.9','1.0','1.1','1.2','1.3','1.4'].map(v => (
+                  <option key={v} value={v}>{v}x</option>
+                ))}
+              </select>
+              <div className="profile-switch-row">
+                <label className="profile-switch-label" htmlFor="reduceMotion">Réduire les animations</label>
+                <input
+                  className="profile-switch-input"
+                  type="checkbox"
+                  id="reduceMotion"
+                  checked={prefs.accessibility.reduceMotion}
+                  onChange={(e) => handlePrefChange('accessibility.reduceMotion', e.target.checked)}
+                />
               </div>
             </div>
           </div>
 
-          <div className="d-flex gap-2 mt-3">
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={() => alert('Paramètres sauvegardés (à connecter à l’API)')}
-            >
-              Enregistrer
-            </button>
-            <button
-              className="btn btn-outline-secondary"
-              type="button"
-              onClick={() =>
-                setPrefs({
-                  theme: 'system',
-                  accent: 'blue',
-                  notifications: { email: true, push: false, frequency: 'weekly' },
-                  gameplay: { defaultDifficulty: 'normal', timer: true, hints: false },
-                  privacy: { visibility: 'friends', leaderboardOptIn: true, hideUsername: false },
-                  accessibility: { fontScale: 1.0, reduceMotion: false },
-                })
-              }
-            >
-              Réinitialiser
-            </button>
+          <div className="profile-settings-actions">
+            <div className="profile-settings-meta">
+              {prefsUiMessage ? (
+                <span className="profile-settings-message">{prefsUiMessage}</span>
+              ) : prefsSavedAt ? (
+                <span className="profile-settings-message">
+                  Dernière sauvegarde : {new Date(prefsSavedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              ) : (
+                <span className="profile-settings-message"> </span>
+              )}
+            </div>
+            <div className="profile-settings-buttons">
+              <button type="button" className="profile-btn-cancel" onClick={resetPrefs}>
+                Réinitialiser les paramètres
+              </button>
+            </div>
+          </div>
+
+          <div className="profile-danger-zone mt-4">
+            <h5 className="danger-title"><CgDanger className="danger-icon" /> Zone de danger</h5>
+            <p className="danger-text">La suppression est définitive. Vous perdrez tout votre historique et vos points.</p>
+            {!isDelete ? (
+              <button type="button" className="profile-btn-danger" onClick={() => setDelete(true)}>
+                Supprimer mon compte
+              </button>
+            ) : (
+              <div className="danger-confirm-box">
+                <label className="profile-label danger">Raison du départ</label>
+                <select
+                  className="profile-select danger"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                >
+                  <option value="">-- Choisir une raison --</option>
+                  <option value="boring">Je m&apos;ennuie</option>
+                  <option value="reset">Je veux recommencer à zéro</option>
+                  <option value="privacy">Confidentialité</option>
+                  <option value="other">Autre</option>
+                </select>
+                
+                <input
+                  className="profile-input danger mt-2"
+                  placeholder="Commentaire (optionnel)"
+                  value={deleteComment}
+                  onChange={(e) => setDeleteComment(e.target.value)}
+                />
+
+                <p className="danger-warning mt-3">
+                  Tapez <strong>SUPPRIMER</strong> pour confirmer.
+                </p>
+                <input
+                  className="profile-input danger"
+                  placeholder="SUPPRIMER"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                />
+
+                <div className="danger-actions mt-3">
+                  <button type="button" className="profile-btn-cancel" onClick={() => setDelete(false)}>Annuler</button>
+                  <button
+                    type="button"
+                    className="profile-btn-danger"
+                    disabled={confirmText !== 'SUPPRIMER' || !deleteReason || deleting}
+                    onClick={handleDeleteAccount}
+                  >
+                    {deleting ? 'Suppression...' : 'Confirmer suppression'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -647,37 +802,35 @@ function ProfilePage() {
   
     if (activeTab === 'history') {
       return (
-        <div className="p-3 text-dark">
-          <h4>Historique de quiz</h4>
+        <div className="profile-tab-pane fade-in">
+          <h4 className="profile-section-title">Historique</h4>
           {historyLoading ? (
-            <p>Chargement...</p>
+            <p className="profile-empty-text">Chargement...</p>
           ) : quizHistory.length === 0 ? (
-            <p>Aucun historique pour le moment.</p>
+            <p className="profile-empty-text">Aucun historique pour le moment.</p>
           ) : (
-            <ul className="list-unstyled d-flex flex-column gap-2">
-              {quizHistory.slice(0, 15).map((s) => {
+            <div className="profile-activity-list">
+              {quizHistory.slice(0, 15).map((s, idx) => {
                 const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
                 const score = s.current_score ?? s.score ?? 0;
                 const correct = s.correct_answers_count ?? 0;
-                const statusText = s.is_completed ? 'Terminé' : 'En cours';
+                const completed = isSessionCompleted(s);
+                const statusText = completed ? 'Terminé' : 'En cours';
                 return (
-                  <li
-                    key={s.session_id || s.id || `${s.last_activity}-${Math.random()}`}
-                    className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 p-2 p-md-3 border rounded-3"
-                  >
-                    <div className="d-flex flex-column flex-grow-1 min-w-0">
-                      <strong className="text-truncate">Session #{s.session_id ?? s.id}</strong>
-                      <small className="text-muted text-truncate">{dateStr}</small>
+                  <div key={s.session_id ?? s.id ?? idx} className="profile-activity-item">
+                    <div className="activity-info">
+                      <strong className="activity-title">Session #{s.session_id ?? s.id}</strong>
+                      <small className="activity-date">{dateStr}</small>
                     </div>
-                    <div className="d-flex flex-wrap gap-2 gap-md-3">
-                      <span className="badge rounded-pill bg-light border text-dark">Score: {score}</span>
-                      <span className="badge rounded-pill bg-light border text-dark">Correctes: {correct}</span>
-                      <span className="badge rounded-pill bg-light border text-dark">Statut: {statusText}</span>
+                    <div className="activity-badges">
+                      <span className={`profile-badge ${completed ? 'success' : 'pending'}`}>{statusText}</span>
+                      <span className="profile-badge">Score: {score}</span>
+                      <span className="profile-badge">Correctes: {correct}</span>
                     </div>
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           )}
         </div>
       );
@@ -748,9 +901,11 @@ function ProfilePage() {
 
             <div className="user-info">
               <div className="user-info-header mb-3">
-                <h1 className="mb-2 text-capitalize">{userInfo.username} {userInfo.firstname}</h1>
+                <h1 className="mb-2 text-capitalize">
+                  {prefs.privacy.hideUsername ? 'Utilisateur' : `${userInfo.username} ${userInfo.firstname}`}
+                </h1>
               </div>
-              <div className="user-details d-flex text-dark flex-column gap-2">
+              <div className="user-details d-flex flex-column gap-2">
                 <p className="d-flex align-items-center gap-2">
                   <FcAddressBook /> {userInfo.email}
                 </p>
@@ -797,7 +952,7 @@ function ProfilePage() {
               </div>
               <div className="level-title mb-1">Niv {userStats.level}</div>
               <div className="level-xp mb-2">
-                {userStats.xp} / {userStats.nextLevelXP} XP
+                {userStats.xpInLevel} / {userStats.levelSpan} XP
               </div>
               <div className="progress-bar" aria-hidden="true">
                 <div className="progress-fill" style={{ width: `${progressPercentage}%` }} />
@@ -823,11 +978,13 @@ function ProfilePage() {
             { id: 'quizzes', label: 'Mes Quiz', icon: '📝' },
             { id: 'achievements', label: 'Succès', icon: '🏆' },
             { id: 'history', label: 'Historique', icon: '🕘' },
+            { id: 'settings', label: 'Paramètres', icon: '⚙️' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+              type="button"
             >
               <span>{tab.icon}</span> {tab.label}
             </button>
@@ -854,7 +1011,7 @@ function ProfilePage() {
                     onClick={() => {
                       setActiveOtp(false);
                       setAlert0(true);
-                      setAlert(false);
+                      setShowOtpPopup(false);
                     }}
                     className="btn btn-outline-secondary"
                   >
@@ -863,7 +1020,7 @@ function ProfilePage() {
                   <button
                     onClick={() => {
                       setAlert0(false);
-                      setAlert(true);
+                      setShowOtpPopup(true);
                     }}
                     className="btn btn-primary"
                   >
@@ -873,7 +1030,7 @@ function ProfilePage() {
               </div>
             )}
 
-            {alert && (
+            {showOtpPopup && (
               <div className="shadow-lg p-4 text-dark rounded-4 bg-white text-center" style={{ maxWidth: 400 }}>
                 <h2 className="mb-3">Vérification du numéro</h2>
                 <p className="mb-3">
@@ -891,7 +1048,7 @@ function ProfilePage() {
                   <button
                     onClick={() => {
                       setActiveOtp(false);
-                      setAlert(false);
+                      setShowOtpPopup(false);
                       setAlert0(true);
                       setOtpCode('');
                       setStatus('');
@@ -1028,32 +1185,6 @@ function ProfilePage() {
                 </div>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      <Link onClick={() => setDelete(true)} className="text-delete mt-5" to={'#'}>
-        Supprimer définitivement mon compte
-      </Link>
-
-      {/* Modal Suppression */}
-      {isDelete && (
-        <div className="position-fixed w-100 h-100 top-0 bottom-0 start-0 end-0 z-1 bg-black bg-opacity-50 d-flex align-items-center justify-content-center">
-          <div style={{ maxWidth: 600 }} className="p-4 w-100 rounded shadow bg-dark">
-            <h2 className="text-danger text-center text-light mb-3">⚠️ Avertissement</h2>
-            <p className="text-center text-light">
-              En cliquant sur <span className="fw-bold text-danger">continuer</span>, vous disposerez d&apos;un délai de <strong>30 jours</strong> pour vous rétracter. Passé ce délai, votre compte sera <span className="fw-bold text-danger">définitivement supprimé</span>.
-            </p>
-            <div className="form-check my-3">
-              <input type="checkbox" className="form-check-input" id="confirmation" checked={checked} onChange={(e) => setChecked(e.target.checked)} />
-              <label style={{ fontSize: '12px' }} className="form-check-label text-light" htmlFor="confirmation">
-                En cochant cette case, vous confirmez être pleinement conscient(e) de cet acte.
-              </label>
-            </div>
-            <div className="d-flex gap-3 mt-4">
-              <button type="button" className="btn btn-secondary flex-fill" onClick={() => { setDelete(false); setChecked(false); }}>Annuler</button>
-              <button onClick={handleDelete} className="btn btn-danger flex-fill" disabled={!checked}>Continuer</button>
-            </div>
           </div>
         </div>
       )}

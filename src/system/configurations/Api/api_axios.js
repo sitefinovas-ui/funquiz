@@ -1,12 +1,16 @@
 import axios from 'axios';
 
-const rawBase = import.meta.env.VITE_API_URL || '';
-const baseURL = rawBase.endsWith('/api')
-  ? rawBase
-  : `${rawBase.replace(/\/+$/, '')}/api`;
+function computeBaseURL() {
+  const envUrl = import.meta.env.VITE_API_URL || '';
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+  const lan = host && host !== 'localhost' ? `${protocol}//${host}:${import.meta.env.VITE_API_PORT || '5100'}` : '';
+  const raw = lan || envUrl || 'http://localhost:5100';
+  return raw.endsWith('/api') ? raw : `${raw.replace(/\/+$/, '')}/api`;
+}
 
 const api = axios.create({
-  baseURL,
+  baseURL: computeBaseURL(),
   timeout: 20000,
   withCredentials: true,
   headers: {
@@ -35,14 +39,18 @@ api.interceptors.response.use(
   (error) => {
     if (!error.response) {
       console.error('❌ Aucune réponse du serveur');
-      return Promise.reject(new Error('Erreur réseau'));
+      const networkError = new Error('Erreur réseau');
+      networkError.code = 'NETWORK_ERROR';
+      return Promise.reject(networkError);
     }
     const message =
       error.response.data?.message ||
       error.response.data?.error ||
       error.message ||
       'Erreur serveur';
-    return Promise.reject(new Error(message));
+    error.message = message;
+    error.userMessage = message;
+    return Promise.reject(error);
   }
 );
 

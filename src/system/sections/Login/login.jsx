@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../configurations/Context/useAuth';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { loginWithGoogleToken } from '../../configurations/Services/googleAuthService';
 import { GoogleLogin } from '@react-oauth/google';
 import './login.css';
 
@@ -32,7 +31,7 @@ const Login = () => {
     ripple.style.cssText = `
       position: absolute;
       border-radius: 50%;
-      background: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.35);
       transform: scale(0);
       animation: ripple 0.6s linear;
       left: ${x}px;
@@ -83,126 +82,90 @@ const Login = () => {
   };
 
   return (
-    <div className="container d-flex flex-column justify-content-center align-items-center w-100 vh-100">
-      <div className="mb-4 d-none d-lg-flex flex-column align-items-center">
-        <h1 className="text-white text-center">Bienvenue</h1>
-        <p style={{ fontSize: '12px', width: '65%' }} className="text-muted-custom text-center">
-          Connectez-vous pour accéder à votre espace personnel et profiter pleinement de FUNQUIZ.
-        </p>
-      </div>
-      
-      {/* Effets de fond */}
-      <div className="bg-effect"></div>
-      <div className="bg-effect"></div>
-
-      <div className="login-container p-4 p-md-5">
-        {/* Indicateur de carte */}
-        <div className="card-indicator"></div>
-
-        {/* Titre de bienvenue */}
-        <h1 className="welcome-title text-white">Connectez-vous</h1>
-
-        {/* Affichage des erreurs */}
-        {error && (
-          <div className="alert alert-danger mb-3" role="alert">
-            {error}
+    <div className=" d-flex">
+      <div className="anthropic-left-panel">
+        <div className="anthropic-content">
+          <div className="anthropic-header">
+            <h1 className="anthropic-title">
+              Apprendre ?<br />
+              S'amuser.
+            </h1>
+            <p className="anthropic-subtitle">Le quiz pour les esprits curieux</p>
           </div>
-        )}
 
-        {/* Formulaire */}
-        <form onSubmit={handleLogin}>
-          <div className="mb-4 login-form">
-            {/* Email */}
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label">
-                Adresse email
-              </label>
-              <input
-                type="email"
-                placeholder="Entrez votre email"
-                className="form-control text-white"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-              />
+          <div className="anthropic-card">
+            <div className="anthropic-google-wrapper">
+               <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="filled_black"
+                  shape="rectangular"
+                  width="320"
+                  text="continue_with"
+                />
             </div>
 
-            {/* Mot de passe */}
-            <div className="mb-3">
-              <label htmlFor="password" className="form-label">
-                Mot de passe
-              </label>
-              <div className="position-relative">
+            <div className="anthropic-divider">
+              <span>OU</span>
+            </div>
+
+            {error && <div className="anthropic-error">{error}</div>}
+
+            <form onSubmit={handleLogin} className="anthropic-form">
+              <div className="anthropic-input-group">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-control pe-5"
-                  id="password"
-                  placeholder="Entrer votre mot de passe"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
+                  type="email"
+                  className="anthropic-input"
+                  placeholder="nom@exemple.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={togglePassword}
-                  disabled={loading}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
               </div>
+
+              <div className="anthropic-input-group">
+                <div className="anthropic-password-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="anthropic-input"
+                    placeholder="Mot de passe"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="anthropic-eye-btn"
+                    onClick={togglePassword}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="anthropic-btn-primary" disabled={loading}>
+                {loading ? 'Chargement...' : "Continuer avec l'email"}
+              </button>
+            </form>
+            
+             <div className="anthropic-footer-links">
+               <Link to="/reset">Mot de passe oublié ?</Link>
+               <span>•</span>
+               <Link to="/sign-up">S'inscrire</Link>
             </div>
 
-            {/* Bouton principal */}
-            <button
-              type="submit"
-              className="btn btn-primary-custom w-100 mb-3 position-relative overflow-hidden"
-              onClick={handleRippleEffect}
-              disabled={loading}
-            >
-              {loading ? 'Connexion...' : 'Se connecter'}
-            </button>
-
-            {/* Lien vers reset password */}
-            <div className="text-center mb-3">
-              <Link to="/reset" className="btn-link-custom">
-                Mot de passe oublié ?
-              </Link>
-            </div>
+            <p className="anthropic-disclaimer">
+              En continuant, vous acceptez nos <a href="/terms#cgu">Conditions d'utilisation</a> et notre <a href="/terms#privacy">Politique de confidentialité</a>.
+            </p>
           </div>
-        </form>
-
-        {/* Séparateur */}
-        <div className="divider">
-          <span>ou s'identifier avec</span>
         </div>
+      </div>
 
-        {/* Google Login */}
-        <div className="d-flex justify-content-center mb-4">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            theme="outline"
-            size="large"
-            width={300}
-            text="continue_with"
-            shape="rectangular"
-            logo_alignment="left"
-          />
-        </div>
-
-        {/* Liens du footer */}
-        <div className="text-center">
-          <p className="text-muted-custom mb-2">
-            Pas encore de compte ?{' '}
-            <Link to="/sign-up" className="link-custom">
-              S'inscrire
-            </Link>
-          </p>
-        </div>
+      <div className="anthropic-right-panel">
+         {/* Placeholder for the artistic image */}
+         <div className="anthropic-art-container">
+            <img src="/play.webp" alt="Funquiz Art" className="w-100 h-100 anthropic-art-logo" />
+         </div>
       </div>
     </div>
   );

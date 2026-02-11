@@ -12,35 +12,8 @@ import QuizDash from './assets/sections/Quiz/quiz.jsx';
 import LegalDash from './assets/sections/Legal/legal.jsx';
 import LogsPage from './assets/sections/Temp/temp.jsx';
 import ThemeSwitcherAdminPage from './../../components/ThemeSwitcher/theme-switcher.jsx';
-import { useEffect, useState } from 'react'; // ajout pour détecter le device
 
 function Dashboard() {
-  // Détection desktop: exclut mobile/tablette et petites fenêtres
-  const [isDesktop, setIsDesktop] = useState(true);
-
-  useEffect(() => {
-    const check = () => {
-      const ua = navigator.userAgent || '';
-      const isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-      const isSmallScreen = window.innerWidth < 992; // seuil Bootstrap lg
-      setIsDesktop(!isMobileUA && !isSmallScreen);
-    };
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  if (!isDesktop) {
-    return (
-      <div className="vh-100 vw-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
-        <h2 className="fw-bold">Backoffice indisponible sur mobile</h2>
-        <p className="text-muted mb-3">
-          Cette section est accessible uniquement depuis un ordinateur ou une fenêtre assez large.
-        </p>
-        <a href="/" className="btn btn-primary rounded-pill px-4">Retour à l’accueil</a>
-      </div>
-    );
-  }
   return (
     // Backoffice
     <PopupProvider>

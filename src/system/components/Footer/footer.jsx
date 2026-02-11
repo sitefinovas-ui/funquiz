@@ -28,21 +28,18 @@ const Footer = ({ openPopup }) => {
     setLoading(true);
     setMessage('');
 
-    if (!user_id_token) {
-      setMessage('Merci pour votre inscription !');
-      setTimeout(() => setMessage(''), 5000); // disparaît après 5 secondes
-      setLoading(false);
-      return;
-    }
-
     try {
-      await Newsletter.addNewsletter(email, user_id_token);
+      await Newsletter.addNewsletter({ email, user_id: user_id_token ?? null });
       setMessage('Merci pour votre inscription !');
       setEmail('');
       setTimeout(() => setMessage(''), 5000); // disparaît après 5 secondes
     } catch (error) {
       console.error('Error subscribing to newsletter:', error);
-      setMessage('Une erreur est survenue. Veuillez réessayer.');
+      if (error?.status === 409 || /déjà abonné/i.test(error?.message || '')) {
+        setMessage('Vous êtes déjà inscrit à la newsletter.');
+      } else {
+        setMessage('Une erreur est survenue. Veuillez réessayer.');
+      }
       setTimeout(() => setMessage(''), 5000); // disparaît après 5 secondes
     } finally {
       setLoading(false);

@@ -67,8 +67,11 @@ const newsletterServices = {
   },
 
   // Ajouter une nouvelle newsletter
-  addNewsletter: async (data) => {
-    const body = normalizeNewsletterPayload(data);
+  addNewsletter: async (data, user_id) => {
+    const body =
+      user_id !== undefined
+        ? { email: String(data || '').trim(), user_id: user_id ?? null }
+        : normalizeNewsletterPayload(data);
     if (!body.email || typeof body.email !== 'string') {
       const err = new Error('Le champ email est requis et doit être une chaîne.');
       err.code = 'INVALID_EMAIL_PAYLOAD';

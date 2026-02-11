@@ -189,14 +189,14 @@ const Home = () => {
     setMessage('');
 
     try {
-      await newsletterService.addNewsletter(email, user_id_token || null);
+      await newsletterService.addNewsletter({ email, user_id: user_id_token || null });
       setMessage('Merci pour votre inscription !');
       setEmail('');
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
       // Traiter 409 comme un succès informatif (déjà abonné)
       if (error?.status === 409 || /déjà abonné/i.test(error?.message || '')) {
-        setMessage('Cet email est déjà abonné.');
+        setMessage('Vous êtes déjà inscrit à la newsletter.');
         setTimeout(() => setMessage(''), 5000);
       } else {
         console.error('Error subscribing to newsletter:', error);
@@ -534,7 +534,7 @@ const Home = () => {
       </section>
 
       {/* TOP section */}
-      <section className="section top">
+      <section className=" section top">
         <div className="title-top d-flex flex-column align-items-center justify-content-center text-center text-light my-4">
           <h2 style={{color: 'var(--site-text)'}} className="fs-custom fw-bold">Classement des joueurs</h2>
           <div className="divider mx-auto text-center text-light my-2"></div>
@@ -635,7 +635,8 @@ const Home = () => {
 
           <button
             onClick={() => navigate('/raking')}
-            className="btn-add d-none d-lg-block position-absolute end-0 me-5"
+            className="btn-add d-none d-lg-block position-absolute me-5"
+            style={{right:'-100px'}}
             aria-label="View rankings"
           >
             <FaPlus size={27} />
@@ -789,19 +790,19 @@ const Home = () => {
                   </div>
                 ))
             ) : (
-              <p className="text-light">Aucune publicité active pour le moment.</p>
+              <p className="text-light"></p>
             )}
               </div>
             </div>
       </section>
 
       {/* GOOGLE OPINIONS */}
-      <section className="section py-3 px-4">
+      <section className="container section py-3 px-4">
         {/* Header */}
         <div className="container text-center mb-4">
-          <div className="d-flex align-items-center justify-content-center gap-3">
+          <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-3">
             <img src={google} width={50} height={50} alt="Google logo" className="img-fluid" />
-            <h2 style={{color: 'var(--site-text)'}} className="m-0 fw-bold title-custom d-flex">
+            <h2 style={{color: 'var(--site-text)'}} className="m-0 fw-bold title-custom d-flex flex-wrap justify-content-center">
               <span className="fw-bold title-span">Google</span>
               <span className="fw-normal text-start"
                 style={{
@@ -847,7 +848,7 @@ const Home = () => {
                 {approvedVisibleComments.map((comment, index) => (
                   <div key={comment.comment_id ?? index} className="comment-card-wrapper">
                     <div
-                      className={`comment-card ${hoveredIndex === index ? 'hovered' : ''}`}
+                      className={`comment-card h-100 ${hoveredIndex === index ? 'hovered' : ''}`}
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
@@ -887,7 +888,7 @@ const Home = () => {
               {approvedVisibleComments.slice(0, 3).map((comment, index) => (
                 <div key={comment.comment_id ?? index} className="col-12  col-md-6 col-lg-4">
                   <div
-                    className={`comment-card ${hoveredIndex === index ? 'hovered' : ''}`}
+                    className={`comment-card h-100 ${hoveredIndex === index ? 'hovered' : ''}`}
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
                   >
@@ -936,14 +937,12 @@ const Home = () => {
       </section>
 
       {/* NEWSLETTER */}
-      <section className="section pb-5">
-        <div className="container newsletter d-flex flex-column align-items-center rounded-pill text-center p-5">
-          <div className="title-newsletter d-flex flex-row align-items-center justify-content-center gap-5 mb-4">
-            <h2 style={{color: 'var(--site-text)'}} className="fw-bold w-100">
+      <section className="section pb-5 px-4 w-100">
+        <div className="container p-5 text-center" style={{ maxWidth: '800px' }}>
+          <h2 className="fw-bold mb-4 text-white">
               Rejoignez notre newsletter pour être informé des dernières actualités, offres
               spéciales et événements.
-            </h2>
-          </div>
+          </h2>
 
           <form
             onSubmit={handleSubmit}

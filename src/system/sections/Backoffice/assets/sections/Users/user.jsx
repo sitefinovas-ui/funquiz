@@ -7,6 +7,7 @@ import {
   FaUserPlus,
   FaEdit,
   FaTrash,
+  FaSkull,
   FaBan,
   FaCheckCircle,
   FaDownload,
@@ -15,6 +16,10 @@ import {
   FaUserCog,
   FaSyncAlt,
   FaUpload,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaFilter,
 } from 'react-icons/fa';
 import { useAuth } from '../../../../../configurations/Context/AuthProvider';
 import {
@@ -34,6 +39,7 @@ import {
 } from 'recharts';
 import { jwtDecode } from 'jwt-decode';
 import { usePopup } from '../../../../../configurations/Context/PopupContext.jsx';
+import './user.css';
 
 const UserManagement = () => {
   const { setActivePopup } = usePopup();
@@ -65,7 +71,7 @@ const UserManagement = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterActive, setFilterActive] = useState('all');
   const [filterDate, setFilterDate] = useState('');
-  const [sortOrder, setSortOrder] = useState('recent');
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [bulkMode, setBulkMode] = useState('active');
   const [showModal, setShowModal] = useState(false);
@@ -82,6 +88,35 @@ const UserManagement = () => {
   });
   const [deleteReason, setDeleteReason] = useState('admin_remove');
   const [deleteComment, setDeleteComment] = useState('');
+  const handleToggleActive = async (user) => {
+    if (!isAdmin) {
+      alert('Action réservée aux administrateurs.');
+      return;
+    }
+    const id = user?.user_id || user?.id;
+    if (!id) return;
+
+    const isActive = user.is_active === 1;
+    const actionLabel = isActive ? 'Bannir' : 'Activer';
+    const newStatus = isActive ? 'suspended' : 'active';
+    const newActiveState = isActive ? 0 : 1;
+
+    const confirmed = window.confirm(`${actionLabel} ${user.name || 'cet utilisateur'} ?`);
+    if (!confirmed) return;
+
+    try {
+      await authService.updateUserAdmin(id, { is_active: newActiveState, status: newStatus });
+      setUsers((prev) =>
+        prev.map((u) =>
+          (u.user_id || u.id) === id ? { ...u, is_active: newActiveState, status: newStatus } : u
+        )
+      );
+    } catch (err) {
+      console.error('Erreur changement statut:', err);
+      alert(err?.message || 'Erreur lors du changement de statut');
+    }
+  };
+
   const handleBanSingle = async (user) => {
     if (!isAdmin) {
       alert('Action réservée aux administrateurs.');
@@ -181,10 +216,16 @@ const UserManagement = () => {
             try {
               const pointsData = await pointService.getUserPoints(user.user_id);
               //console.log(`⭐ Points pour ${user.name || "?"} (id:${user.user_id}):`, pointsData?.total_points);
-              return { ...user, total_points: pointsData?.total_points || 0 };
+              const totalPoints = Number(pointsData?.total_points) || 0;
+              const totalGamesPlayed = Number(pointsData?.total_games_played) || 0;
+              return { ...user, total_points: totalPoints, quiz_completed: totalGamesPlayed };
             } catch (error) {
               console.error(`❌ Erreur récupération points pour user_id=${user.user_id}:`, error);
-              return { ...user, total_points: 0 }; // sécurité en cas d'erreur
+              return {
+                ...user,
+                total_points: 0,
+                quiz_completed: Number(user?.quiz_completed) || 0,
+              }; // sécurité en cas d'erreur
             }
           })
         );
@@ -350,7 +391,7 @@ const UserManagement = () => {
     setFilterStatus('all');
     setFilterActive('all');
     setFilterDate('');
-    setSortOrder('recent');
+    setSortConfig({ key: 'created_at', direction: 'desc' });
     setCurrentPage(1);
   };
 
@@ -409,10 +450,7 @@ const UserManagement = () => {
 
   // Filtrage + Tri
   const filteredUsers = useMemo(() => {
-    const normalizeStr = (s) =>
-      String(s || '')
-        .toLowerCase()
-        .trim();
+    const normalizeStr = (s) => String(s || '').toLowerCase().trim();
     const toDayStr = (d) => {
       const date = new Date(d);
       return isNaN(date) ? null : date.toISOString().slice(0, 10);
@@ -428,11 +466,8 @@ const UserManagement = () => {
       const matchesSearch = !searchTerm || nameMatch || firstNameMatch || emailMatch;
 
       const matchesRole = filterRole === 'all' || user.role === filterRole;
-
       const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-
-      const matchesActive =
-        filterActive === 'all' || String(user.is_active ?? '').trim() === filterActive;
+      const matchesActive = filterActive === 'all' || String(user.is_active ?? '').trim() === filterActive;
 
       const uDateRaw = getUserDate(user);
       const uDateDay = uDateRaw ? toDayStr(uDateRaw) : null;
@@ -441,31 +476,49 @@ const UserManagement = () => {
       return matchesSearch && matchesRole && matchesStatus && matchesActive && matchesDate;
     });
 
-    const byDateVal = (u) => {
-      const d = getUserDate(u);
-      const nd = new Date(d);
-      return isNaN(nd) ? 0 : nd.getTime();
-    };
-
-    const byNameVal = (u) => normalizeStr(u.name || u.first_name || u.email || '');
-
     const sorted = [...base];
-    if (sortOrder === 'recent') {
-      sorted.sort(
-        (a, b) => byDateVal(b) - byDateVal(a) || byNameVal(a).localeCompare(byNameVal(b))
-      );
-    } else if (sortOrder === 'oldest') {
-      sorted.sort(
-        (a, b) => byDateVal(a) - byDateVal(b) || byNameVal(a).localeCompare(byNameVal(b))
-      );
-    } else if (sortOrder === 'az') {
-      sorted.sort((a, b) => byNameVal(a).localeCompare(byNameVal(b)));
-    } else if (sortOrder === 'za') {
-      sorted.sort((a, b) => byNameVal(b).localeCompare(byNameVal(a)));
+    if (sortConfig.key) {
+      sorted.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        // Helper pour récupérer des valeurs nested ou calculées
+        if (sortConfig.key === 'user') {
+          aVal = normalizeStr(a.name || a.first_name || a.email);
+          bVal = normalizeStr(b.name || b.first_name || b.email);
+        } else if (['created_at', 'date_cx', 'last_login'].includes(sortConfig.key)) {
+          // Utilisation de getUserDate pour fallback correct
+          aVal = new Date((sortConfig.key === 'created_at' ? a.created_at : getUserDate(a)) || 0).getTime();
+          bVal = new Date((sortConfig.key === 'created_at' ? b.created_at : getUserDate(b)) || 0).getTime();
+        } else if (sortConfig.key === 'score') {
+          aVal = Number(a.total_points || a.score || 0);
+          bVal = Number(b.total_points || b.score || 0);
+        } else if (sortConfig.key === 'quiz') {
+          aVal = Number(a.quiz_completed || a.quizCompleted || 0);
+          bVal = Number(b.quiz_completed || b.quizCompleted || 0);
+        }
+
+        if (typeof aVal === 'string') {
+          aVal = aVal.toLowerCase();
+          bVal = bVal.toLowerCase();
+        }
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
     }
 
     return sorted;
-  }, [safeUsers, searchTerm, filterRole, filterStatus, filterActive, filterDate, sortOrder]);
+  }, [safeUsers, searchTerm, filterRole, filterStatus, filterActive, filterDate, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   // ==================== HANDLERS ====================
   const handleSelectUser = (userId) => {
@@ -558,7 +611,7 @@ const UserManagement = () => {
       return;
     }
     if (!selectedUsers.length) return;
-    const confirmed = window.confirm(`Supprimer ${selectedUsers.length} utilisateur(s) ?`);
+    const confirmed = window.confirm(`Supprimer (Soft) ${selectedUsers.length} utilisateur(s) ?`);
     if (!confirmed) return;
 
     try {
@@ -580,6 +633,28 @@ const UserManagement = () => {
       setSelectedUsers([]);
     } catch (err) {
       console.error('Erreur suppression en masse:', err);
+      alert(err?.message || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleBulkHardDelete = async () => {
+    if (!isAdmin) {
+      alert('Action réservée aux administrateurs.');
+      return;
+    }
+    if (!selectedUsers.length) return;
+    const confirmed = window.confirm(
+      `ATTENTION : Suppression DÉFINITIVE de ${selectedUsers.length} utilisateur(s) ?\nCette action est irréversible.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await Promise.all(selectedUsers.map((id) => authService.hardDeleteUser(id)));
+      setUsers((prev) => prev.filter((u) => !selectedUsers.includes(u.user_id || u.id)));
+      setSelectedUsers([]);
+      alert('Utilisateurs supprimés définitivement.');
+    } catch (err) {
+      console.error('Erreur suppression définitive en masse:', err);
       alert(err?.message || 'Erreur lors de la suppression');
     }
   };
@@ -780,12 +855,12 @@ const UserManagement = () => {
 
       <div className="row g-2 mb-4">
         <div className="col-6 col-sm-6 col-lg-2">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm bg-white text-dark">
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small text-dark">Total</p>
-                  <h3 className="fw-bold mb-0">{stats.total}</h3>
+                  <p className="text-muted mb-1 small">Total</p>
+                  <h3 className="fw-bold mb-0 text-dark">{stats.total}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-primary bg-opacity-10">
                   <FaUserShield size={20} className="text-primary" />
@@ -795,12 +870,12 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="col-6 col-sm-6 col-lg-2">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm bg-white text-dark">
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small text-dark">Actifs</p>
-                  <h3 className="fw-bold mb-0">{stats.active}</h3>
+                  <p className="text-muted mb-1 small">Actifs</p>
+                  <h3 className="fw-bold mb-0 text-dark">{stats.active}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-success bg-opacity-10">
                   <FaCheckCircle size={20} className="text-success" />
@@ -810,12 +885,12 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="col-6 col-sm-6 col-lg-2">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm bg-white text-dark">
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small text-dark">Admins</p>
-                  <h3 className="fw-bold mb-0">{stats.admins}</h3>
+                  <p className="text-muted mb-1 small">Admins</p>
+                  <h3 className="fw-bold mb-0 text-dark">{stats.admins}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-danger bg-opacity-10">
                   <FaUserShield size={20} className="text-danger" />
@@ -825,12 +900,12 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="col-6 col-sm-6 col-lg-2">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm bg-white text-dark">
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small text-dark">Modérateurs</p>
-                  <h3 className="fw-bold mb-0">{stats.moderators}</h3>
+                  <p className="text-muted mb-1 small">Modérateurs</p>
+                  <h3 className="fw-bold mb-0 text-dark">{stats.moderators}</h3>
                 </div>
                 <div className="rounded-3 p-2 bg-warning bg-opacity-10">
                   <FaUserCog size={20} className="text-warning" />
@@ -840,15 +915,15 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="col-6 col-sm-6 col-lg-2">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm bg-white text-dark">
             <div className="card-body p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <p className="text-muted mb-1 small text-dark">Bannis</p>
-                  <h3 className="fw-bold mb-0">{stats.banned}</h3>
+                  <p className="text-muted mb-1 small">Bannis</p>
+                  <h3 className="fw-bold mb-0 text-dark">{stats.banned}</h3>
                 </div>
-                <div className="rounded-3 p-2 bg-dark bg-opacity-10">
-                  <FaBan size={20} className="text-dark" />
+                <div className="rounded-3 p-2 bg-secondary bg-opacity-10">
+                  <FaBan size={20} className="text-secondary" />
                 </div>
               </div>
             </div>
@@ -959,134 +1034,108 @@ const UserManagement = () => {
       </div>
 
       <div
-        className="card border-0 shadow-sm mb-3"
-        style={{ position: 'sticky', top: 0, zIndex: 1000 }}
+        className="card border-0 shadow-sm mb-4 sticky-top"
+        style={{ top: 0, zIndex: 1000 }}
       >
-        <div className="card-body bg-white border-bottom">
-          <div className="card-body bg-white">
-            <div className="card-body bg-white border-bottom">
-              <div className="d-flex flex-column justify-content-between align-items-center px-3 py-2">
-                <div className="d-flex w-100 flex-wrap justify-content-between align-items-center gap-2">
-                  {/* 🎭 Rôle */}
-                  <div className="col-6 col-md-3 col-lg-2">
-                    <select
-                      className="form-select text-dark shadow-sm"
-                      value={filterRole}
-                      onChange={(e) => setFilterRole(e.target.value)}
-                    >
-                      <option value="all">Tous les rôles</option>
-                      <option value="admin">Admin</option>
-                      <option value="moderator">Modérateur</option>
-                      <option value="user">Utilisateur</option>
-                    </select>
-                  </div>
+        <div className="card-body bg-white p-4">
+          <div className="d-flex flex-column gap-3">
+            {/* Top Row: Search & Main Actions */}
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+              <div
+                className="input-group shadow-sm rounded-pill overflow-hidden bg-light"
+                style={{ maxWidth: '400px' }}
+              >
+                <span className="input-group-text border-0 bg-light ps-3 text-muted">
+                  <FaSearch />
+                </span>
+                <input
+                  type="text"
+                  className="form-control border-0 bg-light shadow-none"
+                  placeholder="Rechercher (nom, email)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ fontWeight: 500 }}
+                />
+              </div>
 
-                  {/* ⚙️ Statut */}
-                  <div className="col-6 col-md-3 col-lg-2">
-                    <select
-                      className="form-select text-dark shadow-sm"
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                    >
-                      <option value="all">Tous les statuts</option>
-                      <option value="active">Actif</option>
-                      <option value="suspended">Suspendu</option>
-                      <option value="deleted">Supprimé</option>
-                    </select>
-                  </div>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-2 fw-semibold shadow-sm"
+                  onClick={() => openModal('add')}
+                >
+                  <FaUserPlus /> <span>Nouveau</span>
+                </button>
+                <button
+                  className="btn btn-light rounded-circle shadow-sm p-2 text-secondary"
+                  onClick={resetFilters}
+                  title="Réinitialiser les filtres"
+                >
+                  <FaSyncAlt />
+                </button>
+              </div>
+            </div>
 
-                  {/* 🟢 Activité */}
-                  <div className="col-6 col-md-3 col-lg-2">
-                    <select
-                      className="form-select text-dark shadow-sm"
-                      value={filterActive}
-                      onChange={(e) => setFilterActive(e.target.value)}
-                    >
-                      <option value="all">Tous</option>
-                      <option value="1">Actif</option>
-                      <option value="0">Inactif</option>
-                    </select>
-                  </div>
+            {/* Bottom Row: Filters & Secondary Actions */}
+            <div className="d-flex flex-wrap gap-2 align-items-center pt-2 border-top">
+              <div className="d-flex align-items-center gap-2 me-2">
+                <FaFilter className="text-primary opacity-50" />
+                <span className="text-muted small fw-bold text-uppercase" style={{ fontSize: '0.75rem' }}>
+                  Filtres
+                </span>
+              </div>
 
-                  {/* 📅 Date */}
-                  <div className="col-6 col-md-3 col-lg-2">
-                    <input
-                      type="date"
-                      className="form-control text-dark shadow-sm"
-                      value={filterDate}
-                      onChange={(e) => setFilterDate(e.target.value)}
-                    />
-                  </div>
+              <select
+                className="form-select form-select-sm border-0 bg-light rounded-pill shadow-none w-auto fw-medium text-secondary"
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+              >
+                <option value="all">Rôles : Tous</option>
+                <option value="admin">Admin</option>
+                <option value="moderator">Modérateur</option>
+                <option value="user">Utilisateur</option>
+              </select>
 
-                  {/* 🎚️ Tri */}
-                  <div className="col-6 col-md-3 col-lg-2">
-                    <select
-                      className="form-select text-dark shadow-sm"
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value)}
-                    >
-                      <option value="recent">Plus récents</option>
-                      <option value="oldest">Plus anciens</option>
-                      <option value="az">A → Z</option>
-                      <option value="za">Z → A</option>
-                    </select>
-                  </div>
-                </div>
+              <select
+                className="form-select form-select-sm border-0 bg-light rounded-pill shadow-none w-auto fw-medium text-secondary"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">Statut : Tous</option>
+                <option value="active">Actif</option>
+                <option value="suspended">Suspendu</option>
+                <option value="deleted">Supprimé</option>
+              </select>
 
-                {/* 🔍 Recherche utilisateur */}
-                <div className="col-12 col-md-4 col-lg-6 ">
-                  <div className="input-group shadow-sm rounded-pill overflow-hidden">
-                    <input
-                      type="text"
-                      className="w-100 border-0 text-dark rounded-pill ps-3 m-0"
-                      placeholder="🔍 Rechercher (nom ou email)..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
-                        backgroundColor: '#f8f9fa',
-                        fontWeight: 500,
-                        height: '45px',
-                      }}
-                    />
-                  </div>
-                </div>
+              <select
+                className="form-select form-select-sm border-0 bg-light rounded-pill shadow-none w-auto fw-medium text-secondary"
+                value={filterActive}
+                onChange={(e) => setFilterActive(e.target.value)}
+              >
+                <option value="all">Compte : Tous</option>
+                <option value="1">Validé</option>
+                <option value="0">Non validé</option>
+              </select>
 
-                {/* 🧩 Actions */}
-                <div className="row mt-4">
-                  <div className="col-12 d-flex flex-wrap justify-content-lg-end justify-content-center gap-2">
-                    <button
-                      className="btn btn-primary d-flex align-items-center gap-2"
-                      onClick={() => openModal('add')}
-                    >
-                      <FaUserPlus />
-                      <span className="d-none d-sm-inline">Ajouter</span>
-                    </button>
+              <input
+                type="date"
+                className="form-control form-control-sm border-0 bg-light rounded-pill shadow-none w-auto text-secondary fw-medium"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+              />
 
-                    <button
-                      className="btn btn-outline-secondary d-flex align-items-center gap-2"
-                      onClick={handleExport}
-                    >
-                      <FaUpload />
-                      <span className="d-none d-sm-inline">Exporter</span>
-                    </button>
-
-                    <button
-                      className="btn btn-outline-primary d-flex align-items-center gap-2"
-                      onClick={handleImport}
-                    >
-                      <FaDownload />
-                      <span className="d-none d-sm-inline">Importer</span>
-                    </button>
-
-                    <button
-                      className="btn btn-outline-danger d-flex align-items-center gap-2"
-                      onClick={resetFilters}
-                    >
-                      <FaSyncAlt />
-                      <span className="d-none d-sm-inline">Réinitialiser</span>
-                    </button>
-                  </div>
-                </div>
+              <div className="ms-auto d-flex gap-2">
+                <button
+                  className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1 border-0 bg-light"
+                  onClick={handleExport}
+                >
+                  <FaUpload size={12} /> <span className="d-none d-sm-inline">Export</span>
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1 border-0 bg-light"
+                  onClick={handleImport}
+                >
+                  <FaDownload size={12} /> <span className="d-none d-sm-inline">Import</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1096,10 +1145,10 @@ const UserManagement = () => {
       <div className="card border-0 shadow-sm">
         <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead className="table-light">
+            <table className="table table-hover align-middle mb-0" style={{ borderCollapse: 'separate', borderSpacing: '0' }}>
+              <thead className="table-light sticky-top" style={{ top: '0', zIndex: 10 }}>
                 <tr>
-                  <th style={{ width: '50px' }}>
+                  <th style={{ width: '50px' }} className="border-bottom-0">
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -1110,15 +1159,50 @@ const UserManagement = () => {
                       onChange={handleSelectAllCurrentPage}
                     />
                   </th>
-                  <th>Utilisateur</th>
-                  <th>Rôle</th>
-                  <th>Statut</th>
-                  <th>Dernière connexion</th>
-                  <th>Quiz complétés</th>
-                  <th>Score total</th>
-                  <th>Abonnement</th>
-                  <th>Date d'inscription</th>
-                  <th className="text-center">Actions</th>
+                  
+                  <th onClick={() => requestSort('user')} className="cursor-pointer border-bottom-0 text-secondary text-uppercase small fw-bold" style={{ cursor: 'pointer' }}>
+                    <div className="d-flex align-items-center gap-1">
+                      Utilisateur
+                      {sortConfig.key === 'user' && (
+                        sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />
+                      )}
+                      {sortConfig.key !== 'user' && <FaSort className="text-muted opacity-25" />}
+                    </div>
+                  </th>
+
+                  <th className="border-bottom-0 text-secondary text-uppercase small fw-bold">Rôle & Statut</th>
+
+                  <th onClick={() => requestSort('last_login')} className="cursor-pointer border-bottom-0 text-secondary text-uppercase small fw-bold" style={{ cursor: 'pointer' }}>
+                     <div className="d-flex align-items-center gap-1">
+                      Dernière Connexion
+                      {sortConfig.key === 'last_login' && (
+                        sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />
+                      )}
+                    </div>
+                  </th>
+
+                  <th onClick={() => requestSort('quiz')} className="cursor-pointer border-bottom-0 text-secondary text-uppercase small fw-bold text-center" style={{ cursor: 'pointer' }}>
+                    <div className="d-flex align-items-center justify-content-center gap-1">
+                        Quiz
+                        {sortConfig.key === 'quiz' && (sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+                    </div>
+                  </th>
+
+                  <th onClick={() => requestSort('score')} className="cursor-pointer border-bottom-0 text-secondary text-uppercase small fw-bold text-center" style={{ cursor: 'pointer' }}>
+                    <div className="d-flex align-items-center justify-content-center gap-1">
+                        Score
+                        {sortConfig.key === 'score' && (sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+                    </div>
+                  </th>
+
+                  <th onClick={() => requestSort('created_at')} className="cursor-pointer border-bottom-0 text-secondary text-uppercase small fw-bold" style={{ cursor: 'pointer' }}>
+                    <div className="d-flex align-items-center gap-1">
+                        Inscription
+                        {sortConfig.key === 'created_at' && (sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+                    </div>
+                  </th>
+
+                  <th className="text-center border-bottom-0 text-secondary text-uppercase small fw-bold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1138,108 +1222,134 @@ const UserManagement = () => {
                         <td>
                           <div className="d-flex align-items-center">
                             <div
-                              className="rounded-circle bg-primary overflow-hidden text-white d-flex align-items-center justify-content-center me-2"
+                              className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3 shadow-sm"
                               style={{
-                                width: '40px',
-                                height: '40px',
-                                fontSize: '16px',
-                                fontWeight: '600',
+                                width: '45px',
+                                height: '45px',
+                                fontSize: '18px',
+                                fontWeight: 'bold',
                               }}
                             >
                               {user.avatar_url ? (
                                 <img
                                   src={user.avatar_url}
                                   alt={user.name || 'Avatar'}
-                                  className="w-100 h-100 object-fit-cover"
-                                  style={{ objectFit: 'cover' }}
+                                  className="w-100 h-100 rounded-circle object-fit-cover"
                                 />
                               ) : (
-                                (user.name?.charAt(0) || '?').toUpperCase()
+                                (user.name?.charAt(0) || user.first_name?.charAt(0) || user.email?.charAt(0) || '?').toUpperCase()
                               )}
                             </div>
-                            <div>
-                              <div className="fw-semibold">{user.name || 'N/A'}</div>
-                              <small className="text-muted">{user.email || 'N/A'}</small>
+                            <div className="d-flex flex-column">
+                              <span className="fw-bold text-dark">{user.name || 'Inconnu'} {user.first_name}</span>
+                              <small className="text-muted" style={{ fontSize: '0.85em' }}>{user.email || 'N/A'}</small>
                             </div>
                           </div>
                         </td>
-                        <td>{getRoleBadge(user.role)}</td>
-                        <td>{getStatusBadge(user.status, user.is_active)}</td>
+                        
                         <td>
-                          <small className="text-muted">
-                            {user.date_cx
+                            <div className="d-flex flex-column gap-1 align-items-start">
+                                {getRoleBadge(user.role)}
+                                {getStatusBadge(user.status, user.is_active)}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div className="text-muted small fw-medium">
+                                {user.date_cx
                               ? new Date(user.date_cx).toLocaleDateString('fr-FR', {
                                   day: '2-digit',
-                                  month: 'long',
+                                  month: 'short',
                                   year: 'numeric',
                                 })
                               : 'Jamais'}
-                          </small>
+                            </div>
+                            <small className="text-muted" style={{ fontSize: '0.75em' }}>
+                                {user.date_cx ? new Date(user.date_cx).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}) : ''}
+                            </small>
                         </td>
-                        <td>
-                          <span className="badge bg-info text-dark">
-                            {user.quiz_completed || user.quizCompleted || 0}
-                          </span>
+
+                        <td className="text-center">
+                           <span className="badge bg-light text-dark border fw-normal px-3 py-2 rounded-pill">
+                                {user.quiz_completed || user.quizCompleted || 0}
+                           </span>
                         </td>
-                        <td>
-                          <span className="fw-semibold text-success">
-                            {user.total_points || user.score || 0} pts
-                          </span>
+
+                        <td className="text-center">
+                            <span className="fw-bold text-primary">
+                                {user.total_points || user.score || 0}
+                            </span>
                         </td>
+
                         <td>
-                          <span
-                            className={`badge ${user.is_active === 1 ? 'bg-success' : user.is_active === 0 ? 'bg-danger' : 'bg-secondary'}`}
-                          >
-                            {user.is_active === 1
-                              ? 'Valid'
-                              : user.is_active === 0
-                                ? 'Not valid'
-                                : 'N/A'}
-                          </span>
-                        </td>
-                        <td>
-                          <small className="text-muted">
-                            {user.created_at
+                            <div className="text-muted small">
+                                {user.created_at
                               ? new Date(user.created_at).toLocaleDateString('fr-FR', {
                                   day: '2-digit',
-                                  month: 'long',
+                                  month: 'short',
                                   year: 'numeric',
                                 })
-                              : 'Jamais'}
-                          </small>
+                              : 'N/A'}
+                            </div>
                         </td>
+
                         <td>
-                          <div className="d-flex gap-2 justify-content-center">
+                          <div className="d-flex gap-1 justify-content-center">
                             <button
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-light text-secondary border-0 rounded-circle"
                               onClick={() => openModal('view', user)}
                               title="Voir détails"
                             >
                               <FaEye />
                             </button>
                             <button
-                              className="btn btn-sm btn-outline-warning"
+                              className="btn btn-sm btn-light text-primary border-0 rounded-circle"
                               onClick={() => openModal('edit', user)}
                               title="Modifier"
                             >
                               <FaEdit />
                             </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => openModal('delete', user)}
-                              title="Supprimer"
-                              disabled={!isAdmin}
-                            >
-                              <FaTrash />
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-warning"
-                              onClick={() => handleBanSingle(user)}
-                              title="Bannir"
-                              disabled={!isAdmin}
-                            >
-                              <FaBan />
-                            </button>
+                            
+                             {isAdmin && (
+                              <>
+                                <button
+                                  className={`btn btn-sm btn-light border-0 rounded-circle ${
+                                    user.is_active ? 'text-warning' : 'text-success'
+                                  }`}
+                                  onClick={() => handleToggleActive(user)}
+                                  title={user.is_active ? 'Bannir' : 'Activer'}
+                                >
+                                  {user.is_active ? <FaBan className="text-dark" /> : <FaCheckCircle />}
+                                </button>
+                                <button
+                                        className="btn btn-sm btn-danger text-white border-0 shadow-sm rounded-circle"
+                                        style={{ marginLeft: '4px' }}
+                                        onClick={async () => {
+                                          if (
+                                            window.confirm(
+                                              `ATTENTION : Suppression DÉFINITIVE de ${user.name} ?\nCette action est irréversible.`
+                                            )
+                                          ) {
+                                            try {
+                                              await authService.hardDeleteUser(user.user_id || user.id);
+                                              setUsers((prev) =>
+                                                prev.filter(
+                                                  (u) => (u.user_id || u.id) !== (user.user_id || user.id)
+                                                )
+                                              );
+                                              alert('Utilisateur supprimé définitivement.');
+                                            } catch (err) {
+                                              console.error(err);
+                                              alert(err.message || 'Erreur lors de la suppression');
+                                            }
+                                          }
+                                        }}
+                                        title="Suppression DÉFINITIVE"
+                                      >
+                                        <FaSkull />
+                                      </button>
+                                </>
+                             )}
                           </div>
                         </td>
                       </tr>
@@ -1247,8 +1357,12 @@ const UserManagement = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="9" className="text-center py-4 text-muted">
-                      Aucun utilisateur trouvé
+                    <td colSpan="8" className="text-center py-5">
+                      <div className="text-muted d-flex flex-column align-items-center">
+                        <FaSearch size={32} className="mb-3 opacity-50" />
+                        <p className="mb-0">Aucun utilisateur trouvé.</p>
+                        <small>Essayez de modifier vos filtres.</small>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -1297,54 +1411,59 @@ const UserManagement = () => {
           style={{ zIndex: 1000 }}
         >
           <div className="card border-0 shadow-lg">
-            <div className="card-body d-flex align-items-center gap-3">
-              <span className="fw-semibold">
-                {selectedUsers.length} utilisateur(s) sélectionné(s)
+            <div className="card-body d-flex align-items-center gap-3 p-2 ps-3">
+              <span className="fw-bold text-primary">
+                {selectedUsers.length} <span className="fw-normal text-muted">sélectionné(s)</span>
               </span>
-              <div className="vr"></div>
+              
+              <div className="vr mx-1"></div>
 
-              {/* Sélecteur de mode */}
-              <select
-                className="form-select form-select-sm w-auto"
-                value={bulkMode}
-                onChange={(e) => setBulkMode(e.target.value)}
-                disabled={!isAdmin}
-              >
-                <option value="active">Mode: Active</option>
-                <option value="not_valid">Mode: Not valid</option>
-                <option value="suspended">Mode: Suspendu</option>
-                <option value="deleted">Mode: Supprimé</option>
-              </select>
-              <button
-                className="btn btn-sm btn-secondary"
-                onClick={handleApplyBulkMode}
-                disabled={!isAdmin}
-              >
-                Appliquer
-              </button>
+              {/* Statuts */}
+              <div className="d-flex align-items-center gap-2">
+                  <select
+                    className="form-select form-select-sm border-0 bg-light rounded-pill fw-medium"
+                    value={bulkMode}
+                    onChange={(e) => setBulkMode(e.target.value)}
+                    disabled={!isAdmin}
+                    style={{ minWidth: '130px' }}
+                  >
+                    <option value="active">Activer</option>
+                    <option value="not_valid">Invalider</option>
+                    <option value="suspended">Suspendre</option>
+                    <option value="deleted">Corbeille</option>
+                  </select>
+                  <button
+                    className="btn btn-sm btn-dark rounded-pill px-3"
+                    onClick={handleApplyBulkMode}
+                    disabled={!isAdmin}
+                    title="Appliquer le statut"
+                  >
+                    OK
+                  </button>
+              </div>
 
-              <div className="vr"></div>
+              <div className="vr mx-1"></div>
+
+              {/* Actions destructives */}
+              <div className="d-flex gap-2">
+                 <button
+                    className="btn btn-sm btn-danger text-white shadow-sm d-flex align-items-center gap-2 rounded-pill px-3"
+                    onClick={handleBulkHardDelete}
+                    disabled={!isAdmin}
+                    title="Suppression DÉFINITIVE"
+                  >
+                    <FaSkull /> <span className="d-none d-sm-inline">Définitif</span>
+                  </button>
+              </div>
+              
+              <div className="vr mx-1"></div>
+
               <button
-                className="btn btn-sm btn-danger"
-                onClick={handleBulkDelete}
-                disabled={!isAdmin}
-              >
-                <FaTrash className="me-2" />
-                Supprimer
-              </button>
-              <button
-                className="btn btn-sm btn-warning"
-                onClick={handleBulkBan}
-                disabled={!isAdmin}
-              >
-                <FaBan className="me-2" />
-                Bannir
-              </button>
-              <button
-                className="btn btn-sm btn-outline-secondary"
+                className="btn btn-sm btn-light text-secondary rounded-circle"
                 onClick={() => setSelectedUsers([])}
+                title="Annuler"
               >
-                Annuler
+                ✕
               </button>
             </div>
           </div>
@@ -1401,7 +1520,7 @@ const UserManagement = () => {
                             style={{ objectFit: 'cover' }}
                           />
                         ) : (
-                          (currentUser.name?.charAt(0) || '?').toUpperCase()
+                          (currentUser.name?.charAt(0) || currentUser.first_name?.charAt(0) || currentUser.email?.charAt(0) || '?').toUpperCase()
                         )}
                       </div>
                       <h5 className="fw-bold">{currentUser.name || 'N/A'}</h5>
@@ -1457,6 +1576,7 @@ const UserManagement = () => {
                         <input
                           type="text"
                           className="form-control bg-secondary text-light border-0"
+                          placeholder="Nom de famille"
                           value={formData?.name || ''}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
@@ -1466,6 +1586,7 @@ const UserManagement = () => {
                         <input
                           type="text"
                           className="form-control bg-secondary text-light border-0"
+                          placeholder="Prénom(s)"
                           value={formData?.firstName || ''}
                           onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                         />
@@ -1476,6 +1597,7 @@ const UserManagement = () => {
                       <input
                         type="email"
                         className="form-control bg-secondary text-light border-0"
+                        placeholder="exemple@email.com"
                         value={formData?.email || ''}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
@@ -1510,7 +1632,7 @@ const UserManagement = () => {
 
               {/* ------------------------- Footer ------------------------- */}
               <div className="modal-footer border-top border-secondary">
-                <button type="button" className="btn btn-outline-light" onClick={closeModal}>
+                <button type="button" className="btn btn-secondary text-white" onClick={closeModal}>
                   {modalType === 'view' ? 'Fermer' : 'Annuler'}
                 </button>
                 {modalType !== 'view' && (
@@ -1523,13 +1645,6 @@ const UserManagement = () => {
           </div>
         </div>
       )}
-
-      <style>{`
-        .user-management .table-hover tbody tr:hover {
-          background-color: rgba(59, 130, 246, 0.05);
-          position: relative;
-        }
-      `}</style>
 
     </div>
   );
