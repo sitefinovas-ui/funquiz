@@ -5,7 +5,7 @@ import {
   updateMessage,
   deleteMessage,
 } from "../models/messageModel.js";
-import { mailMessageReply, mailMessageReceived } from "../utils/mail.js";
+import { mailAdminDirect, mailMessageReply, mailMessageReceived } from "../utils/mail.js";
 
 // ✅ Récupérer tous les messages
 export const allMessageData = async (req, res) => {
@@ -92,13 +92,19 @@ export const editMessage = async (req, res) => {
 // ✅ Envoyer un email direct (admin)
 export const sendEmailDirect = async (req, res) => {
   try {
-    const { email, name, subject, content } = req.body;
+    const { email, name, firstname, subject, content } = req.body;
     if (!email || !subject || !content) {
       return res
         .status(400)
         .json({ error: "Les champs email, subject et content sont requis." });
     }
-    await mailMessageReply(email, name || "Utilisateur", content, subject);
+    await mailAdminDirect({
+      email,
+      name: name || "Utilisateur",
+      firstname: firstname || "",
+      subject,
+      content,
+    });
     return res.status(200).json({ success: true, message: "Email envoyé" });
   } catch (error) {
     res.status(500).json({ error: error.message });

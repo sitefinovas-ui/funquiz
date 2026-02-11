@@ -117,7 +117,18 @@ export const initializeWhatsApp = async () => {
 
   if (!initializing && !waReady) {
     initializing = true;
-    await waClient.initialize();
+    try {
+      await waClient.initialize();
+    } catch (err) {
+      initializing = false;
+      const msg = String(err?.message || "");
+      if (msg.includes("already running")) {
+        waReady = false;
+        console.error("⚠️ Navigateur déjà actif pour cette session. Ignoré.");
+        return;
+      }
+      throw err;
+    }
   }
 }
 
@@ -160,3 +171,12 @@ export { waClient };
 
 // Supprimer cette ligne qui cause l'erreur
 // export default client;
+
+const shutdown = async () => {
+  try {
+    await waClient?.destroy();
+  } catch {}
+};
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+process.on("exit", shutdown);

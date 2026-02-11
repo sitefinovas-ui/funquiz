@@ -101,6 +101,36 @@ export const sendResetCodeEmail = async (email, firstName, resetCode) => {
     return { success: false, message: error.message };
   }
 };
+
+export const sendOtpEmail = async (email, firstName, otpCode, ttlMinutes = 10) => {
+  try {
+    const emailContent = {
+      from: '"FunQuiz" <no-reply@funquiz.com>',
+      to: email,
+      subject: "Code de vérification FunQuiz 🔐",
+      html: `
+        <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;">
+          <div style="background-color:#1c1c1c;padding:20px;text-align:center;">
+            <h1 style="color:#ffffff;">Vérification du compte</h1>
+          </div>
+          <div style="padding:20px;">
+            <p>Bonjour ${firstName || ""},</p>
+            <p>Voici votre code de vérification :</p>
+            <h2 style="text-align:center;color:#1c1c1c;">${otpCode}</h2>
+            <p>Ce code est valable ${ttlMinutes} minutes.</p>
+            <p>Si vous n'êtes pas à l'origine de cette demande, ignorez ce mail.</p>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(emailContent);
+    return { success: true, message: "Code OTP envoyé par email" };
+  } catch (error) {
+    console.error("Erreur envoi email OTP:", error);
+    return { success: false, message: error.message };
+  }
+};
 // -----------------------------
 // Email de suppression de compte
 // -----------------------------
@@ -287,6 +317,38 @@ export const mailMessageReceived = async (email, name, subject, userContent) => 
   }
 };
 
+export const senMailNews = async (email, subject, userContent) => {
+  try {
+    const emailContent = {
+      from: `"FunQuiz Support 📥" <no-reply@funquiz.com>`,
+      to: email,
+      subject: `${subject ? ` — ${subject}` : ''}`,
+      html: `
+        <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+         
+          <div style="padding:20px;">
+            ${subject ? `<p><strong>Sujet :</strong> ${subject}</p>` : ''}
+            ${userContent ? `
+              <div style="background:#f5f5f5;border-radius:4px;padding:15px;margin:15px 0;">
+                <p style="margin:0;line-height:1.6;">${userContent}</p>
+              </div>
+            ` : ''}
+            <p>Vous pouvez répondre directement à cet email pour nous fournir plus de détails si besoin.</p>
+            <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee;">
+              <p style="color:#666;margin:0;">🚀 L'équipe FunQuiz</p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(emailContent);
+    return { success: true, message: "Accusé de réception envoyé" };
+  } catch (error) {
+    console.error("❌ Erreur mailMessageReceived:", error);
+    return { success: false, message: error.message };
+  }
+};
 export const mailMessageReply = async (email, name, content, subject = "Réponse à votre message") => {
   try {
     const emailContent = {
@@ -317,6 +379,45 @@ export const mailMessageReply = async (email, name, content, subject = "Réponse
     return { success: true, message: "Email de réponse envoyé" };
   } catch (error) {
     console.error("❌ Erreur mailMessageReply:", error);
+    return { success: false, message: error.message };
+  }
+};
+
+export const mailAdminDirect = async ({ email, name, firstname, subject, content }) => {
+  if (process.env.DISABLE_EMAILS === "true") {
+    return { skipped: true };
+  }
+  try {
+    const safeSubject = String(subject || "").trim() || "Message FunQuiz";
+    const recipientName = firstname || name || "Utilisateur";
+    const body = String(content || "").trim();
+
+    const emailContent = {
+      from: `"FunQuiz" <no-reply@funquiz.com>`,
+      to: email,
+      subject: safeSubject,
+      html: `
+        <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+          <div style="background-color:#1c1c1c;padding:20px;text-align:center;">
+            <h1 style="color:#fff;margin:0;">Message FunQuiz</h1>
+          </div>
+          <div style="padding:20px;">
+            <h2>Bonjour ${recipientName},</h2>
+            <div style="background:#f5f5f5;border-radius:4px;padding:15px;margin:15px 0;">
+              <p style="margin:0;line-height:1.6;">${body}</p>
+            </div>
+            <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee;">
+              <p style="color:#666;margin:0;">🚀 L'équipe FunQuiz</p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(emailContent);
+    return { success: true, message: "Email envoyé" };
+  } catch (error) {
+    console.error("❌ Erreur mailAdminDirect:", error);
     return { success: false, message: error.message };
   }
 };

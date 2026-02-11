@@ -18,6 +18,7 @@ import {
   setUserVerified,
   findUserByEmail,
   insertUserBasic,
+  deleteUserHard,
 } from "../models/authModel.js";
 import pkg from "whatsapp-web.js";
 import xlsx from "xlsx";
@@ -28,6 +29,7 @@ import {
   mailInscription,
   mailConnected,
   sendResetCodeEmail,
+  sendOtpEmail,
   mailAccountDeleted,
   mailUpdateProfile,
 } from "../utils/mail.js";
@@ -59,6 +61,50 @@ function formatWhatsAppId(number) {
   return `${number}@c.us`;
 }
 
+async function sendSmsTwilio({ to, body }) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM_NUMBER;
+  if (!accountSid || !authToken || !from) {
+    const err = new Error("Twilio non configuré");
+    err.code = "TWILIO_NOT_CONFIGURED";
+    throw err;
+  }
+  const toStr = String(to || "").trim();
+  const e164Ok = /^\+\d{8,15}$/.test(toStr);
+  if (!e164Ok) {
+    const err = new Error("Numéro invalide pour SMS (format requis: +XXXXXXXXXXX)");
+    err.code = "INVALID_E164";
+    throw err;
+  }
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+  const params = new URLSearchParams();
+  params.set("To", toStr);
+  params.set("From", from);
+  params.set("Body", String(body || ""));
+
+  const basic = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
+  });
+
+  const data = await resp.json().catch(() => null);
+  if (!resp.ok) {
+    const msg = data?.message || `Twilio error (${resp.status})`;
+    const err = new Error(msg);
+    err.code = "TWILIO_SEND_FAILED";
+    err.details = data;
+    throw err;
+  }
+  return data;
+}
+
 // Retourne l'utilisateur courant à partir du token (pour /auth/me)
 export const me = (req, res) => {
   res.status(200).json(req.user);
@@ -71,6 +117,30 @@ export const allUsers = async (req, res) => {
     const users = await getAllUsers();
     res.status(200).json(users);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// -----------------------------
+// 7️⃣ bis Hard Delete (Temp)
+// -----------------------------
+export const hardDeleteUser = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Action réservée aux administrateurs." });
+    }
+    const { user_id } = req.body;
+    if (!user_id) return res.status(400).json({ error: "user_id requis" });
+
+    // Suppression définitive
+    await deleteUserHard(user_id);
+
+    // Supprimer aussi l'avatar s'il existe (optionnel mais propre)
+    // On ne le fait pas ici pour faire simple et "temporaire"
+
+    res.status(200).json({ message: "Utilisateur supprimé définitivement (Hard Delete)." });
+  } catch (error) {
+    console.error("❌ hardDeleteUser:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -404,11 +474,18 @@ export const deleteUserWithFeedback = async (req, res) => {
 
     const { user_id, reason, comment } = req.body;
 
-    if (!reason)
-      return res.status(400).json({ error: "La raison est obligatoire" });
+    if (!user_id) {
+      return res.status(400).json({ error: "user_id requis" });
+    }
+
+    const safeReason = reason || "admin_remove";
 
     // 1️⃣ Enregistrer le feedback
-    await createFeedback({ user_id, reason, comment });
+    try {
+      await createFeedback({ user_id, reason: safeReason, comment });
+    } catch (e) {
+      console.error("deleteUserWithFeedback createFeedback:", e);
+    }
 
     // 2️⃣ Supprimer l'utilisateur (soft delete)
     await deleteUserSoft(user_id);
@@ -556,14 +633,49 @@ export async function sendOtp(req, res) {
     `;
 
     try {
+      await sendSmsTwilio({ to: number, body: message });
+      return res.json({
+        success: true,
+        channel: "sms",
+        message: "OTP envoyé par SMS.",
+      });
+    } catch (e) {
+      if (e?.code === "INVALID_E164") {
+        return res.status(400).json({ error: e.message });
+      }
+    }
+
+    try {
       await ensureWhatsAppReady();
       await ensureWhatsAppConnected(); // état strict CONNECTED
     } catch (e) {
+      const email = user?.email;
+      if (email) {
+        const r = await sendOtpEmail(email, user.first_name || user.name || "", otp, OTP_TTL_MINUTES);
+        if (r?.success) {
+          return res.json({
+            success: true,
+            channel: "email",
+            message: "OTP envoyé par email (fallback).",
+          });
+        }
+      }
       return res.status(503).json({ error: "WhatsApp non prêt", details: e.message });
     }
 
     const numberId = await waClient.getNumberId(String(number)).catch(() => null);
     if (!numberId || !numberId._serialized) {
+      const email = user?.email;
+      if (email) {
+        const r = await sendOtpEmail(email, user.first_name || user.name || "", otp, OTP_TTL_MINUTES);
+        if (r?.success) {
+          return res.json({
+            success: true,
+            channel: "email",
+            message: "OTP envoyé par email (fallback).",
+          });
+        }
+      }
       return res.status(400).json({ error: "Numéro WhatsApp invalide ou non trouvable" });
     }
 
@@ -571,6 +683,7 @@ export async function sendOtp(req, res) {
 
     return res.json({
       success: true,
+      channel: "whatsapp",
       message: "OTP envoyé via WhatsApp.",
       waStatus: sendResult?.id || null,
     });

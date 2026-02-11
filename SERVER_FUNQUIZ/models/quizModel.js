@@ -65,7 +65,14 @@ export const getAllQuizData = async () => {
 
 FROM quiz_thematics t
 LEFT JOIN quiz_sub_thematics st ON st.thematic_id = t.thematic_id
-GROUP BY t.thematic_id;
+GROUP BY 
+  t.thematic_id,
+  t.title,
+  t.description,
+  t.icon_url,
+  t.color_code,
+  t.is_active,
+  t.updated_at;
   `;
 
   const [rows] = await db.query(sql);
@@ -118,7 +125,7 @@ export const getUserTotalPoints = async (user_id) => {
      FROM funquiz_users u
      LEFT JOIN quiz_game_history gh ON u.user_id = gh.user_id
      WHERE u.user_id = ?
-     GROUP BY u.user_id`,
+     GROUP BY u.user_id, u.first_name, u.name`,
     [user_id],
   );
 

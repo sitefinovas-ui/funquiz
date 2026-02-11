@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import createError from "http-errors";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
+import jwt from "jsonwebtoken";
+
 import { connectDB } from "./config/db.js";
 import { logger } from "./middleware/logger.js";
 import compression from "compression";
@@ -17,20 +20,47 @@ import quizStatsRoutes from "./routes/quizStatsRoute.js";
 import quizUserSessionRoutes from "./routes/quizUserSessionRoutes.js";
 import logsRoutes from "./routes/logsRoute.js";
 import publiciteRoutes from "./routes/publiciteRoute.js";
+import privateMessageRoutes from "./routes/privateMessageRoute.js";
+import adminRoutes from "./routes/adminRoute.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import { listPublicites } from "./controllers/publiciteController.js";
-
-// -----------------------------
-// Configuration initiale
-// -----------------------------
-dotenv.config();
+import { createPrivateMessage, markThreadRead } from "./models/privateMessageModel.js";
+import db from "./config/db.js";
 
 const app = express();
-const PORT = process.env.PORT ;
-const IP = process.env.IP ;
+const PORT = Number(process.env.PORT) || 5100;
+const IP = process.env.IP || "0.0.0.0";
+const JWT_SECRET = process.env.JWT_SECRET || "votre_clÇ¸_secrÇùte";
 
-// Helpers pour chemins ES modules
+const isStaffRole = (role) => role === "admin" || role === "moderator";
+const canMessagePair = ({ senderRole, receiverRole }) => {
+  const senderStaff = isStaffRole(senderRole);
+  const receiverStaff = isStaffRole(receiverRole);
+  if (senderStaff && !receiverStaff) return true;
+  if (!senderStaff && receiverStaff) return true;
+  return false;
+};
+
+const getUserRoleById = async (userId) => {
+  const [rows] = await db.query(`SELECT role FROM funquiz_users WHERE user_id = ? LIMIT 1`, [
+    Number(userId),
+  ]);
+  return rows?.[0]?.role || null;
+};
+
+const allowedOrigins = [
+  "http://192.168.1.26:31",
+  "http://localhost:5173",
+  "http://localhost:31",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+const isOriginAllowed = (origin) => {
+  const allowLan = origin && origin.startsWith("http://192.168.");
+  return !origin || allowedOrigins.includes(origin) || allowLan;
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -87,12 +117,14 @@ app.use(
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
       const allowedOrigins = [
-        "https://funquiz-7k43.onrender.com", // frontend Render (prod)
-        "http://localhost:31",              // front Vite local (corrigé)
+        "http://192.168.1.26:31", // frontend Render (prod)
+        "http://localhost:5173",              // front Vite local
+        "http://localhost:31",                // fallback si PORT dev est 31
         process.env.FRONTEND_URL,             // override via env si défini
       ].filter(Boolean);
 
-      if (!origin || allowedOrigins.includes(origin)) {
+      const allowLan = origin && origin.startsWith("http://192.168.");
+      if (!origin || allowedOrigins.includes(origin) || allowLan) {
         callback(null, true);
       } else {
         console.error("❌ Origine non autorisée:", origin);
@@ -120,11 +152,10 @@ app.use((req, res, next) => {
 });
 
 
-
-// -----------------------------
 // Middleware : rendre "uploads" public
 // -----------------------------
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // -----------------------------
 // Ajout automatique du BASE_URL sur les champs *_url
@@ -174,10 +205,12 @@ app.use(
   commentRoutes,
   newsletterRoutes,
   messageRoutes,
+  privateMessageRoutes,
   quizStatsRoutes,
   quizUserSessionRoutes,
   logsRoutes,
   publiciteRoutes,
+  adminRoutes,
   (await import("./routes/legalCguRoute.js")).default,
   (await import("./routes/legalPrivacyRoute.js")).default,
   (await import("./routes/legalCookiesRoute.js")).default,
@@ -219,30 +252,128 @@ app.use((err, req, res, next) => {
   });
 });
 
+
 // -----------------------------
-// 🚀 Lancement du serveur
+// Lancement du serveur
 // -----------------------------
 const startServer = async () => {
   try {
     await connectDB();
+  } catch (error) {
+    console.error("[startup] Database connection failed:", error);
+    process.exit(1);
+  }
+
+  try {
     await initializeWhatsApp();
-    const server = app.listen(PORT, IP, () => {
-      console.log(
-        `🚀 Serveur FunQuiz optimisé lancé sur http://${IP === "0.0.0.0" ? "localhost" : IP}:${PORT}/`
-      );
+  } catch (error) {
+    console.error("[startup] WhatsApp init failed, server will continue:", error?.message || error);
+  }
+
+  try {
+    const httpServer = http.createServer(app);
+    const io = new SocketIOServer(httpServer, {
+      cors: {
+        origin: (origin, callback) => {
+          if (isOriginAllowed(origin)) return callback(null, true);
+          return callback(new Error("Origin not allowed"));
+        },
+        credentials: true,
+      },
     });
 
-    server.on("error", (error) => {
+    io.use((socket, next) => {
+      try {
+        const token =
+          socket.handshake.auth?.token ||
+          (socket.handshake.headers?.authorization || "").split(" ")[1];
+        if (!token) return next(new Error("Token manquant"));
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (!decoded?.user_id) return next(new Error("Token invalide"));
+        socket.user = decoded;
+        return next();
+      } catch (err) {
+        return next(new Error("Token invalide"));
+      }
+    });
+
+    io.on("connection", (socket) => {
+      const userId = socket.user?.user_id;
+      if (userId) socket.join(`user:${userId}`);
+
+      socket.on("private:send", async (payload) => {
+        try {
+          const receiver_id = Number(payload?.toUserId);
+          const content = String(payload?.content || "").trim();
+          if (!receiver_id || !content) return;
+
+          const senderRole = socket.user?.role || "user";
+          const receiverRole = await getUserRoleById(receiver_id);
+          if (!receiverRole) return;
+          if (!canMessagePair({ senderRole, receiverRole })) return;
+
+          const saved = await createPrivateMessage({
+            sender_id: userId,
+            receiver_id,
+            content,
+          });
+
+          io.to(`user:${receiver_id}`).emit("private:message", saved);
+          io.to(`user:${userId}`).emit("private:message", saved);
+        } catch (err) {
+          console.error("Socket private:send error:", err.message);
+        }
+      });
+
+      socket.on("private:read", async (payload) => {
+        try {
+          const other_id = Number(payload?.other_id);
+          if (!other_id) return;
+
+          const myRole = socket.user?.role || "user";
+          const otherRole = await getUserRoleById(other_id);
+          if (!otherRole) return;
+          if (!canMessagePair({ senderRole: myRole, receiverRole: otherRole })) return;
+
+          await markThreadRead(userId, other_id);
+          io.to(`user:${other_id}`).emit("private:read", { by: userId });
+        } catch (err) {
+          console.error("Socket private:read error:", err.message);
+        }
+      });
+    });
+
+    app.set("io", io);
+
+    const listenOn = (host) => {
+      httpServer.listen(PORT, host, () => {
+        console.log(
+          `Server FunQuiz running on http://${host === "0.0.0.0" ? "localhost" : host}:${PORT}/`
+        );
+      });
+    };
+
+    listenOn(IP);
+
+    httpServer.on("error", (error) => {
       if (error.code === "EADDRINUSE") {
-        console.error(`❌ Le port ${PORT} est déjà utilisé.`);
+        console.error(`Port ${PORT} already in use.`);
         process.exit(1);
+      } else if (error.code === "EADDRNOTAVAIL") {
+        const fallbackHost = "0.0.0.0";
+        console.error(`Address ${IP} not available, falling back to ${fallbackHost}`);
+        try {
+          httpServer.close(() => listenOn(fallbackHost));
+        } catch {
+          listenOn(fallbackHost);
+        }
       } else {
-        console.error("❌ Erreur serveur :", error);
+        console.error("Server error:", error);
         process.exit(1);
       }
     });
   } catch (error) {
-    console.error("❌ Erreur de connexion à la base de données :", error);
+    console.error("[startup] Server failed to start:", error);
     process.exit(1);
   }
 };

@@ -121,6 +121,9 @@ export const addNewsletter = async (req, res) => {
 
     return res.status(201).json(newNewsletter);
   } catch (error) {
+    if (error?.code === "ER_DUP_ENTRY" || /duplicate entry/i.test(error?.message || "")) {
+      return res.status(409).json({ message: "Cet email est déjà abonné." });
+    }
     return res
       .status(500)
       .json({ message: "Erreur serveur lors de la création de l'abonnement." });

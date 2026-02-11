@@ -17,7 +17,11 @@ export const getUserById = async (user_id) => {
 // -----------------------------
 export const getAllUsers = async () => {
   try {
-    const [rows] = await db.query("SELECT * FROM funquiz_users ");
+    const [rows] = await db.query(`
+      SELECT u.*, 
+      (SELECT COUNT(*) FROM quiz_game_history h WHERE h.user_id = u.user_id) as quiz_completed
+      FROM funquiz_users u
+    `);
     return rows;
   } catch (error) {
     console.error("❌ getAllUsers:", error);
@@ -48,12 +52,19 @@ export const registerUser = async (data) => {
     // 🕓 Date actuelle (inscription et première connexion)
     const now = new Date();
 
-    // 💾 Insertion dans la base avec date_cx
+    // 🧮 Génère un user_id si la colonne n'est pas AUTO_INCREMENT
+    const [nextRows] = await db.query(
+      "SELECT COALESCE(MAX(user_id), 0) + 1 AS next_id FROM funquiz_users"
+    );
+    const next_id = Number(nextRows?.[0]?.next_id) || 1;
+
+    // 💾 Insertion dans la base avec user_id explicite et date_cx
     const [result] = await db.query(
       `INSERT INTO funquiz_users 
-      (name, first_name, email, number, password_hash, google_id, avatar_url, role, date_cx)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (user_id, name, first_name, email, number, password_hash, google_id, avatar_url, role, is_active, date_cx)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        next_id,
         name,
         first_name,
         email,
@@ -62,6 +73,7 @@ export const registerUser = async (data) => {
         google_id || null,
         avatar_url || null,
         role || "user",
+        1,
         now,
       ],
     );
@@ -109,7 +121,11 @@ export const loginUser = async (email, password) => {
       throw err;
     }
 
-    if (Number(user.is_active) === 0) {
+    const isInactive =
+      user.is_active !== undefined &&
+      user.is_active !== null &&
+      Number(user.is_active) === 0;
+    if (isInactive) {
       const err = new Error(
         "Veuillez contacter le support : votre compte est inactif. Impossible de se connecter."
       );
@@ -161,9 +177,19 @@ export const registerOrLoginGoogleUser = async ({
 
   // Crée un utilisateur Google sans numéro; l’utilisateur l’ajoutera ensuite dans son profil
   const [result] = await db.query(
-    `INSERT INTO funquiz_users (google_id, email, name, first_name, avatar_url, number, date_cx) 
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [google_id, email, name, first_name, avatar_url || null, null, now],
+    `INSERT INTO funquiz_users (user_id, google_id, email, name, first_name, avatar_url, number, is_active, date_cx) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      Number((await db.query("SELECT COALESCE(MAX(user_id), 0) + 1 AS next_id FROM funquiz_users"))[0][0]?.next_id) || 1,
+      google_id,
+      email,
+      name,
+      first_name,
+      avatar_url || null,
+      null,
+      1,
+      now
+    ],
   );
 
   return {
@@ -248,6 +274,7 @@ export const updateUserFields = async (user_id, fields, allowedFields) => {
           [fields.number, user_id]
         );
         if (dup[0]) {
+          console.error(`❌ Duplicate number ${fields.number} found for user_id ${dup[0].user_id} (current user: ${user_id})`);
           const err = new Error("Ce numéro est déjà utilisé par un autre compte.");
           err.code = "NUMBER_ALREADY_IN_USE";
           throw err;
@@ -303,12 +330,31 @@ export const deleteUserSoft = async (user_id) => {
   }
 };
 
+// -----------------------------
+// 7️⃣ bis Suppression DEFINITIVE (Hard Delete) - Temporaire
+// -----------------------------
+export const deleteUserHard = async (user_id) => {
+  try {
+    await db.query('DELETE FROM funquiz_users WHERE user_id = ?', [user_id]);
+    return true;
+  } catch (error) {
+    console.error("❌ deleteUserHard:", error);
+    throw new Error(error.message);
+  }
+};
+
 // Création du feedback
 export const createFeedback = async ({ user_id, reason, comment }) => {
   try {
+    // Génère un id si la colonne n'est pas AUTO_INCREMENT
+    const [rows] = await db.query(
+      "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM user_feedbacks"
+    );
+    const next_id = Number(rows?.[0]?.next_id) || 1;
+
     await db.query(
-      "INSERT INTO user_feedbacks (user_id, reason, comment) VALUES (?, ?, ?)",
-      [user_id, reason, comment],
+      "INSERT INTO user_feedbacks (id, user_id, reason, comment) VALUES (?, ?, ?, ?)",
+      [next_id, user_id, reason, comment],
     );
     console.log("✅ Feedback créé avec succès", { user_id, reason, comment });
     return true;

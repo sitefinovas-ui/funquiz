@@ -18,6 +18,7 @@ import {
   logout,
   me,
   importUsers,
+  hardDeleteUser,
 } from "../controllers/authController.js";
 import {
   authenticateToken,
@@ -52,6 +53,7 @@ router.put(
   updateUserAdmin,
 ); // Modifier profil admin
 router.post("/auth/delete", authenticateToken, deleteUserWithFeedback);
+router.delete("/auth/hard-delete", authenticateToken, authorizeRole(["admin"]), hardDeleteUser);
 // =============================
 // Mot de passe
 // =============================
