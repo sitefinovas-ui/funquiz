@@ -9,6 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "db:railway:import": "node scripts/importRailwayDb.mjs",
     "postinstall": "npx puppeteer browsers install chrome"
   },
   "keywords": [],
