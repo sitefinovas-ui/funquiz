@@ -153,9 +153,6 @@ export const signup = async (req, res) => {
     // Enregistre l'utilisateur
     const user = await registerUser(req.body);
 
-    // Envoie un mail de bienvenue
-    await mailInscription(user.email, user.first_name);
-
     // Crée un token JWT
     const token = jwt.sign(
       {
@@ -174,6 +171,13 @@ export const signup = async (req, res) => {
       message: "Utilisateur inscrit",
       token,
       user,
+    });
+
+    // Fire-and-forget : ne bloque pas la réponse si l'email est lent/indisponible
+    setImmediate(() => {
+      mailInscription(user.email, user.first_name).catch((err) => {
+        console.error("Erreur envoi email inscription:", err?.message || err);
+      });
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -235,13 +239,18 @@ export const login = async (req, res) => {
       JWT_SECRET,
       { expiresIn: "3d" },    );
 
-    await mailConnected(user.email, user.first_name, req.ip);
-
     res.status(200).json({
       message: "Connexion réussie",
       type: "succès",
       token,
       user: { user_id: user.user_id },
+    });
+
+    // Fire-and-forget : ne bloque pas la réponse si l'email est lent/indisponible
+    setImmediate(() => {
+      mailConnected(user.email, user.first_name, req.ip).catch((err) => {
+        console.error("Erreur envoi email connexion:", err?.message || err);
+      });
     });
   } catch (error) {
     res.status(400).json({
