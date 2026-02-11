@@ -170,7 +170,6 @@ export const removeNewsletter = async (req, res) => {
 };
 
 
-
 // Envoyer une newsletter à tous les abonnés et stocker en base
 // Mise à jour du statut confirmed
 export const updateConfirmedStatus = async (req, res) => {
