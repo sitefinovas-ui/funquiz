@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './headDash.css';
 import { PiBellRingingDuotone } from 'react-icons/pi';
 import { MdOutlineMessage } from 'react-icons/md';
+import { FiMenu } from 'react-icons/fi';
 import messageServices from '../../../../../configurations/Services/messageServices.js';
 import quizStatsServices from '../../../../../configurations/Services/quizStatsServices.js';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -122,7 +123,7 @@ const HeadDash = ({ onOpenSidebar }) => {
           aria-label="Ouvrir le menu"
           onClick={() => onOpenSidebar && onOpenSidebar()}
         >
-          ≡
+          <FiMenu />
         </button>
         <div className="head-dash-title-wrap min-w-0">
           <div className="head-dash-title text-truncate">{getTitle(location.pathname)}</div>

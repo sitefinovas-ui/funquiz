@@ -385,7 +385,7 @@ export default function Comment() {
 
   return (
     <div className="container py-3">
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
         <h2 className="mb-0 text-dark">Gestion des commentaires</h2>
         <button className="btn btn-primary d-flex align-items-center gap-2" onClick={openAddForm}>
           <FaPlus /> <span>Ajouter</span>
@@ -393,10 +393,10 @@ export default function Comment() {
       </div>
 
       {/* Barre de recherche */}
-      <div className="mb-3 bg-white rounded-4 justify-content-between d-flex align-items-center p-4 gap-2">
+      <div className="mb-3 bg-white rounded-4 justify-content-between d-flex flex-column flex-md-row align-items-stretch align-items-md-center p-4 gap-2">
         <div
           className="input-grou d-flex flex-row border border-secondary border-opacity-50 rounded-4 overflow-hidden"
-          style={{ width: '520px' }}
+          style={{ width: '100%', maxWidth: '520px' }}
         >
           <span className="input-group-text rounded-0 ">
             <FaSearch color='#000' />
@@ -457,7 +457,7 @@ export default function Comment() {
               </label>
             </div>
 
-            <div className="d-flex gap-2">
+            <div className="d-flex flex-wrap gap-2">
               {formMode === 'add' ? (
                 <button className="btn btn-primary" onClick={handleCreate} disabled={submitting}>
                   {submitting ? <FaSpinner className="spin" /> : 'Créer'}
@@ -480,7 +480,7 @@ export default function Comment() {
       )}
 
       {selectedIds.size > 0 && (
-        <div className="d-flex align-items-center gap-2 mb-3">
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
           <span className="text-light">{selectedIds.size} sélectionné(s)</span>
           <button className="btn btn-success btn-sm" onClick={bulkApprove} disabled={bulkLoading}>
             Approuver

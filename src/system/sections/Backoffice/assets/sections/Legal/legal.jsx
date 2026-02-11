@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Modal, Form, Input, Button, message, Radio } from 'antd';
+import { Card, Table, Modal, Form, Input, Button, message, Radio, Grid } from 'antd';
 import cguServices from '../../../../../configurations/Services/cguServices.js';
 import privacyPolicyServices from '../../../../../configurations/Services/privacyPolicyServices.js';
 import cookiesPolicyServices from '../../../../../configurations/Services/cookiesPolicyServices.js';
@@ -23,6 +23,11 @@ function Legal() {
 
   const [modal, setModal] = useState({ type: null, item: null });
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const tableSize = isMobile ? 'small' : 'middle';
+  const tableScroll = { x: 'max-content' };
+  const modalWidth = isMobile ? 'calc(100vw - 24px)' : 700;
 
   // === Chargement des données ===
   const loadAll = async () => {
@@ -190,18 +195,17 @@ function Legal() {
       title: 'Actions',
       key: 'actions',
       render: (_, r) => (
-        <>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <Button
             size="small"
             onClick={() => openModal(`${type}-edit`, r)}
-            style={{ marginRight: 8 }}
           >
             Éditer
           </Button>
           <Button danger size="small" onClick={() => deleteItem(type, r.id)}>
             Supprimer
           </Button>
-        </>
+        </div>
       ),
     },
   ];
@@ -215,18 +219,17 @@ function Legal() {
       title: 'Actions',
       key: 'actions',
       render: (_, r) => (
-        <>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <Button
             size="small"
             onClick={() => openModal('about-edit', r)}
-            style={{ marginRight: 8 }}
           >
             Éditer
           </Button>
           <Button danger size="small" onClick={() => deleteItem('about', r.id)}>
             Supprimer
           </Button>
-        </>
+        </div>
       ),
     },
   ];
@@ -250,6 +253,7 @@ function Legal() {
           value={status}
           onChange={(e) => updateContactStatus(r, e.target.value)}
           size="small"
+          style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
         >
           <Radio.Button value="operationnel">Opérationnel</Radio.Button>
           <Radio.Button value="cacher">Caché</Radio.Button>
@@ -260,18 +264,17 @@ function Legal() {
       title: 'Actions',
       key: 'actions',
       render: (_, r) => (
-        <>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <Button
             size="small"
             onClick={() => openModal('contact-edit', r)}
-            style={{ marginRight: 8 }}
           >
             Éditer
           </Button>
           <Button danger size="small" onClick={() => deleteItem('contact', r.id)}>
             Supprimer
           </Button>
-        </>
+        </div>
       ),
     },
   ];
@@ -289,6 +292,7 @@ function Legal() {
           value={Number(is_active)}
           onChange={(e) => updateFaqStatus(r, e.target.value)}
           size="small"
+          style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
         >
           <Radio.Button value={1}>Actif</Radio.Button>
           <Radio.Button value={0}>Inactif</Radio.Button>
@@ -299,14 +303,14 @@ function Legal() {
       title: 'Actions',
       key: 'actions',
       render: (_, r) => (
-        <>
-          <Button size="small" onClick={() => openModal('faq-edit', r)} style={{ marginRight: 8 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <Button size="small" onClick={() => openModal('faq-edit', r)}>
             Éditer
           </Button>
           <Button danger size="small" onClick={() => deleteItem('faq', r.faq_id)}>
             Supprimer
           </Button>
-        </>
+        </div>
       ),
     },
   ];
@@ -322,13 +326,20 @@ function Legal() {
   };
 
   return (
-    <div className="p-3">
+    <div className="p-2 p-sm-3">
       <Card
         title="CGU"
         extra={<Button onClick={() => openModal('cgu-create')}>Ajouter</Button>}
         loading={loading}
       >
-        <Table dataSource={cgu} columns={columnsCommon('cgu')} rowKey="id" pagination={false} />
+        <Table
+          dataSource={cgu}
+          columns={columnsCommon('cgu')}
+          rowKey="id"
+          pagination={false}
+          size={tableSize}
+          scroll={tableScroll}
+        />
       </Card>
 
       <Card
@@ -342,6 +353,8 @@ function Legal() {
           columns={columnsCommon('privacy')}
           rowKey="id"
           pagination={false}
+          size={tableSize}
+          scroll={tableScroll}
         />
       </Card>
 
@@ -356,6 +369,8 @@ function Legal() {
           columns={columnsCommon('cookies')}
           rowKey="id"
           pagination={false}
+          size={tableSize}
+          scroll={tableScroll}
         />
       </Card>
 
@@ -365,7 +380,14 @@ function Legal() {
         extra={<Button onClick={() => openModal('about-create')}>Ajouter</Button>}
         loading={loading}
       >
-        <Table dataSource={about} columns={aboutColumns} rowKey="id" pagination={false} />
+        <Table
+          dataSource={about}
+          columns={aboutColumns}
+          rowKey="id"
+          pagination={false}
+          size={tableSize}
+          scroll={tableScroll}
+        />
       </Card>
 
       <Card
@@ -374,7 +396,14 @@ function Legal() {
         loading={loading}
         extra={<Button onClick={() => openModal('contact-create')}>Ajouter</Button>}
       >
-        <Table dataSource={contacts} columns={contactColumns} rowKey="id" pagination={false} />
+        <Table
+          dataSource={contacts}
+          columns={contactColumns}
+          rowKey="id"
+          pagination={false}
+          size={tableSize}
+          scroll={tableScroll}
+        />
       </Card>
 
       <Card
@@ -383,7 +412,14 @@ function Legal() {
         loading={loading}
         extra={<Button onClick={() => openModal('faq-create')}>Ajouter</Button>}
       >
-        <Table dataSource={faq} columns={faqColumns} rowKey="faq_id" pagination={false} />
+        <Table
+          dataSource={faq}
+          columns={faqColumns}
+          rowKey="faq_id"
+          pagination={false}
+          size={tableSize}
+          scroll={tableScroll}
+        />
       </Card>
 
       {/* MODAL UNIQUE */}
@@ -420,7 +456,8 @@ function Legal() {
         onOk={saveItem}
         okText="Enregistrer"
         cancelText="Annuler"
-        width={700}
+        width={modalWidth}
+        style={isMobile ? { top: 12 } : undefined}
       >
         <Form form={form} layout="vertical">
           {/* ABOUT */}

@@ -133,7 +133,7 @@
   z-index: 20;
 }
 
-.bo-shell.is-collapsed .bo-sidebar {
+.bo-sidebar.is-collapsed {
   width: var(--bo-sidebar-collapsed);
 }
 
@@ -393,4 +393,41 @@
 
 .bo-root .bg-dark {
   background-color: #3b3530 !important;
+}
+
+/* ---------------------------------------
+   Responsive helpers (Backoffice mobile)
+---------------------------------------- */
+
+.bo-root .ant-table-wrapper,
+.bo-root .ant-table-content {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 576px) {
+  .bo-root .ant-modal {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px auto !important;
+    top: 8px;
+    padding-bottom: 0;
+  }
+
+  .bo-root .ant-modal-content {
+    border-radius: 16px;
+  }
+
+  .bo-root .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .bo-root .btn-group {
+    flex-wrap: wrap;
+  }
+
+  .bo-root .btn-group > .btn {
+    flex: 1 1 auto;
+  }
 }

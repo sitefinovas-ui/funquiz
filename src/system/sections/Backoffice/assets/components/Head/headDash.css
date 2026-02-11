@@ -94,6 +94,12 @@
   z-index: 30;
 }
 
+/* Fix right alignment for notifications */
+.head-dash .dropdown-menu.dropdown-menu-end {
+  right: 0;
+  left: auto;
+}
+
 @keyframes bo-pop {
   from {
     opacity: 0;
@@ -126,6 +132,7 @@
   border-left: 3px solid transparent;
   line-height: 1.5;
   font-weight: 500;
+  white-space: normal; /* Allow text wrapping */
 }
 
 .head-dash .dropdown-item:hover {

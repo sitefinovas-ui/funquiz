@@ -29,14 +29,14 @@ const LogsPage = () => {
 
   return (
     <div className="container-fluid">
-      <div className="d-flex align-items-center justify-content-between mt-3 mb-3">
+      <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mt-3 mb-3">
         <h2 className="h5 mb-0">Rapport console backend</h2>
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
           <select
             value={limit}
             onChange={(e) => setLimit(Number(e.target.value))}
-            className="form-select form-select-sm w-100 m-0"
-            style={{ width: '140px' }}
+            className="form-select form-select-sm m-0 flex-grow-1"
+            style={{ minWidth: '160px' }}
           >
             {[100, 200, 500, 1000, 2000].map((n) => (
               <option key={n} value={n}>
@@ -44,7 +44,7 @@ const LogsPage = () => {
               </option>
             ))}
           </select>
-          <button className="btn btn-primary btn-sm" onClick={() => load()}>
+          <button className="btn btn-primary btn-sm flex-shrink-0" onClick={() => load()}>
             Rafraîchir
           </button>
         </div>

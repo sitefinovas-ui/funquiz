@@ -1570,26 +1570,32 @@ const UserManagement = () => {
                 ) : (
                   <div>
                     {/* Formulaire Add / Edit */}
-                    <div className=" d-flex gap-2">
-                      <div className="mb-3">
-                        <label className="form-label text-light">Nom</label>
-                        <input
-                          type="text"
-                          className="form-control bg-secondary text-light border-0"
-                          placeholder="Nom de famille"
-                          value={formData?.name || ''}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        />
+                    <div className="row g-2">
+                      <div className="col-12 col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label text-light">Nom</label>
+                          <input
+                            type="text"
+                            className="form-control bg-secondary text-light border-0"
+                            placeholder="Nom de famille"
+                            value={formData?.name || ''}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          />
+                        </div>
                       </div>
-                      <div className="mb-3">
-                        <label className="form-label text-light">Prénom(s)</label>
-                        <input
-                          type="text"
-                          className="form-control bg-secondary text-light border-0"
-                          placeholder="Prénom(s)"
-                          value={formData?.firstName || ''}
-                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        />
+                      <div className="col-12 col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label text-light">Prénom(s)</label>
+                          <input
+                            type="text"
+                            className="form-control bg-secondary text-light border-0"
+                            placeholder="Prénom(s)"
+                            value={formData?.firstName || ''}
+                            onChange={(e) =>
+                              setFormData({ ...formData, firstName: e.target.value })
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="mb-3">

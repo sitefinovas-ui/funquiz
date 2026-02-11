@@ -514,6 +514,7 @@ function QuizList() {
         dataSource={thematics}
         columns={columns}
         rowKey="thematic_id"
+        scroll={{ x: 'max-content' }}
         expandable={{
           expandedRowRender: (record) => (
             <>
@@ -528,6 +529,7 @@ function QuizList() {
                 pagination={false}
                 rowKey="sub_thematic_id"
                 size="small"
+                scroll={{ x: 'max-content' }}
                 expandable={{
                   expandedRowRender: (st) => (
                     <Table
@@ -536,6 +538,7 @@ function QuizList() {
                       pagination={false}
                       rowKey="question_id"
                       size="small"
+                      scroll={{ x: 'max-content' }}
                       expandable={{
                         expandedRowRender: (q) => {
                           const answers = Array.isArray(q.answers) ? q.answers : [];
@@ -550,6 +553,7 @@ function QuizList() {
                               pagination={false}
                               rowKey="key"
                               size="small"
+                              scroll={{ x: 'max-content' }}
                             />
                           );
                         },

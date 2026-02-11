@@ -38,7 +38,8 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
   useEffect(() => {
     setIsOpen(false);
     if (onCloseMobile) onCloseMobile();
-  }, [location.pathname, onCloseMobile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return (
     <div className={`sidebar-pro d-flex flex-column ${isCollapsed ? 'collapsed' : 'expanded'}`}>

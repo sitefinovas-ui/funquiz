@@ -463,7 +463,7 @@ function QuizCreate() {
           {/* Import / Export Excel */}
           <div style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 8 }}>Importer via Excel</h3>
-              <div className="d-flex gap-2">
+              <div className="d-flex flex-wrap gap-2">
               {/* Bouton d'import */}
               <Upload
                 beforeUpload={handleExcelImport}

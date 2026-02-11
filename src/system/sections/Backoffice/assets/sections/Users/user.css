@@ -72,3 +72,15 @@
   border-color: var(--bo-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--bo-accent) 18%, transparent);
 }
+
+@media (max-width: 768px) {
+  .user-management .sticky-top {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .user-management thead.sticky-top {
+    position: static !important;
+    top: auto !important;
+  }
+}

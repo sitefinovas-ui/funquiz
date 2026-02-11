@@ -128,7 +128,7 @@ const Messages = () => {
                   onChange={(e) => setPmContent(e.target.value)}
                 />
               </div>
-              <div className="col-12 d-flex gap-2 justify-content-end">
+              <div className="col-12 d-flex flex-wrap gap-2 justify-content-end">
                 <button
                   type="button"
                   className="btn btn-light"

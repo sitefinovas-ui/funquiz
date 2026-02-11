@@ -61,14 +61,25 @@ export default function ResetPassword() {
   const handleRequestCode = async () => {
     setError('');
     setSuccess('');
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Veuillez saisir votre email.');
+      return;
+    }
+    if (normalizedEmail !== email) setEmail(normalizedEmail);
     setLoading(true);
     try {
-      await authService.requestResetPassword(email);
-      setSuccess('Code envoyé par mail.');
+      const resp = await authService.requestResetPassword(normalizedEmail);
+      setSuccess(resp?.message || 'Si un compte existe pour cet email, un code a été envoyé.');
       setStep(2);
       setCooldown(30);
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la demande.');
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          'Erreur lors de la demande.'
+      );
     } finally {
       setLoading(false);
     }
@@ -80,10 +91,12 @@ export default function ResetPassword() {
   };
 
   const handleValidateCode = () => {
-    if (!code || code.trim().length === 0) {
+    const normalizedCode = String(code || '').trim();
+    if (!normalizedCode) {
       setError('Veuillez saisir le code reçu.');
       return;
     }
+    if (normalizedCode !== code) setCode(normalizedCode);
     setError('');
     setSuccess('Code validé avec succès ✅');
     setStep(3);
@@ -93,18 +106,29 @@ export default function ResetPassword() {
     setError('');
     setSuccess('');
     setLoading(true);
+    const normalizedCode = String(code || '').trim();
+    if (!normalizedCode) {
+      setError('Veuillez saisir le code reçu.');
+      setLoading(false);
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setError('Les mots de passe ne correspondent pas.');
       setLoading(false);
       return;
     }
     try {
-      await authService.resetPassword({ email, code, newPassword });
-      setSuccess('Mot de passe réinitialisé 🎉');
+      const resp = await authService.resetPassword({ code: normalizedCode, newPassword });
+      setSuccess(resp?.message || 'Mot de passe réinitialisé 🎉');
       setStep(4);
-      setTimeout(() => navigate('/'), 2500);
+      setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors du changement.');
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          'Erreur lors du changement.'
+      );
     } finally {
       setLoading(false);
     }

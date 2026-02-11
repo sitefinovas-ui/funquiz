@@ -40,6 +40,9 @@ const LayoutDash = () => {
   };
   const layoutMode = localStorage.getItem('bo.layout') === 'compact' ? 'compact' : 'wide';
 
+  // Force sidebar expansion when mobile menu is open
+  const sidebarState = isMobileSidebarOpen ? false : isCollapsed;
+
   return (
     <div className={`bo-root layout-${layoutMode}`}>
       {isMobileSidebarOpen && (
@@ -51,15 +54,15 @@ const LayoutDash = () => {
         />
       )}
 
-      <div className={`bo-shell ${isCollapsed ? 'is-collapsed' : ''}`}>
-        <aside className={`bo-sidebar ${isMobileSidebarOpen ? 'is-open' : ''}`}>
-          <Sidebar
-            isCollapsed={isCollapsed}
-            onToggleCollapse={() => setIsCollapsed((v) => !v)}
-            onCloseMobile={() => setIsMobileSidebarOpen(false)}
-          />
-        </aside>
+      <aside className={`bo-sidebar ${isMobileSidebarOpen ? 'is-open' : ''} ${sidebarState ? 'is-collapsed' : ''}`}>
+        <Sidebar
+          isCollapsed={sidebarState}
+          onToggleCollapse={() => setIsCollapsed((v) => !v)}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        />
+      </aside>
 
+      <div className={`bo-shell ${isCollapsed ? 'is-collapsed' : ''}`}>
         <main className="bo-main">
           <div className="bo-topbar">
             <HeadDash onOpenSidebar={() => setIsMobileSidebarOpen(true)} />

@@ -238,7 +238,7 @@ const QuizStats = () => {
                 pagination={false}
                 size="small"
                 rowKey="user_id"
-                scroll={{ y: 300 }}
+                scroll={{ x: 'max-content', y: 300 }}
               />
             </Card>
           </Col>
@@ -250,7 +250,7 @@ const QuizStats = () => {
                 pagination={false}
                 size="small"
                 rowKey="history_id"
-                scroll={{ y: 300 }}
+                scroll={{ x: 'max-content', y: 300 }}
               />
             </Card>
           </Col>
