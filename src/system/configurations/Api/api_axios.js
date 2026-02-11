@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-function computeBaseURL() {
+function computeBackendOrigin() {
   const envUrl = import.meta.env.VITE_API_URL || '';
   const useProxy = String(import.meta.env.VITE_USE_PROXY || '').toLowerCase() === 'true';
   const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
@@ -18,8 +18,37 @@ function computeBaseURL() {
 
   const sameOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const raw = envUrl || lan || (useProxy ? sameOrigin : '') || 'http://localhost:5100';
-  return raw.endsWith('/api') ? raw : `${raw.replace(/\/+$/, '')}/api`;
+
+  return raw.replace(/\/api\/?$/, '').replace(/\/+$/, '');
 }
+
+function computeBaseURL() {
+  const origin = computeBackendOrigin();
+  const apiBase = origin.endsWith('/api') ? origin : `${origin}/api`;
+  return apiBase.replace(/\/+$/, '');
+}
+
+const normalizeRelativeMediaUrls = (value) => {
+  const origin = computeBackendOrigin();
+  const prefix = (s) => `${origin}${s}`;
+
+  const walk = (node) => {
+    if (!node) return node;
+    if (typeof node === 'string') {
+      if (node.startsWith('/uploads/') || node.startsWith('/public/')) return prefix(node);
+      return node;
+    }
+    if (Array.isArray(node)) return node.map(walk);
+    if (typeof node === 'object') {
+      const out = {};
+      for (const [k, v] of Object.entries(node)) out[k] = walk(v);
+      return out;
+    }
+    return node;
+  };
+
+  return walk(value);
+};
 
 const api = axios.create({
   baseURL: computeBaseURL(),
@@ -47,7 +76,12 @@ api.interceptors.request.use(
 
 // Intercepteur pour les réponses
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response && typeof response.data !== 'undefined') {
+      response.data = normalizeRelativeMediaUrls(response.data);
+    }
+    return response;
+  },
   (error) => {
     if (!error.response) {
       console.error('❌ Aucune réponse du serveur');
@@ -67,3 +101,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+export { computeBackendOrigin };
