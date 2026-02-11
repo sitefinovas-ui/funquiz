@@ -23,10 +23,11 @@ function computeBackendOrigin() {
 }
 
 function computeBaseURL() {
+  const envUrl = import.meta.env.VITE_API_URL || '';
   const useProxy = String(import.meta.env.VITE_USE_PROXY || '').toLowerCase() === 'true';
   const sameOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
-  if (useProxy && sameOrigin) {
+  if (!envUrl && useProxy && sameOrigin) {
     return `${sameOrigin}/api`;
   }
 
