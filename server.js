@@ -51,7 +51,7 @@ const getUserRoleById = async (userId) => {
 
 const allowedOrigins = [
   "http://192.168.1.26:31",
-  "https://funquiz2k25.web.app/",
+  "https://funquiz2k25.web.app",
   "http://localhost:31",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
