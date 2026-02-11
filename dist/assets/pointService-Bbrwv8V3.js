@@ -1,1 +1,0 @@
-import{x as t}from"./index-Br9127To.js";const s={getUserPoints:async r=>{try{return(await t.get(`/point/${r}`)).data}catch(e){throw console.error("Erreur lors de la récupération des points utilisateur :",e),e}},getAllUsersPoints:async()=>{try{return(await t.get("/ranking")).data}catch(r){throw console.error("Erreur lors de la récupération du classement :",r),r}}};export{s as p};

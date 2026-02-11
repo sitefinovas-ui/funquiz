@@ -19,6 +19,11 @@ export default function ThemeSwitcherAdminPage() {
   const [cacheLoading, setCacheLoading] = useState(false);
   const [cacheStatus, setCacheStatus] = useState(null);
 
+  const [waLoading, setWaLoading] = useState(false);
+  const [waError, setWaError] = useState(null);
+  const [waStatus, setWaStatus] = useState(null);
+  const [waQrDataUrl, setWaQrDataUrl] = useState(null);
+
   // États CRUD Publicité
   const [publicites, setPublicites] = useState([]);
   const [pubLoading, setPubLoading] = useState(true);
@@ -78,6 +83,42 @@ export default function ThemeSwitcherAdminPage() {
   // Chargement des publicités
   useEffect(() => {
     fetchPublicites();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer;
+
+    const fetchQr = async () => {
+      if (cancelled) return;
+      setWaLoading(true);
+      setWaError(null);
+      try {
+        const data = await adminServices.getWhatsAppQr();
+        if (cancelled) return;
+        setWaStatus(data?.status ?? null);
+        setWaQrDataUrl(data?.qrDataUrl ?? null);
+      } catch (e) {
+        if (cancelled) return;
+        const msg = e?.response?.data?.error || e?.message || 'Erreur';
+        setWaError(msg);
+        setWaStatus(null);
+        setWaQrDataUrl(null);
+      } finally {
+        if (!cancelled) setWaLoading(false);
+      }
+    };
+
+    const loop = async () => {
+      await fetchQr();
+      timer = window.setInterval(fetchQr, 5000);
+    };
+
+    loop();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearInterval(timer);
+    };
   }, []);
 
   const applyBg = (value) => {
@@ -439,6 +480,60 @@ export default function ThemeSwitcherAdminPage() {
         </div>
       )}
 
+      <h3 className="text-dark mt-4">WhatsApp</h3>
+      <p className="text-muted">Scanne le QR pour connecter le bot WhatsApp.</p>
+
+      <div className="card p-3 mb-3">
+        <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <button
+            className="btn btn-outline-primary"
+            onClick={async () => {
+              try {
+                setWaLoading(true);
+                setWaError(null);
+                const data = await adminServices.getWhatsAppQr();
+                setWaStatus(data?.status ?? null);
+                setWaQrDataUrl(data?.qrDataUrl ?? null);
+              } catch (e) {
+                const msg = e?.response?.data?.error || e?.message || 'Erreur';
+                setWaError(msg);
+              } finally {
+                setWaLoading(false);
+              }
+            }}
+            disabled={waLoading}
+          >
+            {waLoading ? 'Chargement…' : 'Rafraîchir QR'}
+          </button>
+
+          <div className="text-muted">
+            Statut: {waStatus?.ready ? 'connecté' : waStatus?.initializing ? 'initialisation' : 'déconnecté'}
+          </div>
+        </div>
+
+        {waError && (
+          <div className="alert alert-danger" role="alert">
+            {waError}
+          </div>
+        )}
+
+        {waQrDataUrl ? (
+          <div className="d-flex justify-content-center">
+            <img
+              src={waQrDataUrl}
+              alt="QR WhatsApp"
+              style={{ width: 320, height: 320, imageRendering: 'pixelated' }}
+            />
+          </div>
+        ) : (
+          <div className="text-muted">
+            {waStatus?.ready
+              ? 'Le client WhatsApp est déjà connecté (pas de QR).'
+              : 'QR non disponible pour le moment. Attends quelques secondes et rafraîchis.'}
+          </div>
+        )}
+      </div>
+
       <h3 className="text-dark mt-4">Publicité du moment</h3>
       <p className="text-muted">Gérez les publicités affichées au public.</p>
 
@@ -590,4 +685,3 @@ export default function ThemeSwitcherAdminPage() {
     </div>
   );
 }
-
