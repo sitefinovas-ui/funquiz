@@ -323,28 +323,57 @@ export const googleAuth = async (req, res) => {
 // 4️⃣ Demande réinitialisation mot de passe
 // -----------------------------
 export const requestResetPasswordController = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const resetCode = await requestPasswordReset(email);
-    await sendResetCodeEmail(email, "", resetCode);
-    res
-      .status(200)
-      .json({ message: "Code de réinitialisation envoyé par mail" });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  const email = String(req.body?.email || "").trim().toLowerCase();
+
+  if (!email) {
+    return res.status(400).json({ message: "Email requis" });
   }
+
+  try {
+    const resetCode = await requestPasswordReset(email);
+
+    const mailResult = await sendResetCodeEmail(email, "", resetCode);
+    if (!mailResult?.success) {
+      console.error("❌ sendResetCodeEmail failed:", mailResult?.message);
+      return res.status(503).json({
+        message: "Service email indisponible. Réessayez plus tard ou contactez le support.",
+      });
+    }
+  } catch (error) {
+    const msg = String(error?.message || "Erreur lors de la demande");
+    // Anti-enumeration: ne pas révéler si un email existe ou non
+    if (/utilisateur non trouv/i.test(msg)) {
+      return res.status(200).json({
+        message: "Si un compte existe pour cet email, un code de réinitialisation a été envoyé.",
+      });
+    }
+    return res.status(400).json({ message: msg });
+  }
+
+  return res.status(200).json({
+    message: "Si un compte existe pour cet email, un code de réinitialisation a été envoyé.",
+  });
 };
 
 // -----------------------------
 // 5️⃣ Réinitialisation mot de passe
 // -----------------------------
 export const resetUserPassword = async (req, res) => {
+  const code = String(req.body?.code || "").trim();
+  const newPassword = String(req.body?.newPassword || "");
+
+  if (!code) {
+    return res.status(400).json({ message: "Code requis" });
+  }
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ message: "Mot de passe trop court (min 6)" });
+  }
+
   try {
-    const { code, newPassword } = req.body;
     await resetPassword(code, newPassword);
-    res.status(200).json({ message: "Mot de passe réinitialisé avec succès" });
+    return res.status(200).json({ message: "Mot de passe réinitialisé avec succès" });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ message: String(error?.message || "Erreur lors du changement") });
   }
 };
 

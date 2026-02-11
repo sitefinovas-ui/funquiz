@@ -3,14 +3,210 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Crée un transporter réutilisable
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
-  },
-});
+const smtpUserSource = process.env.SMTP_USER
+  ? "SMTP_USER"
+  : process.env.EMAIL_USER
+    ? "EMAIL_USER"
+    : process.env.EMAIL
+      ? "EMAIL"
+      : "";
+const smtpUser = String(process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL || "").trim();
+// Gmail "App Password" est souvent affiché avec des espaces: "xxxx xxxx xxxx xxxx"
+// Nodemailer attend la valeur sans espaces.
+const smtpPassSource = process.env.SMTP_PASS
+  ? "SMTP_PASS"
+  : process.env.EMAIL_PASS
+    ? "EMAIL_PASS"
+    : process.env.EMAIL_PASSWORD
+      ? "EMAIL_PASSWORD"
+      : process.env.PASSWORD
+        ? "PASSWORD"
+        : "";
+const smtpPass = String(
+  process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD || process.env.PASSWORD || ""
+)
+  .trim()
+  .replace(/\s+/g, "");
+
+const smtpService = String(process.env.SMTP_SERVICE || "gmail").trim();
+const smtpHost = String(process.env.SMTP_HOST || "").trim();
+const smtpPortRaw = String(process.env.SMTP_PORT || "").trim();
+const smtpPort = smtpPortRaw ? Number(smtpPortRaw) : undefined;
+const smtpSecureEnv = String(process.env.SMTP_SECURE || "").trim().toLowerCase();
+const smtpSecure = smtpSecureEnv === "true";
+
+const mailProvider = String(process.env.MAIL_PROVIDER || "").trim().toLowerCase();
+const resendApiKey = String(process.env.RESEND_API_KEY || "").trim();
+
+const mailFrom = String(process.env.MAIL_FROM || "").trim();
+const mailFromEmail = String(process.env.MAIL_FROM_EMAIL || "").trim();
+
+const maskEmail = (value) => {
+  const email = String(value || "").trim();
+  if (!email) return "";
+  const at = email.indexOf("@");
+  if (at <= 1) return "***";
+  const user = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  return `${user.slice(0, 2)}***@${domain}`;
+};
+
+const buildFrom = (displayName = "FunQuiz") => {
+  // Permet de forcer le from globalement (ex: '"FunQuiz" <noreply@domaine.com>')
+  if (mailFrom) {
+    if (mailFrom.includes("<") && mailFrom.includes(">")) return mailFrom;
+    return `"${displayName}" <${mailFrom}>`;
+  }
+
+  // Sinon, on garde le nom (emoji OK) et on injecte une adresse valide/configurée
+  const address = mailFromEmail || smtpUser;
+  if (address) return `"${displayName}" <${address}>`;
+
+  // Fallback ultime (évite d'exploser le code si l'env est vide)
+  return `"${displayName}" <no-reply@funquiz.com>`;
+};
+
+const extractDisplayName = (fromValue) => {
+  const raw = String(fromValue || "").trim();
+  if (!raw) return "FunQuiz";
+  const m = raw.match(/^\s*"?([^"<]*)"?\s*<[^>]+>\s*$/);
+  const name = String(m?.[1] || "").trim();
+  return name || "FunQuiz";
+};
+
+const patchFrom = (fromValue) => {
+  const raw = String(fromValue || "").trim();
+  // Si un from "réel" est fourni (pas le no-reply hardcodé), on le respecte.
+  if (raw && !/no-reply@funquiz\.com/i.test(raw)) return raw;
+  return buildFrom(extractDisplayName(raw));
+};
+
+let transporter;
+const getTransporter = () => {
+  if (transporter) return transporter;
+
+  if (smtpHost) {
+    const port = Number.isFinite(smtpPort) && smtpPort > 0 ? smtpPort : 587;
+    const secure = smtpSecure || port === 465;
+    transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port,
+      secure,
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+    return transporter;
+  }
+
+  transporter = nodemailer.createTransport({
+    service: smtpService || "gmail",
+    auth: { user: smtpUser, pass: smtpPass },
+  });
+  return transporter;
+};
+
+let warnedMissingMailConfig = false;
+const ensureMailConfigured = (context) => {
+  const configured = Boolean(smtpUser) && Boolean(smtpPass);
+  if (configured) return true;
+
+  if (!warnedMissingMailConfig) {
+    warnedMissingMailConfig = true;
+    console.warn(
+      `[mail] SMTP non configuré: définis SMTP_USER/SMTP_PASS (ou EMAIL/PASSWORD). user=${maskEmail(
+        smtpUser
+      )} context=${context}`
+    );
+  }
+  return false;
+};
+
+const sendMailSafe = async (emailContent, context) => {
+  const ctx = String(context || emailContent?.subject || emailContent?.to || "mail");
+  if (process.env.DISABLE_EMAILS === "true") {
+    const err = new Error("Emails désactivés (DISABLE_EMAILS=true)");
+    err.code = "EMAILS_DISABLED";
+    throw err;
+  }
+
+  const patchedEmailContent = {
+    ...emailContent,
+    from: patchFrom(emailContent?.from),
+  };
+
+  if (mailProvider === "resend") {
+    if (!resendApiKey) {
+      const err = new Error("RESEND_API_KEY manquant (MAIL_PROVIDER=resend)");
+      err.code = "RESEND_NOT_CONFIGURED";
+      throw err;
+    }
+
+    const from = String(patchedEmailContent?.from || "").trim();
+    const to = Array.isArray(patchedEmailContent?.to)
+      ? patchedEmailContent.to
+      : [patchedEmailContent?.to].filter(Boolean);
+    const subject = String(patchedEmailContent?.subject || "").trim();
+    const html = String(patchedEmailContent?.html || "");
+
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to,
+        subject,
+        html,
+      }),
+    });
+
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok) {
+      const msg = data?.message || `Resend error (${resp.status})`;
+      const err = new Error(msg);
+      err.code = "RESEND_SEND_FAILED";
+      err.details = data;
+      throw err;
+    }
+
+    return data;
+  }
+
+  if (!ensureMailConfigured(ctx)) {
+    const err = new Error("Service email non configuré (identifiants SMTP manquants)");
+    err.code = "MAIL_NOT_CONFIGURED";
+    throw err;
+  }
+
+  const transport = getTransporter();
+  return transport.sendMail(patchedEmailContent);
+};
+
+if (process.env.NODE_ENV === "production") {
+  const kind = mailProvider === "resend" ? "resend" : smtpHost ? "smtp" : `service:${smtpService || "gmail"}`;
+  const configured =
+    mailProvider === "resend"
+      ? Boolean(resendApiKey)
+      : Boolean(smtpUser) && Boolean(smtpPass);
+  const fromAddr = (() => {
+    if (mailFrom) {
+      const m = mailFrom.match(/<([^>]+)>/);
+      return String((m ? m[1] : mailFrom) || "").trim();
+    }
+    return String(mailFromEmail || smtpUser || "").trim();
+  })();
+
+  console.log(
+    `[mail] provider=${kind} configured=${configured ? "yes" : "no"} user=${maskEmail(smtpUser)} from=${maskEmail(fromAddr)} userSource=${smtpUserSource || "n/a"} passSource=${smtpPassSource || "n/a"}`
+  );
+
+  if (smtpPassSource === "PASSWORD") {
+    console.warn(
+      "[mail] Astuce: en production, évite la variable PASSWORD (souvent utilisée par des addons). Préfère SMTP_PASS ou EMAIL_PASS."
+    );
+  }
+}
 
 // -----------------------------
 // 1️⃣ Email d'inscription
@@ -31,7 +227,7 @@ export const mailInscription = async (email, first_name) => {
             `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Email d’inscription envoyé avec succès" };
   } catch (error) {
     console.error("Erreur envoi email inscription:", error);
@@ -60,7 +256,7 @@ export const mailConnected = async (email, firstName, userIP) => {
             `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Email de connexion envoyé avec succès" };
   } catch (error) {
     console.error("Erreur envoi email connexion:", error);
@@ -91,7 +287,7 @@ export const sendResetCodeEmail = async (email, firstName, resetCode) => {
             `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return {
       success: true,
       message: "Code de réinitialisation envoyé par email",
@@ -124,7 +320,7 @@ export const sendOtpEmail = async (email, firstName, otpCode, ttlMinutes = 10) =
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Code OTP envoyé par email" };
   } catch (error) {
     console.error("Erreur envoi email OTP:", error);
@@ -151,7 +347,7 @@ export const mailAccountDeleted = async (email, first_name) => {
             `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return {
       success: true,
       message: "Email de suppression envoyé avec succès",
@@ -195,7 +391,7 @@ export const mailUpdateProfile = async (email, first_name) => {
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return {
       success: true,
       message: "Email de modification envoyé avec succès",
@@ -231,7 +427,7 @@ export const mailNewsletterSubscription = async (email) => {
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return {
       success: true,
       message: "Email d’inscription à la newsletter envoyé avec succès",
@@ -267,7 +463,7 @@ export const mailNewsletterUnsubscription = async (email) => {
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return {
       success: true,
       message: "Email de désinscription à la newsletter envoyé avec succès",
@@ -309,7 +505,7 @@ export const mailMessageReceived = async (email, name, subject, userContent) => 
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Accusé de réception envoyé" };
   } catch (error) {
     console.error("❌ Erreur mailMessageReceived:", error);
@@ -342,7 +538,7 @@ export const senMailNews = async (email, subject, userContent) => {
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Accusé de réception envoyé" };
   } catch (error) {
     console.error("❌ Erreur mailMessageReceived:", error);
@@ -375,7 +571,7 @@ export const mailMessageReply = async (email, name, content, subject = "Réponse
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Email de réponse envoyé" };
   } catch (error) {
     console.error("❌ Erreur mailMessageReply:", error);
@@ -414,7 +610,7 @@ export const mailAdminDirect = async ({ email, name, firstname, subject, content
       `,
     };
 
-    await transporter.sendMail(emailContent);
+    await sendMailSafe(emailContent);
     return { success: true, message: "Email envoyé" };
   } catch (error) {
     console.error("❌ Erreur mailAdminDirect:", error);

@@ -57,12 +57,8 @@ router.delete("/auth/hard-delete", authenticateToken, authorizeRole(["admin"]), 
 // =============================
 // Mot de passe
 // =============================
-router.post(
-  "/auth/password/request-reset",
-  requestResetPasswordController,
-  authenticateToken,
-); // Demander reset
-router.post("/auth/password/reset", resetUserPassword, authenticateToken); // Réinitialiser
+router.post("/auth/password/request-reset", requestResetPasswordController); // Demander reset
+router.post("/auth/password/reset", resetUserPassword); // Réinitialiser
 router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
 
