@@ -43,6 +43,8 @@ dist-ssr/
 # Deployment / CI
 # -------------------------
 .vercel
+/.firebase/
+firebase-debug.log
  
 # -------------------------
 # Local helper scripts (ignored)

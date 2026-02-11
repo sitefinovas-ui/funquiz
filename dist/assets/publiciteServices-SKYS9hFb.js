@@ -1,0 +1,1 @@
+import{x as t}from"./index-Br9127To.js";const s={list:async()=>(await t.get("/publicites")).data,getById:async a=>(await t.get(`/publicites/${a}`)).data,create:async a=>(await t.post("/publicites",a)).data,update:async(a,e)=>(await t.put(`/publicites/${a}`,e)).data,delete:async a=>(await t.delete(`/publicites/${a}`)).data};export{s as p};

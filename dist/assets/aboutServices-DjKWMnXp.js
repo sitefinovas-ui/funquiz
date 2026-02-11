@@ -1,1 +1,0 @@
-import{x as t}from"./index-D8NLYhyO.js";const o={getAll:async()=>(await t.get("/legal/about")).data,getById:async a=>(await t.get(`/legal/about/${a}`)).data,create:async a=>(await t.post("/legal/about",a)).data,update:async(a,e)=>(await t.put(`/legal/about/${a}`,e)).data,delete:async a=>(await t.delete(`/legal/about/${a}`)).data};export{o as a};
