@@ -59,13 +59,11 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authService.logout();
-      navigate(`${import.meta.env.REACT_APP_BASE_URL}/profil`);
-      console.log('Logout successful', navigate);
     } catch (err) {
       console.warn('Logout API failed:', err?.message || err);
     } finally {
       setUser(null);
-      navigate(`${import.meta.env.REACT_APP_BASE_URL}/profil`);	
+      navigate('/login', { replace: true });
     }
   };
 

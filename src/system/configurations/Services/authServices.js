@@ -48,20 +48,14 @@ const authService = {
     }
   },
 
-   logout: async () => {
+  logout: async () => {
     try {
-      await api.post('/auth/logout');
-      if (response.data.success) {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/profil`;
-      }
-    } catch (error) {
-      console.error('erreur lors de la déconnexion:', error.response?.data || error.message);
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = `${import.meta.env.REACT_APP_BASE_URL}/profil`;
-    } 
+      const response = await api.post('/auth/logout');
+      return response.data;
+    } finally {
+      // Ne pas supprimer les préférences (thème/langue/etc.).
+      localStorage.removeItem('token');
+    }
   },
 
   register: async (credentials) => {

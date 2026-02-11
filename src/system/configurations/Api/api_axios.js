@@ -1,5 +1,16 @@
 import axios from 'axios';
 
+function computeTimeoutMs() {
+  const raw =
+    import.meta.env.VITE_API_TIMEOUT_MS ||
+    import.meta.env.VITE_API_TIMEOUT ||
+    import.meta.env.VITE_AXIOS_TIMEOUT_MS ||
+    '';
+  const parsed = Number(raw);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return 60000;
+}
+
 function computeBackendOrigin() {
   const envUrl = import.meta.env.VITE_API_URL || '';
   const useProxy = String(import.meta.env.VITE_USE_PROXY || '').toLowerCase() === 'true';
@@ -60,7 +71,7 @@ const normalizeRelativeMediaUrls = (value) => {
 
 const api = axios.create({
   baseURL: computeBaseURL(),
-  timeout: 20000,
+  timeout: computeTimeoutMs(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -92,9 +103,30 @@ api.interceptors.response.use(
   },
   (error) => {
     if (!error.response) {
-      console.error('❌ Aucune réponse du serveur');
-      const networkError = new Error('Erreur réseau');
-      networkError.code = 'NETWORK_ERROR';
+      const code = error?.code || '';
+      const isTimeout = code === 'ECONNABORTED' || /timeout/i.test(String(error?.message || ''));
+      const isCanceled =
+        code === 'ERR_CANCELED' ||
+        error?.name === 'CanceledError' ||
+        (typeof axios.isCancel === 'function' && axios.isCancel(error));
+
+      if (isTimeout) {
+        console.error('⏱️ Timeout API:', error?.message || error);
+        const timeoutError = new Error("Délai d'attente dépassé (serveur lent ou indisponible)");
+        timeoutError.code = 'TIMEOUT';
+        return Promise.reject(timeoutError);
+      }
+
+      if (isCanceled) {
+        console.warn('⚠️ Requête annulée:', error?.message || error);
+        const canceledError = new Error('Requête annulée');
+        canceledError.code = 'CANCELED';
+        return Promise.reject(canceledError);
+      }
+
+      console.error('❌ Aucune réponse du serveur:', error?.message || error);
+      const networkError = new Error('Erreur réseau (serveur injoignable ou CORS)');
+      networkError.code = code || 'NETWORK_ERROR';
       return Promise.reject(networkError);
     }
     const message =
