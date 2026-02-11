@@ -55,6 +55,22 @@ const parseOrigins = (value) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+const getAllowedOrigins = () =>
+  [
+    "https://funquiz2k25.web.app",
+    "https://funquiz2k25.firebaseapp.com",
+    "http://localhost:5173",
+    "http://localhost:31",
+    ...parseOrigins(process.env.FRONTEND_URL),
+    ...parseOrigins(process.env.FRONTEND_URLS),
+  ].filter(Boolean);
+
+const isOriginAllowed = (origin) => {
+  const allowedOrigins = getAllowedOrigins();
+  const allowLan = origin && origin.startsWith("http://192.168.");
+  return !origin || allowedOrigins.includes(origin) || allowLan;
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -110,17 +126,7 @@ app.use(
     origin: function (origin, callback) {
       console.log("🔒 Requête CORS reçue depuis:", origin || "origine non définie");
 
-      const allowedOrigins = [
-        "https://funquiz2k25.web.app",
-        "https://funquiz2k25.firebaseapp.com",
-        "http://localhost:5173",
-        "http://localhost:31",
-        ...parseOrigins(process.env.FRONTEND_URL),
-        ...parseOrigins(process.env.FRONTEND_URLS),
-      ].filter(Boolean);
-
-      const allowLan = origin && origin.startsWith("http://192.168.");
-      if (!origin || allowedOrigins.includes(origin) || allowLan) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
         console.error("❌ Origine non autorisée:", origin);
