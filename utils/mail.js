@@ -655,7 +655,7 @@ export const mailAdminDirect = async ({ email, name, firstname, subject, content
     return { success: true, message: "Email envoyé" };
   } catch (error) {
     console.error("❌ Erreur mailAdminDirect:", error);
-    return { success: false, message: error.message };
+    return { success: false, message: error.message + (error.code ? ` (${error.code})` : "") };
   }
 };
 

@@ -249,6 +249,7 @@ app.get("/", (req, res) => {
 // Gestion des erreurs 404
 // -----------------------------
 app.use((req, res, next) => {
+  console.warn(`[404] Route non trouvée: ${req.method} ${req.originalUrl}`);
   next(createError(404, "Route non trouvée"));
 });
 
