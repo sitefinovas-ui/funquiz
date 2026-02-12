@@ -46,21 +46,6 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://funquiz2k25.web.app/" />
 
-    <!-- ✅ Google Tag Manager (dans le <head>, le plus haut possible) -->
-    <script>
-      (function(w,d,s,l,i){
-        w[l]=w[l]||[];
-        w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
-        var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),
-            dl=l!='dataLayer'?'&l='+l:'';
-        j.async=true;
-        j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-        f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-PFD56X4N');
-    </script>
-    <!-- End Google Tag Manager -->
-
     <!-- Open Graph (Facebook, WhatsApp, LinkedIn...) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://funquiz2k25.web.app/" />
@@ -69,10 +54,11 @@
       property="og:description"
       content="Teste tes connaissances avec FunQuiz : défis variés, classement en direct et parties entre amis. Gratuit, sans pub et fun !"
     />
-    <meta property="og:image" content="https://funquiz2k25.web.app/og-image.jpg?v=20260211" />
+    <meta property="og:image" content="https://funquiz2k25.web.app/og-image.jpg" />
+    <meta property="og:image:url" content="https://funquiz2k25.web.app/og-image.jpg" />
     <meta
       property="og:image:secure_url"
-      content="https://funquiz2k25.web.app/og-image.jpg?v=20260211"
+      content="https://funquiz2k25.web.app/og-image.jpg"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -88,7 +74,8 @@
       name="twitter:description"
       content="Teste tes connaissances avec des quiz variés et affronte d'autres joueurs en ligne."
     />
-    <meta name="twitter:image" content="https://funquiz2k25.web.app/og-image.jpg?v=20260211" />
+    <meta name="twitter:image" content="https://funquiz2k25.web.app/og-image.jpg" />
+    <meta name="twitter:url" content="https://funquiz2k25.web.app/" />
     <meta name="twitter:image:alt" content="FunQuiz - Interface de jeu et scores en temps réel" />
 
     <!-- Données structurées (JSON-LD pour Google) -->
@@ -102,18 +89,33 @@
         "operatingSystem": "Web",
         "description": "FunQuiz est une application de quiz interactive qui permet de tester ses connaissances et de défier ses amis en ligne. 100% gratuite et sans publicité.",
         "author": { "@type": "Person", "name": "Frederick" },
-        "publisher": {
+         "publisher": {
           "@type": "Organization",
           "name": "FunQuiz Team",
           "logo": {
             "@type": "ImageObject",
-            "url": "https://funquiz2k25.web.app/icon-512.png?v=20260211"
+            "url": "https://funquiz2k25.web.app/icon-512.png"
           }
         },
-        "image": "https://funquiz2k25.web.app/og-image.jpg?v=20260211",
+        "image": "https://funquiz2k25.web.app/og-image.jpg",
         "inLanguage": "fr-FR"
       }
     </script>
+
+    <!-- ✅ Google Tag Manager (dans le <head>, le plus haut possible) -->
+    <script>
+      (function(w,d,s,l,i){
+        w[l]=w[l]||[];
+        w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+        var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),
+            dl=l!='dataLayer'?'&l='+l:'';
+        j.async=true;
+        j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+        f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-PFD56X4N');
+    </script>
+    <!-- End Google Tag Manager -->
   </head>
 
   <body>

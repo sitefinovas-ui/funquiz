@@ -724,7 +724,7 @@
     grid-template-columns: 280px 1fr;
   }
 
-  .info-panel {
+  .messages-grid .info-panel {
     display: none;
   }
 }
@@ -753,7 +753,7 @@
     grid-template-columns: 1fr;
   }
 
-  .conversations-panel {
+  .messages-grid .conversations-panel {
     display: none;
   }
 
