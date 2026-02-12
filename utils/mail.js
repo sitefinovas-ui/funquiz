@@ -50,6 +50,17 @@ const smtpPortRaw = stripWrappingQuotes(process.env.SMTP_PORT || "");
 const smtpPort = smtpPortRaw ? Number(smtpPortRaw) : undefined;
 const smtpSecureEnv = stripWrappingQuotes(process.env.SMTP_SECURE || "").toLowerCase();
 const smtpSecure = smtpSecureEnv === "true";
+const smtpPoolEnv = stripWrappingQuotes(process.env.SMTP_POOL || "").toLowerCase();
+const smtpPool = smtpPoolEnv ? smtpPoolEnv === "true" : false;
+const smtpConnectionTimeoutMs =
+  Number(stripWrappingQuotes(process.env.SMTP_CONNECTION_TIMEOUT_MS || process.env.SMTP_CONNECTION_TIMEOUT || "")) ||
+  20000;
+const smtpGreetingTimeoutMs =
+  Number(stripWrappingQuotes(process.env.SMTP_GREETING_TIMEOUT_MS || process.env.SMTP_GREETING_TIMEOUT || "")) ||
+  20000;
+const smtpSocketTimeoutMs =
+  Number(stripWrappingQuotes(process.env.SMTP_SOCKET_TIMEOUT_MS || process.env.SMTP_SOCKET_TIMEOUT || "")) ||
+  30000;
 
 const mailProvider = stripWrappingQuotes(process.env.MAIL_PROVIDER || "").toLowerCase();
 const resendApiKey = stripWrappingQuotes(process.env.RESEND_API_KEY || "");
@@ -103,19 +114,33 @@ const getTransporter = () => {
 
   if (smtpHost) {
     const port = Number.isFinite(smtpPort) && smtpPort > 0 ? smtpPort : 587;
-    const secure = smtpSecure || port === 465;
+    const secure = smtpSecureEnv ? smtpSecure : port === 465;
     transporter = nodemailer.createTransport({
       host: smtpHost,
       port,
       secure,
       auth: { user: smtpUser, pass: smtpPass },
+      pool: smtpPool,
+      connectionTimeout: smtpConnectionTimeoutMs,
+      greetingTimeout: smtpGreetingTimeoutMs,
+      socketTimeout: smtpSocketTimeoutMs,
     });
     return transporter;
   }
 
+  const serviceOverrides = {
+    ...(Number.isFinite(smtpPort) && smtpPort > 0 ? { port: smtpPort } : {}),
+    ...(smtpSecureEnv ? { secure: smtpSecure } : {}),
+  };
+
   transporter = nodemailer.createTransport({
     service: smtpService || "gmail",
     auth: { user: smtpUser, pass: smtpPass },
+    pool: smtpPool,
+    connectionTimeout: smtpConnectionTimeoutMs,
+    greetingTimeout: smtpGreetingTimeoutMs,
+    socketTimeout: smtpSocketTimeoutMs,
+    ...serviceOverrides,
   });
   return transporter;
 };

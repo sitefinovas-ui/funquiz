@@ -49,26 +49,7 @@ export const createMessage = async (data) => {
       assigned_to = null,
     } = data;
 
-    const [result] = await db.query(
-      `INSERT INTO funquiz_messages (
-         user_id, admin_id, name, email, subject, content, content_admin, priority, status, assigned_to
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        user_id,
-        admin_id,
-        name,
-        email,
-        subject,
-        content,
-        content_admin,
-        priority,
-        status,
-        assigned_to,
-      ],
-    );
-
-    return {
-      message_id: result.insertId,
+    const values = [
       user_id,
       admin_id,
       name,
@@ -79,7 +60,89 @@ export const createMessage = async (data) => {
       priority,
       status,
       assigned_to,
-    };
+    ];
+
+    try {
+      const [result] = await db.query(
+        `INSERT INTO funquiz_messages (
+           user_id, admin_id, name, email, subject, content, content_admin, priority, status, assigned_to
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        values,
+      );
+
+      return {
+        message_id: result.insertId,
+        user_id,
+        admin_id,
+        name,
+        email,
+        subject,
+        content,
+        content_admin,
+        priority,
+        status,
+        assigned_to,
+      };
+    } catch (error) {
+      const isNoDefaultMessageId =
+        error?.code === "ER_NO_DEFAULT_FOR_FIELD" && /message_id/i.test(error?.sqlMessage || "");
+      if (!isNoDefaultMessageId) throw error;
+
+      // Compatibilité: certaines bases n'ont pas AUTO_INCREMENT sur message_id.
+      // On génère un ID incrémental et on réessaie.
+      let message_id = 1;
+      try {
+        const [rows] = await db.query(
+          "SELECT COALESCE(MAX(message_id), 0) + 1 AS next_id FROM funquiz_messages",
+        );
+        message_id = Number(rows?.[0]?.next_id) || 1;
+      } catch (e) {
+        console.error("❌ createMessage: failed to compute next message_id:", e?.message || e);
+      }
+
+      // Petit retry en cas de course (si une contrainte unique existe)
+      let lastErr = error;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await db.query(
+            `INSERT INTO funquiz_messages (
+               message_id, user_id, admin_id, name, email, subject, content, content_admin, priority, status, assigned_to
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [message_id, ...values],
+          );
+          return {
+            message_id,
+            user_id,
+            admin_id,
+            name,
+            email,
+            subject,
+            content,
+            content_admin,
+            priority,
+            status,
+            assigned_to,
+          };
+        } catch (e) {
+          lastErr = e;
+          const errText = String(e?.sqlMessage || e?.message || "");
+          const mightBeDuplicate = e?.code === "ER_DUP_ENTRY" || /duplicate/i.test(errText);
+          if (!mightBeDuplicate) throw e;
+
+          try {
+            const [rows] = await db.query(
+              "SELECT COALESCE(MAX(message_id), 0) + 1 AS next_id FROM funquiz_messages",
+            );
+            message_id = Number(rows?.[0]?.next_id) || message_id + 1;
+          } catch {
+            message_id++;
+          }
+        }
+      }
+
+      // Si on arrive ici, on laisse remonter la dernière erreur
+      throw lastErr;
+    }
   } catch (error) {
     console.error("❌ createMessage error:", error);
     throw error;

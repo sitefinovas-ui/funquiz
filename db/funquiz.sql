@@ -223,7 +223,7 @@ INSERT INTO `funquiz_faq` (`faq_id`, `question`, `answer`, `is_active`, `created
 --
 
 CREATE TABLE `funquiz_messages` (
-  `message_id` int(11) NOT NULL,
+  `message_id` int(11) NOT NULL AUTO_INCREMENT,
   `admin_id` int(11) DEFAULT NULL,
   `content_admin` text,
   `user_id` int(11) DEFAULT NULL,
@@ -235,7 +235,8 @@ CREATE TABLE `funquiz_messages` (
   `status` enum('unread','read','in_progress','resolved','closed') DEFAULT 'unread',
   `assigned_to` int(11) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`message_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------

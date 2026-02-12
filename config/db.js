@@ -5,13 +5,32 @@ import path from "path";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
+const stripWrappingQuotes = (value) => {
+  const s = String(value || "").trim();
+  if (s.length >= 2) {
+    const first = s[0];
+    const last = s[s.length - 1];
+    if ((first === `"` && last === `"`) || (first === `'` && last === `'`)) {
+      return s.slice(1, -1).trim();
+    }
+  }
+  return s;
+};
+
+const dbHost = stripWrappingQuotes(process.env.DB_HOST || "127.0.0.1");
+const dbUser = stripWrappingQuotes(process.env.DB_USER || "root");
+const dbPasswordRaw = stripWrappingQuotes(process.env.DB_PASSWORD || "");
+const dbPassword = dbPasswordRaw && dbPasswordRaw.trim().length > 0 ? dbPasswordRaw : "root";
+const dbName = stripWrappingQuotes(process.env.DB_NAME || "funquiz");
+const dbPort = Number(stripWrappingQuotes(process.env.DB_PORT || "")) || 3306;
+
 // ✅ Création du pool de connexions MySQL optimisé
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "127.0.0.1",
-  user: process.env.DB_USER || "root",
-  password: (process.env.DB_PASSWORD && process.env.DB_PASSWORD.trim().length > 0 ? process.env.DB_PASSWORD : "root"),
-  database: process.env.DB_NAME || "funquiz",
-  port: Number(process.env.DB_PORT) || 3306,
+  host: dbHost,
+  user: dbUser,
+  password: dbPassword,
+  database: dbName,
+  port: dbPort,
   waitForConnections: true,
   connectionLimit: 50, // Augmenté pour supporter plus d'utilisateurs
   queueLimit: 0, // illimité
@@ -42,6 +61,46 @@ export const connectDB = async () => {
       `);
     } catch (e) {
       console.error("❌ Erreur lors de la création de funquiz_newsletter :", e.message);
+    }
+
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS funquiz_messages (
+          message_id INT NOT NULL AUTO_INCREMENT,
+          admin_id INT DEFAULT NULL,
+          content_admin TEXT,
+          user_id INT DEFAULT NULL,
+          name VARCHAR(100) DEFAULT NULL,
+          email VARCHAR(150) DEFAULT NULL,
+          subject VARCHAR(255) NOT NULL,
+          content TEXT NOT NULL,
+          priority ENUM('low','normal','high','urgent') DEFAULT 'normal',
+          status ENUM('unread','read','in_progress','resolved','closed') DEFAULT 'unread',
+          assigned_to INT DEFAULT NULL,
+          created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (message_id),
+          KEY idx_user_id (user_id),
+          KEY idx_email (email),
+          KEY idx_status (status),
+          KEY idx_priority (priority),
+          KEY idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+    } catch (e) {
+      console.error("❌ Erreur lors de la création de funquiz_messages :", e.message);
+    }
+
+    // Compatibilité: certains dumps ont message_id sans AUTO_INCREMENT / sans PK
+    try {
+      await pool.query(`ALTER TABLE funquiz_messages ADD PRIMARY KEY (message_id)`);
+    } catch (e) {
+      // ignore si déjà présent ou si données invalides
+    }
+    try {
+      await pool.query(`ALTER TABLE funquiz_messages MODIFY message_id INT NOT NULL AUTO_INCREMENT`);
+    } catch (e) {
+      // ignore si déjà en place
     }
 
     try {

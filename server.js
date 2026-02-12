@@ -31,6 +31,18 @@ import db from "./config/db.js";
 const app = express();
 const PORT = Number(process.env.PORT) || 5100;
 const IP = process.env.IP || "0.0.0.0";
+
+const stripWrappingQuotes = (value) => {
+  const s = String(value || "").trim();
+  if (s.length >= 2) {
+    const first = s[0];
+    const last = s[s.length - 1];
+    if ((first === `"` && last === `"`) || (first === `'` && last === `'`)) {
+      return s.slice(1, -1).trim();
+    }
+  }
+  return s;
+};
 const JWT_SECRET = process.env.JWT_SECRET || "votre_clÇ¸_secrÇùte";
 
 const isStaffRole = (role) => role === "admin" || role === "moderator";
@@ -50,7 +62,7 @@ const getUserRoleById = async (userId) => {
 };
 
 const parseOrigins = (value) =>
-  String(value || "")
+  stripWrappingQuotes(value)
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -186,8 +198,8 @@ app.use((req, res, next) => {
   const originalJson = res.json.bind(res);
   res.json = (data) => {
     try {
-      const baseUrl = process.env.BASE_URL;
-      addBaseUrlRecursively(data, baseUrl);
+      const baseUrl = stripWrappingQuotes(process.env.BASE_URL || "");
+      if (baseUrl) addBaseUrlRecursively(data, baseUrl);
     } catch (err) {
       console.error("❌ Erreur lors du patch des URLs :", err);
     }

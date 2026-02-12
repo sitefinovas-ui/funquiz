@@ -45,15 +45,16 @@ export const addMessage = async (req, res) => {
     const newMessage = await createMessage(req.body);
 
     // Envoi email selon le contexte
+    let mailResult = null;
     if (email) {
       if (content_admin) {
-        await mailMessageReply(email, name || "Utilisateur", content_admin, subject);
+        mailResult = await mailMessageReply(email, name || "Utilisateur", content_admin, subject);
       } else if (content) {
-        await mailMessageReceived(email, name || "Utilisateur", subject, content);
+        mailResult = await mailMessageReceived(email, name || "Utilisateur", subject, content);
       }
     }
 
-    res.status(201).json(newMessage);
+    res.status(201).json({ ...newMessage, mail: mailResult });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -78,11 +79,12 @@ export const editMessage = async (req, res) => {
 
     // Email de réponse admin
     const bodyToSend = content_admin ?? content;
+    let mailResult = null;
     if (email && bodyToSend) {
-      await mailMessageReply(email, name || "Utilisateur", bodyToSend, subject);
+      mailResult = await mailMessageReply(email, name || "Utilisateur", bodyToSend, subject);
     }
 
-    res.status(200).json(updatedMessage);
+    res.status(200).json({ ...updatedMessage, mail: mailResult });
   } catch (error) {
     console.error("Erreur lors de la mise à jour du message:", error);
     res.status(500).json({ error: error.message });
@@ -98,13 +100,25 @@ export const sendEmailDirect = async (req, res) => {
         .status(400)
         .json({ error: "Les champs email, subject et content sont requis." });
     }
-    await mailAdminDirect({
+    const r = await mailAdminDirect({
       email,
       name: name || "Utilisateur",
       firstname: firstname || "",
       subject,
       content,
     });
+
+    if (r?.skipped) {
+      return res.status(200).json({ success: true, skipped: true, message: "Email ignoré (désactivé)" });
+    }
+    if (!r?.success) {
+      return res.status(503).json({
+        success: false,
+        message: "Service email indisponible. Réessayez plus tard.",
+        details: r?.message || "Envoi impossible",
+      });
+    }
+
     return res.status(200).json({ success: true, message: "Email envoyé" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -215,35 +215,54 @@ export const sendNewsletterBulk = async (req, res) => {
 
     const results = { sent: 0, stored: 0, errors: [] };
 
-    await Promise.all(
-      recipients.map(async (n) => {
-        try {
-          const email = n.email;
-          const user_id = n.user_id || null;
+    // Envoi séquentiel: évite d'ouvrir trop de connexions SMTP en parallèle
+    for (const n of recipients) {
+      const email = n?.email;
+      const user_id = n?.user_id || null;
 
-          // Envoi email
-          await mailMessageReply(email, "Abonné", content, subject);
-          results.sent++;
-
-          // Stockage côté messages (bulle admin)
-          await createMessage({
-            user_id,
-            admin_id: adminId,
-            name: "Newsletter",
+      // 1) Envoi email
+      try {
+        const r = await mailMessageReply(email, "Abonné", content, subject);
+        if (!r?.success) {
+          results.errors.push({
             email,
-            subject,
-            content,
-            content_admin: content,
-            priority: "normal",
-            status: "read",
-            assigned_to: adminId,
+            stage: "send",
+            error: r?.message || "Email non envoyé",
           });
-          results.stored++;
-        } catch (e) {
-          results.errors.push({ email: n.email, error: e.message });
+        } else {
+          results.sent++;
         }
-      })
-    );
+      } catch (e) {
+        results.errors.push({
+          email,
+          stage: "send",
+          error: String(e?.message || e),
+        });
+      }
+
+      // 2) Stockage côté messages (bulle admin)
+      try {
+        await createMessage({
+          user_id,
+          admin_id: adminId,
+          name: "Newsletter",
+          email,
+          subject,
+          content,
+          content_admin: content,
+          priority: "normal",
+          status: "read",
+          assigned_to: adminId,
+        });
+        results.stored++;
+      } catch (e) {
+        results.errors.push({
+          email,
+          stage: "store",
+          error: String(e?.message || e),
+        });
+      }
+    }
 
     return res
       .status(200)
