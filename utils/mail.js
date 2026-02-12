@@ -3,6 +3,18 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const stripWrappingQuotes = (value) => {
+  const s = String(value || "").trim();
+  if (s.length >= 2) {
+    const first = s[0];
+    const last = s[s.length - 1];
+    if ((first === `"` && last === `"`) || (first === `'` && last === `'`)) {
+      return s.slice(1, -1).trim();
+    }
+  }
+  return s;
+};
+
 const smtpUserSource = process.env.SMTP_USER
   ? "SMTP_USER"
   : process.env.EMAIL_USER
@@ -10,7 +22,9 @@ const smtpUserSource = process.env.SMTP_USER
     : process.env.EMAIL
       ? "EMAIL"
       : "";
-const smtpUser = String(process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL || "").trim();
+const smtpUser = stripWrappingQuotes(
+  process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL || ""
+);
 // Gmail "App Password" est souvent affiché avec des espaces: "xxxx xxxx xxxx xxxx"
 // Nodemailer attend la valeur sans espaces.
 const smtpPassSource = process.env.SMTP_PASS
@@ -22,24 +36,26 @@ const smtpPassSource = process.env.SMTP_PASS
       : process.env.PASSWORD
         ? "PASSWORD"
         : "";
-const smtpPass = String(
-  process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD || process.env.PASSWORD || ""
-)
-  .trim()
-  .replace(/\s+/g, "");
+const smtpPass = stripWrappingQuotes(
+  process.env.SMTP_PASS ||
+    process.env.EMAIL_PASS ||
+    process.env.EMAIL_PASSWORD ||
+    process.env.PASSWORD ||
+    ""
+).replace(/\s+/g, "");
 
-const smtpService = String(process.env.SMTP_SERVICE || "gmail").trim();
-const smtpHost = String(process.env.SMTP_HOST || "").trim();
-const smtpPortRaw = String(process.env.SMTP_PORT || "").trim();
+const smtpService = stripWrappingQuotes(process.env.SMTP_SERVICE || "gmail");
+const smtpHost = stripWrappingQuotes(process.env.SMTP_HOST || "");
+const smtpPortRaw = stripWrappingQuotes(process.env.SMTP_PORT || "");
 const smtpPort = smtpPortRaw ? Number(smtpPortRaw) : undefined;
-const smtpSecureEnv = String(process.env.SMTP_SECURE || "").trim().toLowerCase();
+const smtpSecureEnv = stripWrappingQuotes(process.env.SMTP_SECURE || "").toLowerCase();
 const smtpSecure = smtpSecureEnv === "true";
 
-const mailProvider = String(process.env.MAIL_PROVIDER || "").trim().toLowerCase();
-const resendApiKey = String(process.env.RESEND_API_KEY || "").trim();
+const mailProvider = stripWrappingQuotes(process.env.MAIL_PROVIDER || "").toLowerCase();
+const resendApiKey = stripWrappingQuotes(process.env.RESEND_API_KEY || "");
 
-const mailFrom = String(process.env.MAIL_FROM || "").trim();
-const mailFromEmail = String(process.env.MAIL_FROM_EMAIL || "").trim();
+const mailFrom = stripWrappingQuotes(process.env.MAIL_FROM || "");
+const mailFromEmail = stripWrappingQuotes(process.env.MAIL_FROM_EMAIL || "");
 
 const maskEmail = (value) => {
   const email = String(value || "").trim();
@@ -112,7 +128,7 @@ const ensureMailConfigured = (context) => {
   if (!warnedMissingMailConfig) {
     warnedMissingMailConfig = true;
     console.warn(
-      `[mail] SMTP non configuré: définis SMTP_USER/SMTP_PASS (ou EMAIL/PASSWORD). user=${maskEmail(
+      `[mail] SMTP non configuré: définis SMTP_USER/SMTP_PASS (ou EMAIL/EMAIL_PASSWORD). user=${maskEmail(
         smtpUser
       )} context=${context}`
     );
