@@ -28,6 +28,12 @@ function normalizeQuestionType(valRaw) {
   return map[v] || 'multiple_choice';
 }
 
+function normalizeDifficultyLevel(valRaw) {
+  const v = String(valRaw || '').trim().toLowerCase();
+  if (v === 'facile' || v === 'moyen' || v === 'difficile') return v;
+  return 'moyen';
+}
+
 function QuizCreate() {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
@@ -163,6 +169,15 @@ function QuizCreate() {
   const normalizeTitle = (s) =>
     s
       ? s.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      : '';
+
+  const normalizeTitleStrict = (s) =>
+    s
+      ? s
+          .toString()
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
       : '';
 
   // Helpers: trouver IDs existants par titre (insensible à la casse/accents/espaces)
@@ -328,30 +343,50 @@ function QuizCreate() {
         return n;
       };
 
-      // Thématique (prend les infos de la première ligne)
-      const first = toNorm(rows[0]);
-      const thematicTitle = pick(first, [
-        'thematic_title',
-        'thematique',
-        'thematique_title',
-        'thematic',
-        'titre',
-        'titre_thematique',
-      ]);
-      if (!thematicTitle) throw new Error('Colonne thématique manquante');
+      const getThematicTitle = (n) =>
+        pick(n, [
+          'thematic_title',
+          'thematique',
+          'thematique_title',
+          'thematic',
+          'titre',
+          'titre_thematique',
+        ]);
 
-      const thematicDescription = pick(first, [
-        'thematic_description',
-        'description_thematique',
-        'description',
-      ]);
-      const colorCode = pick(first, ['color_code', 'couleur']) || '#6366f1';
-      const displayOrder = Number(pick(first, ['display_order', 'ordre_thematique']) ?? 0);
-
-      // Groupage par sous-thématique
-      const subsMap = new Map();
+      const thematicsMap = new Map();
+      let lastThematicKey = null;
+      const lastSubKeyByThematic = new Map();
       rows.forEach((r, idx) => {
         const n = toNorm(r);
+
+        const tTitle = getThematicTitle(n);
+        const tKey = tTitle ? normalizeTitleStrict(tTitle) : lastThematicKey;
+        if (!tKey) return;
+        const tDesc = pick(n, [
+          'thematic_description',
+          'description_thematique',
+          'description',
+        ]);
+        const tColor = pick(n, ['color_code', 'couleur']) || '#6366f1';
+        const tOrder = Number(pick(n, ['display_order', 'ordre_thematique']) ?? 0);
+
+        if (!thematicsMap.has(tKey)) {
+          if (!tTitle) return;
+          thematicsMap.set(tKey, {
+            title: tTitle,
+            description: tDesc || '',
+            color_code: tColor,
+            display_order: tOrder,
+            sub_thematics: new Map(),
+          });
+        } else {
+          const existing = thematicsMap.get(tKey);
+          if (!existing.description && tDesc) existing.description = tDesc;
+          if (!existing.color_code && tColor) existing.color_code = tColor;
+          if (!existing.display_order && Number.isFinite(tOrder)) existing.display_order = tOrder;
+        }
+
+        lastThematicKey = tKey;
 
         const stTitle = pick(n, [
           'sub_title',
@@ -360,21 +395,31 @@ function QuizCreate() {
           'sous__thematique',
           'sous_thematiques',
         ]);
-        if (!stTitle) return;
-
+        const stKey = stTitle ? normalizeTitleStrict(stTitle) : lastSubKeyByThematic.get(tKey);
+        if (!stKey) return;
         const stDesc = pick(n, ['sub_description', 'description_sous_thematique']);
-        const stDiff = pick(n, ['difficulty', 'difficulte']) || 'moyen';
+        const stDiff = normalizeDifficultyLevel(pick(n, ['difficulty', 'difficulte']));
         const stOrder = Number(pick(n, ['sub_display_order', 'ordre_sous_thematique']) ?? 0);
 
-        if (!subsMap.has(stTitle)) {
-          subsMap.set(stTitle, {
+        const thematic = thematicsMap.get(tKey);
+        if (!thematic.sub_thematics.has(stKey)) {
+          if (!stTitle) return;
+          thematic.sub_thematics.set(stKey, {
             title: stTitle,
             description: stDesc || null,
             difficulty_level: stDiff,
             display_order: stOrder,
             questions: [],
           });
+        } else if (stTitle) {
+          const existingSt = thematic.sub_thematics.get(stKey);
+          if (!existingSt.title) existingSt.title = stTitle;
+          if (!existingSt.description && stDesc) existingSt.description = stDesc;
+          if (!existingSt.display_order && Number.isFinite(stOrder)) existingSt.display_order = stOrder;
+          if (!existingSt.difficulty_level && stDiff) existingSt.difficulty_level = stDiff;
         }
+
+        lastSubKeyByThematic.set(tKey, stKey);
 
         // Normalisation de la bonne option
         const correctOptionRaw = pick(n, ['correct_option', 'bonne_option']);
@@ -411,25 +456,112 @@ function QuizCreate() {
           return;
         }
 
-        subsMap.get(stTitle).questions.push(q);
+        thematic.sub_thematics.get(stKey).questions.push(q);
       });
 
-      const sub_thematics = Array.from(subsMap.values());
-      if (sub_thematics.length === 0) {
-        message.warning("Aucune sous‑thématique détectée: vérifiez l'en‑tête 'Sous‑thématique'." );
+      const thematics = Array.from(thematicsMap.values()).map((t) => ({
+        ...t,
+        sub_thematics: Array.from(t.sub_thematics.values()),
+      }));
+
+      if (thematics.length === 0) throw new Error('Colonne thématique manquante');
+
+      if (thematics.length === 1) {
+        const only = thematics[0];
+        if (only.sub_thematics.length === 0) {
+          message.warning("Aucune sous‑thématique détectée: vérifiez l'en‑tête 'Sous‑thématique'.");
+        }
+        form.setFieldsValue({
+          title: only.title,
+          description: only.description || '',
+          color_code: only.color_code,
+          display_order: only.display_order,
+          sub_thematics: only.sub_thematics,
+        });
+
+        const totalQuestions = only.sub_thematics.reduce(
+          (a, b) => a + (b.questions?.length || 0),
+          0,
+        );
+        message.success(`Import réussi: ${only.sub_thematics.length} sous‑thématiques, ${totalQuestions} questions`);
+        return false;
       }
 
-      // Remplir le formulaire existant
-      form.setFieldsValue({
-        title: thematicTitle,
-        description: thematicDescription || '',
-        color_code: colorCode,
-        display_order: displayOrder,
-        sub_thematics,
+      const errors = [];
+      thematics.forEach((t) => {
+        const errs = validateQuiz({ title: t.title, sub_thematics: t.sub_thematics });
+        errs.forEach((e) => errors.push(`[${t.title}] ${e}`));
       });
+      if (errors.length) {
+        setErrorMessages(errors);
+        setErrorModalOpen(true);
+        return false;
+      }
 
-      const totalQuestions = sub_thematics.reduce((a, b) => a + (b.questions?.length || 0), 0);
-      message.success(`Import réussi: ${sub_thematics.length} sous‑thématiques, ${totalQuestions} questions`);
+      for (const t of thematics) {
+        let thematic_id = await findExistingThematicIdByTitle(t.title);
+        if (!thematic_id) {
+          const formData = new FormData();
+          formData.append('title', t.title);
+          formData.append('description', t.description || '');
+          formData.append('color_code', t.color_code || '#6366f1');
+          formData.append('display_order', t.display_order ?? 0);
+          const tRes = await thematicService.createThematic(formData);
+          thematic_id =
+            tRes?.thematic_id ?? tRes?.data?.thematic_id ?? tRes?.data?.data?.thematic_id;
+          if (!thematic_id) throw new Error('thematic_id introuvable');
+        }
+
+        for (const st of t.sub_thematics) {
+          let sub_thematic_id = await findExistingSubThematicIdByTitle(
+            thematic_id,
+            st.title
+          );
+          if (!sub_thematic_id) {
+            const stRes = await subThematicServices.create({
+              thematic_id,
+              title: st.title,
+              description: st.description || null,
+              difficulty_level: st.difficulty_level || 'moyen',
+              display_order: st.display_order ?? 0,
+            });
+            sub_thematic_id =
+              stRes?.sub_thematic_id ??
+              stRes?.data?.sub_thematic_id ??
+              stRes?.data?.data?.sub_thematic_id;
+            if (!sub_thematic_id) throw new Error('sub_thematic_id introuvable');
+          }
+
+          const questions = st.questions || [];
+          for (const q of questions) {
+            await questionServices.create({
+              sub_thematic_id,
+              content: q.content,
+              explanation: q.explanation || null,
+              difficulty_level: q.difficulty_level || 'moyen',
+              question_type: q.question_type || 'multiple_choice',
+              points: q.points ?? 10,
+              time_limit: q.time_limit ?? 30,
+              allow_multiple_correct: q.allow_multiple_correct ? 1 : 0,
+              media_url: q.media_url || null,
+              answer_option1: q.answer_option1,
+              answer_option2: q.answer_option2,
+              answer_option3: q.answer_option3,
+              correct_option: q.correct_option,
+              answer_type: q.answer_type || 'text',
+              answer_media_url: q.answer_media_url || null,
+              points_value: q.points_value ?? 1,
+            });
+          }
+        }
+      }
+
+      const totalSubs = thematics.reduce((a, b) => a + b.sub_thematics.length, 0);
+      const totalQuestions = thematics.reduce(
+        (a, b) => a + b.sub_thematics.reduce((x, y) => x + (y.questions?.length || 0), 0),
+        0,
+      );
+      message.success(`Import réussi: ${thematics.length} thématiques, ${totalSubs} sous‑thématiques, ${totalQuestions} questions`);
     } catch (e) {
       console.error(e);
       message.error(e.message || "Erreur lors de l'import Excel");
@@ -501,12 +633,12 @@ function QuizCreate() {
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={3} />
           </Form.Item>
-          <Space>
+          <Space wrap>
             <Form.Item name="color_code" label="Couleur (hex)">
-              <Input placeholder="#6366f1" style={{ width: 200 }} />
+              <Input placeholder="#6366f1" style={{ width: 200, maxWidth: '100%' }} />
             </Form.Item>
             <Form.Item name="display_order" label="Ordre d'affichage">
-              <InputNumber min={0} style={{ width: 160 }} />
+              <InputNumber min={0} style={{ width: 160, maxWidth: '100%' }} />
             </Form.Item>
           </Space>
           <Form.Item label="Icône">
@@ -547,7 +679,7 @@ function QuizCreate() {
                     <Form.Item {...restField} name={[name, 'description']} label="Description">
                       <Input.TextArea rows={2} />
                     </Form.Item>
-                    <Space>
+                    <Space wrap>
                       <Form.Item
                         {...restField}
                         name={[name, 'difficulty_level']}
@@ -561,7 +693,7 @@ function QuizCreate() {
                         </Radio.Group>
                       </Form.Item>
                       <Form.Item {...restField} name={[name, 'display_order']} label="Ordre">
-                        <InputNumber min={0} style={{ width: 120 }} />
+                        <InputNumber min={0} style={{ width: 120, maxWidth: '100%' }} />
                       </Form.Item>
                     </Space>
 
@@ -637,7 +769,7 @@ function QuizCreate() {
                                   />
                                 </Form.Item>
                                 <Form.Item {...qRest} name={[qName, 'media_url']} label="Media (URL)">
-                                  <Input placeholder="https://..." style={{ width: 240 }} />
+                                  <Input placeholder="https://..." style={{ width: 240, maxWidth: '100%' }} />
                                 </Form.Item>
                               </Space>
 
@@ -697,14 +829,14 @@ function QuizCreate() {
                                   name={[qName, 'answer_media_url']}
                                   label="Media réponse (URL)"
                                 >
-                                 <Input placeholder="https://..." style={{ width: 240 }} />
+                                  <Input placeholder="https://..." style={{ width: 240, maxWidth: '100%' }} />
                                 </Form.Item>
                                 <Form.Item
                                   {...qRest}
                                   name={[qName, 'points_value']}
                                   label="Points bonne réponse"
                                 >
-                                  <InputNumber min={0} style={{ width: 160 }} />
+                                  <InputNumber min={0} style={{ width: 160, maxWidth: '100%' }} />
                                 </Form.Item>
                               </Space>
                             </Card>

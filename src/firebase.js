@@ -20,12 +20,23 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 let analytics;
+const isLocalHost = typeof window !== "undefined" && (() => {
+  const host = window.location.hostname || "";
+  if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
+  if (host.startsWith("192.168.") || host.startsWith("10.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(host)) return true;
+  return false;
+})();
+const shouldInitAnalytics = import.meta.env.PROD && !isLocalHost;
 
-try {
-  analytics = getAnalytics(app);
-} catch {
+if (shouldInitAnalytics) {
+  try {
+    analytics = getAnalytics(app);
+  } catch {
+    analytics = undefined;
+  }
+} else {
   analytics = undefined;
 }
 
 export { app, analytics, firebaseConfig };
-

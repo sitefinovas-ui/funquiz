@@ -39,7 +39,18 @@ export default function CookieBanner() {
   };
 
   // Charger GA dynamiquement après consentement
+  const shouldBlockAnalytics = () => {
+    if (import.meta.env.PROD) return false;
+    if (typeof window === 'undefined') return true;
+    const host = window.location.hostname || '';
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+    if (host.startsWith('192.168.') || host.startsWith('10.')) return true;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(host)) return true;
+    return false;
+  };
+
   const loadGoogleAnalytics = () => {
+    if (shouldBlockAnalytics()) return;
     if (window.gtag) return;
 
     const script = document.createElement('script');

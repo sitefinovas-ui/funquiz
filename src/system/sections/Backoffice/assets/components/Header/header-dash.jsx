@@ -69,6 +69,8 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
             <button
               type="button"
               className="sidebar-collapse-btn position-relative z-10"
+              aria-label="Réduire la sidebar"
+              title="Réduire la sidebar"
               onClick={onToggleCollapse}
             >
               <FiChevronsLeft size={24} />
@@ -80,6 +82,8 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
             <button
               type="button"
               className="sidebar-expand-btn position-absolute z-10"
+              aria-label="Agrandir la sidebar"
+              title="Agrandir la sidebar"
               onClick={onToggleCollapse}
             >
               <FiChevronsRight size={28} />
@@ -102,16 +106,16 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
               const IconComponent = item.icon;
               return (
                 <li key={item.id} className="nav-item mb-1">
-                  <NavLink
-                    to={item.link}
-                    end={item.link === '/dashboard/' || item.link === '/dashboard'}
-                    className={({ isActive }) =>
-                      `nav-link nav-link-pro d-flex align-items-center justify-content-${
-                        isCollapsed ? 'center' : 'start'
-                      } px-3 py-3 rounded-2 position-relative ${isActive ? 'active' : ''}`
-                    }
-                    title={isCollapsed ? item.label : ''}
-                  >
+                    <NavLink
+                      to={item.link}
+                      end={item.link === '/dashboard/' || item.link === '/dashboard'}
+                      className={({ isActive }) =>
+                        `nav-link nav-link-pro d-flex align-items-center justify-content-${
+                          isCollapsed ? 'center' : 'start'
+                        } w-100 px-3 py-2 position-relative ${isActive ? 'active' : ''}`
+                      }
+                      title={isCollapsed ? item.label : ''}
+                    >
                     <IconComponent
                       className="nav-icon"
                       size={20}

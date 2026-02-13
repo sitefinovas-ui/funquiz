@@ -238,6 +238,29 @@ function QuizList() {
     });
   };
 
+  const confirmPurge = () => {
+    Modal.confirm({
+      title: 'Supprimer toutes les thématiques ?',
+      content: 'Cette action est irréversible et supprimera toutes les questions associées.',
+      okText: 'Tout supprimer',
+      okButtonProps: { danger: true },
+      cancelText: 'Annuler',
+      onOk: async () => {
+        try {
+          const res = await thematicService.purgeThematics();
+          const c = res?.result || {};
+          message.success(
+            `Suppression complète: ${c.thematics ?? 0} thématiques, ${c.sub_thematics ?? 0} sous‑thématiques, ${c.questions ?? 0} questions`
+          );
+          await loadThematics();
+        } catch (e) {
+          console.error(e);
+          message.error(e?.response?.data?.error || 'Erreur suppression complète');
+        }
+      },
+    });
+  };
+
   const openSubCreate = (parentThematic) => {
     setEditingSub({ mode: 'create', thematic_id: parentThematic.thematic_id });
     subForm.setFieldsValue({
@@ -327,20 +350,23 @@ function QuizList() {
       title: 'Description',
       key: 'thematic_description',
       ellipsis: true,
+      responsive: ['lg'],
       render: (_, r) => r.description || r.thematic_description,
     },
     {
       title: 'Couleur',
       dataIndex: 'color_code',
       key: 'color_code',
+      responsive: ['md'],
       render: (c) => <Tag color={c}>{c}</Tag>,
     },
     {
-      title: 'Ordre (1/0)',
+      title: 'Actif (1/0)',
       key: 'is_active',
       width: 220,
+      responsive: ['md'],
       render: (_, r) => (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <InputNumber
             min={0}
             max={1}
@@ -355,8 +381,8 @@ function QuizList() {
         </div>
       ),
     },
-    { title: 'Sous-thématiques', dataIndex: 'subCount', key: 'subCount', width: 140 },
-    { title: 'Questions', dataIndex: 'questionCount', key: 'questionCount', width: 120 },
+    { title: 'Sous-thématiques', dataIndex: 'subCount', key: 'subCount', width: 140, responsive: ['md'] },
+    { title: 'Questions', dataIndex: 'questionCount', key: 'questionCount', width: 120, responsive: ['md'] },
     {
       title: 'Actions',
       key: 'actions',
@@ -510,10 +536,16 @@ function QuizList() {
 
   return (
     <Card title="Liste des Quiz">
+      <div style={{ marginBottom: 12 }}>
+        <Button danger onClick={confirmPurge}>
+          Supprimer toutes les thématiques
+        </Button>
+      </div>
       <Table
         dataSource={thematics}
         columns={columns}
         rowKey="thematic_id"
+        size="small"
         scroll={{ x: 'max-content' }}
         expandable={{
           expandedRowRender: (record) => (

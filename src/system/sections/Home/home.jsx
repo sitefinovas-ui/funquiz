@@ -735,66 +735,62 @@ const Home = () => {
         </div>
       </section>
 
-      {/* PUB optionnelle */}
-      <section className="section px-5 mt-4 mb-5  w-100">
-        <div className="">
-          <div className="">
-            {Array.isArray(pub) && pub.length > 0 ? (
-              pub
-                .filter(item => item.statut === 'actif')
-                .map((item, index) => (
-                  <div key={index} className="">
-                    
-                    <div className="d-flex flex-lg-row flex-column align-items-start justify-content-between gap-5 w-100  h-100">
-                      <div style={{width: '100%', height: '500px'}} className=" rounded-5 overflow-hidden ">
-                        <img src={item.image_url} className="img-fluid object-fit-cover w-100 h-100" alt={item.titre} />
-                      </div>
-                      <div style={{maxWidth: '100%'}} className="card-body">
-                        <div className="">
-                          <h2 className="text-focuss position-relative w-100" style={{
-                            fontSize: '1.5rem',
-                            fontWeight: '500',
-                            lineHeight: '1.3',
-                            letterSpacing: '0.5px',
-                            color: 'var(--site-text)',
-                          }}>
-                            En ce moment !
-                          </h2>
-                          
-                        </div>
-                        <div className="mb-5">
-                          <h2
-                            style={{ color: 'var(--site-text)' }}
-                            className="card-title fs-md-1"
-                          >
-                            {item?.titre ?? 'Titre indisponible'}
-                          </h2>
-                          <small className="text-muted">
-                              Publié le {new Date(item.created_at).toLocaleDateString()}
-                          </small>
-                        </div>
-                          <p style={{textAlign: 'justify',fontSize: '1.2rem', color: 'var(--site-text-muted)'}} className="card-text w-100 w-lg-75 mb-5">{item.description}</p>
-                          <p style={{textAlign: 'justify',fontSize: '1.2rem', color: 'var(--site-text-muted)'}} className="card-text w-100 d-flex flex-wrap gap-2">
-                            
-                            <small className="text-light bg-danger rounded-pill py-1 px-2">
-                              Du {formatDateFr(item.date_debut)}
-                            </small>
-                            <small className="text-light bg-danger rounded-pill py-1 px-2">
-                              au {formatDateFr(item.date_fin)}
-                            </small>
-                            
-                            
-                          </p>
-                        </div>
-                    </div>
-                  </div>
-                ))
-            ) : (
-              <p className="text-light"></p>
-            )}
+{/* SECTION PUB – VERSION MODULAIRE STACK */}
+<section className="section pub-section container px-3 px-lg-5 mt-5 mb-5">
+  {Array.isArray(pub) && pub.length > 0 &&
+    pub
+      .filter(item => item.statut === "actif")
+      .map((item, index) => (
+        <div key={index} className="pub-block mb-5">
+
+          <div className="row align-items-center g-4">
+
+            {/* IMAGE */}
+            <div className="col-12 col-lg-6">
+              <div className="pub-image-wrapper">
+                <img
+                  src={item.image_url}
+                  alt={item.titre}
+                  className="img-fluid"
+                />
               </div>
             </div>
-      </section>
+
+            {/* CONTENT */}
+            <div className="col-12 col-lg-6">
+              <div className="pub-content-block">
+
+                <span className="pub-label">
+                  ✨ Offre spéciale
+                </span>
+
+                <h2 className="pub-title">
+                  {item?.titre ?? "Titre indisponible"}
+                </h2>
+
+                <p className="pub-description">
+                  {item.description}
+                </p>
+
+                <div className="pub-dates">
+                  <span>Du {formatDateFr(item.date_debut)}</span>
+                  <span>au {formatDateFr(item.date_fin)}</span>
+                </div>
+
+                <button className="pub-cta">
+                  Découvrir maintenant
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      ))}
+</section>
+
+
 
       {/* GOOGLE OPINIONS */}
       <section className="container section py-3 px-4">
@@ -937,8 +933,8 @@ const Home = () => {
       </section>
 
       {/* NEWSLETTER */}
-      <section className="section pb-5 px-4 w-100">
-        <div className="container p-5 text-center" style={{ maxWidth: '800px' }}>
+      <section className="section px-4 w-100">
+        <div className="container position-relative py-5 text-center" style={{ maxWidth: '800px' }}>
           <h2 className="fw-bold mb-4 text-white">
               Rejoignez notre newsletter pour être informé des dernières actualités, offres
               spéciales et événements.
@@ -964,7 +960,7 @@ const Home = () => {
               {loading ? '...' : "S'inscrire"}
             </button>
           </form>
-          {message && <p className="mt-3 text-light position-absolute bottom-0">{message}</p>}
+          {message && <p className="mt-3 text-light position-absolute bottom-0 start-0 end-0">{message}</p>}
         </div>
       </section>
 

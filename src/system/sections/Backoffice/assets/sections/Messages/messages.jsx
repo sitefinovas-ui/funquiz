@@ -29,28 +29,53 @@ const Messages = () => {
   const [pmSendLoading, setPmSendLoading] = useState(false);
   const [pmSendStatus, setPmSendStatus] = useState(null);
 
+  // Historique
+  const [messages, setMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Récupérer les messages et utilisateurs au chargement
   useEffect(() => {
     if (!isStaff) return;
-    let ignore = false;
-
-    const fetchUsers = async () => {
-      try {
-        setPmLoading(true);
-        const list = await authService.getAllUsers();
-        const onlyUsers = (Array.isArray(list) ? list : []).filter((u) => u?.role === 'user');
-        if (!ignore) setPmUsers(onlyUsers);
-      } catch {
-        if (!ignore) setPmUsers([]);
-      } finally {
-        if (!ignore) setPmLoading(false);
-      }
-    };
-
+    fetchMessages();
     fetchUsers();
-    return () => {
-      ignore = true;
-    };
   }, [isStaff]);
+
+  const fetchUsers = async () => {
+    try {
+      setPmLoading(true);
+      const list = await authService.getAllUsers();
+      const onlyUsers = (Array.isArray(list) ? list : []).filter((u) => u?.role === 'user');
+      setPmUsers(onlyUsers);
+    } catch {
+      setPmUsers([]);
+    } finally {
+      setPmLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      setLoadingMessages(true);
+      const data = await messageServices.getAllMessages();
+      // On suppose que data est un tableau de messages
+      setMessages(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const handleDeleteMessage = async (id) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer ce message ?')) return;
+    try {
+      await messageServices.deleteMessage(id);
+      setMessages((prev) => prev.filter((m) => (m.message_id || m.id) !== id));
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      alert("Impossible de supprimer le message.");
+    }
+  };
 
   return (
     <div className="light-messages-container">
@@ -71,13 +96,14 @@ const Messages = () => {
       </div>
 
       {isStaff && (
-        <div className="conversations-panel" style={{ maxWidth: 980, margin: '0 auto 1.5rem auto' }}>
-          <div className="panel-header">
-            <h3>Nouveau message (Email)</h3>
-            <span className="box-subtitle">Envoi direct</span>
-          </div>
-          <div style={{ padding: '1rem 1.2rem' }}>
-            <div className="row g-2">
+        <>
+          <div className="conversations-panel" style={{ maxWidth: 980, margin: '0 auto 1.5rem auto' }}>
+            <div className="panel-header">
+              <h3>Nouveau message (Email)</h3>
+              <span className="box-subtitle">Envoi direct</span>
+            </div>
+            <div style={{ padding: '1rem 1.2rem' }}>
+              <div className="row g-2">
               <div className="col-12 col-lg-5">
                 <input
                   className="form-control text-dark"
@@ -198,6 +224,62 @@ const Messages = () => {
             </div>
           </div>
         </div>
+
+        {/* Historique des messages */}
+        <div className="conversations-panel" style={{ maxWidth: 980, margin: '0 auto 1.5rem auto' }}>
+          <div className="panel-header">
+            <h3>Historique des messages</h3>
+            <span className="box-subtitle">{messages.length} message(s)</span>
+          </div>
+          <div style={{ padding: '0' }}>
+            {loadingMessages ? (
+              <div className="p-4 text-center text-muted">Chargement...</div>
+            ) : messages.length === 0 ? (
+              <div className="p-4 text-center text-muted">Aucun message trouvé.</div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table mb-0 messages-table table-hover">
+                  <thead>
+                    <tr>
+                      <th className="px-3">Date</th>
+                      <th className="px-3">Sujet</th>
+                      <th className="px-3">Contenu</th>
+                      <th className="px-3 text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {messages.map((msg) => (
+                      <tr key={msg.message_id || msg.id}>
+                        <td className="px-3">
+                          {msg.created_at ? new Date(msg.created_at).toLocaleDateString() : '—'}
+                          <small className="d-block text-muted">
+                            {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                          </small>
+                        </td>
+                        <td className="px-3" style={{ maxWidth: '200px' }}>
+                          <div className="fw-medium text-truncate" title={msg.subject}>{msg.subject || 'Sans sujet'}</div>
+                        </td>
+                         <td className="px-3" style={{ maxWidth: '300px' }}>
+                          <div className="text-muted text-truncate" title={msg.content}>{msg.content || '—'}</div>
+                        </td>
+                        <td className="px-3 text-end">
+                          <button 
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDeleteMessage(msg.message_id || msg.id)}
+                            title="Supprimer"
+                          >
+                             <i className="bi bi-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+        </>
       )}
     </div>
   );

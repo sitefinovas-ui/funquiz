@@ -2,6 +2,7 @@ import './header.css';
 import { useLocation, useNavigate, Link} from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import useAuth from '../../configurations/Context/useAuth';
+import { usePopup } from '../../configurations/Context/PopupContext';
 import pointService from '../../configurations/Services/pointService';
 import { SiHomeassistant, SiNintendogamecube } from 'react-icons/si';
 import { FaSearch } from 'react-icons/fa';
@@ -17,6 +18,7 @@ const Header = ({ openPopup }) => {
   const navigate = useNavigate();   
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const { activePopup } = usePopup();
   const isGame = location.pathname === '/step';
   const isLogin = location.pathname === '/login';
   const isSignUp = location.pathname === '/sign-up';
@@ -27,6 +29,17 @@ const Header = ({ openPopup }) => {
 
   // Points dynamiques depuis le service pointService
   const [points, setPoints] = useState(0);
+  const resolvePoints = (data, fallback) => {
+    const value =
+      data?.total_points ??
+      data?.total_points_games ??
+      data?.points ??
+      data?.total;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+    const fallbackParsed = Number(fallback);
+    return Number.isFinite(fallbackParsed) ? fallbackParsed : 0;
+  };
 
   // Persistance de la langue au chargement (sans état local inutile)
   useEffect(() => {
@@ -42,15 +55,11 @@ const Header = ({ openPopup }) => {
       if (user && user.user_id) {
         try {
           const data = await pointService.getUserPoints(user.user_id);
-          let pts = 0;
-          if (data && data.total_points !== undefined) {
-            pts = Number(data.total_points);
-            if (Number.isNaN(pts)) pts = 0;
-          }
+          const pts = resolvePoints(data, user?.total_points);
           if (!ignore) setPoints(pts);
         } catch {
-          const fallbackPts = Number(user?.total_points) || 0;
-          if (!ignore) setPoints(Number.isNaN(fallbackPts) ? 0 : fallbackPts);
+          const fallbackPts = resolvePoints(null, user?.total_points);
+          if (!ignore) setPoints(fallbackPts);
         }
       } else {
         if (!ignore) setPoints(0);
@@ -89,11 +98,11 @@ const Header = ({ openPopup }) => {
       if (user && user.user_id) {
         try {
           const data = await pointService.getUserPoints(user.user_id);
-          const pts = Number(data?.total_points) || 0;
-          setPoints(Number.isNaN(pts) ? 0 : pts);
+          const pts = resolvePoints(data, user?.total_points);
+          setPoints(pts);
         } catch {
-          const fallbackPts = Number(user?.total_points) || 0;
-          setPoints(Number.isNaN(fallbackPts) ? 0 : fallbackPts);
+          const fallbackPts = resolvePoints(null, user?.total_points);
+          setPoints(fallbackPts);
         }
       } else {
         setPoints(0);
@@ -238,90 +247,70 @@ const Header = ({ openPopup }) => {
             </div>
           </header>
 
-          {/* === Footer Mobile === */}
-          <div className="d-flex align-items-center mx-1 justify-content-center w-100">
-            <div
-              style={{
-                height: '64px',
-                maxWidth: '370px',
-                zIndex: 99999,
-                paddingBottom: 'env(safe-area-inset-bottom)',
-              }}
-              className="mobile-bottom-nav d-lg-none bg-mobile shadow-lg position-fixed bottom-0 w-100 rounded-pill m-2 mx-auto left-0 right-0 d-flex align-items-center justify-content-between px-3 gap-2"
-            >
-              {/* Bloc gauche */}
-              <nav className="flex-grow-1">
-                <ul className="d-flex align-items-center justify-content-center gap-2 list-unstyled m-0 flex-nowrap">
-                  
-                  <li>
-                    <button
-                      onClick={() => openPopup('thematic')}
-                      className="btn-mb-header text-decoration-none"
-                      aria-label={t('header.quiz')}
-                    >
-                      <SiNintendogamecube />
-                      <span className="title-header d-none d-sm-inline">{t('header.quiz')}</span>
-                    </button>
-                  </li>
-                  {/* Bouton accès rapide à la recherche */}
-                  <li>
-                    <button
-                      onClick={() => navigate('/search')}
-                      className="btn-mb-header text-decoration-none"
-                      aria-label="Rechercher"
-                    >
-                      <FaSearch />
-                      <span className="title-header d-none d-sm-inline">Rechercher</span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
+          {/* === Footer Mobile (Magic Nav) === */}
+          <div className="mobile-bottom-nav-container d-lg-none">
+            <div className="mobile-bottom-nav">
+              <ul className="nav-list">
+                {/* 0: Quiz */}
+                <li 
+                  className={`nav-item ${activePopup === 'thematic' ? 'active' : ''}`} 
+                  onClick={() => openPopup('thematic')}
+                >
+                  <button className="nav-link-custom" aria-label={t('header.quiz')}>
+                    <span className="icon"><SiNintendogamecube /></span>
+                    <span className="text">{t('header.quiz')}</span>
+                  </button>
+                </li>
 
-              {/* logo */}
-              <button
-                style={{ width: '72px' }}
-                onClick={() => navigate('/')}
-                className="logo d-flex align-items-center bg-transparent border-0 justify-content-center"
-              >
-                <img src={Logo} className="w-100 h-100" alt="Logo" />
-              </button>
+                {/* 1: Search */}
+                <li 
+                  className={`nav-item ${!activePopup && location.pathname === '/search' ? 'active' : ''}`} 
+                  onClick={() => navigate('/search')}
+                >
+                  <button className="nav-link-custom" aria-label="Rechercher">
+                    <span className="icon"><FaSearch /></span>
+                    <span className="text">Recherche</span>
+                  </button>
+                </li>
 
-              {/* Bloc droit */}
-              <nav className="flex-grow-1">
-                <ul className="d-flex align-items-center justify-content-center gap-2 list-unstyled m-0 flex-nowrap">
-                  <li>
-                    <button
-                      onClick={() => navigate('/contact')}
-                      className="btn-mb-header text-decoration-none"
-                      aria-label={t('header.contact')}
-                    >
-                      <IoMdMail />
-                      <span className="title-header d-none d-sm-inline">{t('header.contact')}</span>
-                    </button>
-                  </li>
-                  <li>
-                    {isAuthenticated ? (
-                      <button
-                        onClick={() => navigate('/profil')}
-                        className="btn-mb-header text-decoration-none"
-                        aria-label={t('header.profile')}
-                      >
-                        <MdAccountCircle />
-                        <span className="title-header d-none d-sm-inline">{t('header.profile')}</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => navigate('/login')}
-                        className="btn-mb-header text-decoration-none"
-                        aria-label={t('header.login')}
-                      >
-                        <MdAccountCircle />
-                        <span className="title-header d-none d-sm-inline">{t('header.login')}</span>
-                      </button>
-                    )}
-                  </li>
-                </ul>
-              </nav>
+                {/* 2: Home (Logo) */}
+                <li 
+                  className={`nav-item ${!activePopup && location.pathname === '/' ? 'active' : ''}`} 
+                  onClick={() => navigate('/')}
+                >
+                  <button className="nav-link-custom" aria-label="Accueil">
+                    <span className="icon logo-icon">
+                      <img src={Logo} alt="Logo" />
+                    </span>
+                    <span className="text">Accueil</span>
+                  </button>
+                </li>
+
+                {/* 3: Contact */}
+                <li 
+                  className={`nav-item ${!activePopup && location.pathname === '/contact' ? 'active' : ''}`} 
+                  onClick={() => navigate('/contact')}
+                >
+                  <button className="nav-link-custom" aria-label={t('header.contact')}>
+                    <span className="icon"><IoMdMail /></span>
+                    <span className="text">{t('header.contact')}</span>
+                  </button>
+                </li>
+
+                {/* 4: Profile/Login */}
+                <li 
+                  className={`nav-item ${!activePopup && (location.pathname === '/profil' || location.pathname === '/login') ? 'active' : ''}`} 
+                  onClick={() => navigate(isAuthenticated ? '/profil' : '/login')}
+                >
+                  <button className="nav-link-custom" aria-label={isAuthenticated ? t('header.profile') : t('header.login')}>
+                    <span className="icon"><MdAccountCircle /></span>
+                    <span className="text">{isAuthenticated ? 'Profil' : 'Login'}</span>
+                  </button>
+                </li>
+
+                {/* The Magic Indicator */}
+                <div className="indicator"></div>
+              </ul>
             </div>
           </div>
         </div>

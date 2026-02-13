@@ -52,7 +52,7 @@ const messageServices = {
       const response = await api.post('/messages/send-email', emailData);
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de l’envoi de l’email :', error);
+      console.error('Erreur lors de l’envoi de l’email :', error?.response?.data || error.message);
       throw error;
     }
   },

@@ -761,3 +761,27 @@
     display: none;
   }
 }
+
+.messages-table th,
+.messages-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--bo-border);
+}
+
+.messages-table th {
+  background: rgba(26, 122, 120, 0.06);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--bo-muted);
+}
+
+.messages-table tr:hover td {
+  background: rgba(26, 122, 120, 0.06);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}

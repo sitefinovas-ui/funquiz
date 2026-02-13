@@ -83,6 +83,8 @@
 }
 
 .head-dash .dropdown-menu {
+  position: absolute; /* Force absolute positioning */
+  top: 100%; /* Position below the button */
   min-width: 340px;
   padding: 0;
   margin-top: 10px;

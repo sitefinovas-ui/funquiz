@@ -51,11 +51,22 @@ const normalizeRelativeMediaUrls = (value) => {
   const origin = computeBackendOrigin();
   const prefix = (s) => `${origin}${s}`;
 
+  const normalizeMediaString = (str) => {
+    if (str.startsWith('/uploads/') || str.startsWith('/public/')) return prefix(str);
+    if (str.startsWith('uploads/') || str.startsWith('public/')) return `${origin}/${str}`;
+    try {
+      const url = new URL(str);
+      if (url.pathname.startsWith('/uploads/') || url.pathname.startsWith('/public/')) {
+        return `${origin}${url.pathname}`;
+      }
+    } catch {}
+    return str;
+  };
+
   const walk = (node) => {
     if (!node) return node;
     if (typeof node === 'string') {
-      if (node.startsWith('/uploads/') || node.startsWith('/public/')) return prefix(node);
-      return node;
+      return normalizeMediaString(node);
     }
     if (Array.isArray(node)) return node.map(walk);
     if (typeof node === 'object') {

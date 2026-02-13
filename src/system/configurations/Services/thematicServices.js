@@ -53,6 +53,14 @@ const thematicService = {
       throw error;
     }
   },
+  purgeThematics: async () => {
+    try {
+      const response = await api.delete('/param/thematics/purge');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
   // ➕ Nouveau: liste “raw” des thématiques (title, thematic_id, etc.)
   getAllParamThematics: async () => {
     try {

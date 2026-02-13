@@ -148,54 +148,185 @@
   }
 }
 
-.mobile-bottom-nav {
-  background-color: #6e06e4;
-}
-
-.bg-mobile {
-  background-color: #6e06e4;
-}
-
-.btn-mb-header {
-  color: #fff;
-  background-color: #791de3;
-  padding: 0.5rem 1rem;
+/* Mobile Bottom Nav - Magic Navigation (Gooey Effect) */
+.mobile-bottom-nav-container {
+  position: fixed;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border-radius: 50px;
-  font-size: 1.2rem;
-  transition: all 0.3s ease-in-out;
-  border: 0;
+  align-items: flex-end;
+  pointer-events: none; /* Allows clicks to pass through around the nav */
 }
 
-.title-header {
-  display: none;
-  font-size: 0.9rem;
+.mobile-bottom-nav {
+  position: relative;
+  width: 100%;
+  height: 70px;
+  background: var(--purple-deep);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
-.btn-mb-header:hover .title-header {
-  display: inline-block;
+.nav-list {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  position: relative;
+}
+
+.nav-item {
+  position: relative;
+  width: 20%;
+  height: 70px;
+  z-index: 1;
+}
+
+.nav-link-custom {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-link-custom .icon {
+  position: relative;
+  display: block;
+  line-height: 75px;
+  font-size: 1.5em;
+  text-align: center;
+  transition: 0.5s;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nav-item.active .nav-link-custom .icon {
+  transform: translateY(-32px);
+  color: var(--purple-deep); /* Icon becomes purple in the white bubble */
+}
+
+/* Specific adjustment for Logo image */
+.logo-icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.5;
+  transition: 0.5s;
+}
+
+.nav-item.active .logo-icon img {
+  filter: none;
+  opacity: 1;
+  width: 40px;
+  height: 40px;
+}
+
+.nav-link-custom .text {
+  position: absolute;
+  color: #fff;
+  font-weight: 400;
+  font-size: 0.75em;
+  letter-spacing: 0.05em;
+  transition: 0.5s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.nav-item.active .nav-link-custom .text {
+  opacity: 1;
+  transform: translateY(10px);
+}
+
+/* Indicator - The Moving Bubble */
+.indicator {
+  position: absolute;
+  top: -35px; /* Positioned half outside */
+  width: 70px;
+  height: 70px;
+  background: #fff;
+  border-radius: 50%;
+  border: 6px solid transparent; /* Keeps sizing consistent */
+  transition: 0.5s;
+  /* Initial position centered on first item (10% of total width - half indicator width) */
+  left: calc(10% - 35px); 
+}
+
+/* Curves using box-shadow on pseudo-elements */
+.indicator::before {
+  content: '';
+  position: absolute;
+  top: 50%; /* Start at middle of circle */
+  left: -22px; /* Shift left */
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border-top-right-radius: 20px;
+  box-shadow: 1px -10px 0 0 var(--purple-deep); /* Curve color matches nav bg */
+}
+
+.indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -22px; /* Shift right */
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border-top-left-radius: 20px;
+  box-shadow: -1px -10px 0 0 var(--purple-deep);
+}
+
+/* Movement Logic using specific Left calculations for perfect centering */
+/* 
+   Slot centers:
+   1: 10%
+   2: 30%
+   3: 50%
+   4: 70%
+   5: 90%
+   Formula: calc(Center% - 35px)
+*/
+
+.nav-item:nth-child(1).active ~ .indicator {
   transform: translateX(0);
-  animation: slideIn 0.3s ease-in-out;
+  left: calc(10% - 35px);
+}
+.nav-item:nth-child(2).active ~ .indicator {
+  transform: translateX(0); /* Reset transform, rely on left */
+  left: calc(30% - 35px);
+}
+.nav-item:nth-child(3).active ~ .indicator {
+  transform: translateX(0);
+  left: calc(50% - 35px);
+}
+.nav-item:nth-child(4).active ~ .indicator {
+  transform: translateX(0);
+  left: calc(70% - 35px);
+}
+.nav-item:nth-child(5).active ~ .indicator {
+  transform: translateX(0);
+  left: calc(90% - 35px);
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
-.btn-mb-header:hover {
-  background-color: #390548;
-  transform: scale(1.05);
-}
+
 
 @media (min-width: 992px) and (max-width: 1199.98px) {
   .header-desktop {

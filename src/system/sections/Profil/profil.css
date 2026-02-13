@@ -137,6 +137,9 @@
 .stat-card.orange {
   background: linear-gradient(135deg, rgba(255, 153, 0, 0.9), rgba(192, 63, 255, 0.75));
 }
+.stat-card.purple {
+  background: linear-gradient(135deg, rgba(155, 52, 211, 0.9), rgba(46, 7, 98, 0.85));
+}
 
 .tabs {
   margin-top: 1rem;

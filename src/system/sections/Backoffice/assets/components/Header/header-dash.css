@@ -32,6 +32,11 @@
   font-size: 0.65rem;
 }
 
+.nav-pro .nav-item {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
 .nav-pro .nav-link-pro {
   color: rgba(255, 255, 255, 0.72);
   border-radius: 14px;
@@ -42,6 +47,7 @@
   font-size: 0.9rem;
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .nav-pro .nav-link-pro:hover {
@@ -65,13 +71,20 @@
 .nav-pro .nav-link-pro.active::before {
   content: '';
   position: absolute;
-  left: 8px;
-  top: 12%;
-  bottom: 12%;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
   width: 4px;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--bo-accent-alt), var(--bo-accent));
   opacity: 0.9;
+}
+
+/* Sur mobile, le :hover peut "coller" après un tap -> évite le décalage */
+@media (hover: none) {
+  .nav-pro .nav-link-pro:hover {
+    transform: none;
+  }
 }
 
 .nav-icon {
@@ -85,11 +98,11 @@
 .nav-text {
   font-size: 0.9rem;
   transition: all 0.2s ease;
-  flex: 0 0 auto;
-  max-width: 40vw;
+  flex: 1; /* Allow it to take available space */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 1;
 }
 
 .avatar-wrapper {
@@ -202,12 +215,12 @@
 }
 
 .sidebar-pro::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
 }
 
 .sidebar-pro::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .sidebar-collapse-btn,
@@ -219,6 +232,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.sidebar-collapse-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.sidebar-collapse-btn:active {
+  transform: scale(0.98);
 }
 
 .sidebar-expand-btn {
@@ -244,7 +276,8 @@
     justify-content: center;
     position: absolute;
     top: 12px;
-    left: 12px;
+    right: 12px;
+    left: auto;
     width: 36px;
     height: 36px;
     border-radius: 999px;
@@ -254,5 +287,11 @@
     font-size: 22px;
     line-height: 1;
     z-index: 5;
+  }
+
+  /* Sur mobile, on utilise le bouton "X" (drawer) -> cache le collapse */
+  .sidebar-collapse-btn,
+  .sidebar-expand-btn {
+    display: none !important;
   }
 }

@@ -327,17 +327,24 @@ function ProfilePage() {
 
   // --- Récupération des points (détails) ---
   useEffect(() => {
+    let ignore = false;
     const fetchUserPoints = async () => {
       if (!user?.user_id) return;
       try {
         const data = await pointService.getUserPoints(user.user_id);
-        setUserPoints(data || null);
+        if (!ignore) setUserPoints(data || null);
       } catch (e) {
         console.error('Erreur récupération des points utilisateur:', e);
-        setUserPoints(null);
+        if (!ignore) setUserPoints(null);
       }
     };
     fetchUserPoints();
+    const handler = () => fetchUserPoints();
+    window.addEventListener('points:updated', handler);
+    return () => {
+      ignore = true;
+      window.removeEventListener('points:updated', handler);
+    };
   }, [user?.user_id]);
 
   // (SUPPRIMÉ) --- Points dynamiques (header) ---
@@ -419,6 +426,11 @@ function ProfilePage() {
   const correctAnswers =
     Number(userPoints?.total_correct_answers) || Number(user?.correctAnswers) || 0;
   const streak = Number(userPoints?.current_streak) || Number(user?.streak) || 0;
+  const totalPoints =
+    Number(userPoints?.total_points) ||
+    Number(userPoints?.total_points_games) ||
+    Number(user?.total_points) ||
+    0;
 
   const userStats = {
     level,
@@ -969,10 +981,12 @@ function ProfilePage() {
           </div>
 
           <div className="stats-grid">
+            <div className="stat-card purple">
+              🪙 {totalPoints.toLocaleString('fr-FR')} <span>Points</span>
+            </div>
             <div className="stat-card blue">
               📊 {userStats.totalQuizzes} <span>Quiz Terminés</span>
             </div>
-            
             <div className="stat-card orange">
               🔥 {quizHistory.length}
               <span>Historique</span>
