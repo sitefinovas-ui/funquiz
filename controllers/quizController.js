@@ -391,8 +391,22 @@ export const updateThematic = async (req, res) => {
 
 export const deleteThematic = async (req, res) => {
   try {
-    await quizModel.deleteThematic(req.params.id);
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+    await quizModel.deleteThematic(id);
     res.json({ message: "Thématique supprimée" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const purgeThematics = async (req, res) => {
+  try {
+    const result = await quizModel.purgeAllThematics();
+    res.json({ message: "Toutes les thématiques supprimées", result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -411,7 +425,11 @@ export const getAllThematics = async (req, res) => {
 
 export const getThematicById = async (req, res) => {
   try {
-    const thematic = await quizModel.getThematicById(req.params.id);
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+    const thematic = await quizModel.getThematicById(id);
     if (!thematic)
       return res.status(404).json({ error: "Thématique introuvable" });
     res.json(thematic);

@@ -80,7 +80,13 @@ const getAllowedOrigins = () =>
 const isOriginAllowed = (origin) => {
   const allowedOrigins = getAllowedOrigins();
   const allowLan = origin && origin.startsWith("http://192.168.");
-  return !origin || allowedOrigins.includes(origin) || allowLan;
+  const allowLocalhost =
+    origin &&
+    (origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:") ||
+      origin.startsWith("https://localhost:") ||
+      origin.startsWith("https://127.0.0.1:"));
+  return !origin || allowedOrigins.includes(origin) || allowLan || allowLocalhost;
 };
 
 const __filename = fileURLToPath(import.meta.url);

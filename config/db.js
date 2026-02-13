@@ -173,6 +173,90 @@ export const connectDB = async () => {
       console.error("Erreur lors de la creation de funquiz_private_messages :", e.message);
     }
 
+    // ---------------------------------------------------------------------
+    // Quiz: compatibilité dumps (AUTO_INCREMENT manquants)
+    // ---------------------------------------------------------------------
+
+    // Historique des parties (sert au calcul des points)
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS quiz_game_history (
+          history_id INT NOT NULL AUTO_INCREMENT,
+          user_id INT NOT NULL,
+          sub_thematic_id INT DEFAULT NULL,
+          score INT DEFAULT 0,
+          max_score INT NOT NULL,
+          total_questions INT NOT NULL,
+          correct_answers INT DEFAULT 0,
+          time_spent INT DEFAULT NULL,
+          difficulty_level ENUM('facile','moyen','difficile') DEFAULT NULL,
+          completion_percentage DECIMAL(5,2) GENERATED ALWAYS AS (
+            (CASE
+              WHEN (total_questions > 0) THEN ((correct_answers * 100.0) / total_questions)
+              ELSE 0
+            END)
+          ) STORED,
+          played_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (history_id),
+          KEY idx_user_id (user_id),
+          KEY idx_played_at (played_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+    } catch (e) {
+      console.error("❌ Erreur lors de la création de quiz_game_history :", e.message);
+    }
+
+    // Certains dumps ont history_id sans AUTO_INCREMENT / sans PK
+    try {
+      await pool.query(`ALTER TABLE quiz_game_history ADD PRIMARY KEY (history_id)`);
+    } catch (e) {
+      // ignore si déjà présent
+    }
+    try {
+      await pool.query(`ALTER TABLE quiz_game_history MODIFY history_id INT NOT NULL AUTO_INCREMENT`);
+    } catch (e) {
+      // ignore si déjà en place
+    }
+
+    // Sessions utilisateur (jeu / reprise)
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS quiz_user_sessions (
+          session_id INT NOT NULL AUTO_INCREMENT,
+          user_id INT NOT NULL,
+          thematic_id INT NOT NULL,
+          sub_thematic_id INT DEFAULT NULL,
+          current_question_index INT DEFAULT 0,
+          answered_questions JSON DEFAULT NULL,
+          current_score INT DEFAULT 0,
+          correct_answers_count INT DEFAULT 0,
+          total_questions INT NOT NULL,
+          difficulty_level ENUM('facile','moyen','difficile') DEFAULT NULL,
+          time_started TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+          last_activity TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          is_completed TINYINT(1) DEFAULT 0,
+          session_data JSON DEFAULT NULL,
+          PRIMARY KEY (session_id),
+          KEY idx_user_id (user_id),
+          KEY idx_last_activity (last_activity)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+    } catch (e) {
+      console.error("❌ Erreur lors de la création de quiz_user_sessions :", e.message);
+    }
+
+    // Certains dumps ont session_id sans AUTO_INCREMENT / sans PK
+    try {
+      await pool.query(`ALTER TABLE quiz_user_sessions ADD PRIMARY KEY (session_id)`);
+    } catch (e) {
+      // ignore si déjà présent
+    }
+    try {
+      await pool.query(`ALTER TABLE quiz_user_sessions MODIFY session_id INT NOT NULL AUTO_INCREMENT`);
+    } catch (e) {
+      // ignore si déjà en place
+    }
+
     try {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS user_feedbacks (

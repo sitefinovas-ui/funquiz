@@ -13,6 +13,7 @@ import {
   createThematic,
   updateThematic,
   deleteThematic,
+  purgeThematics,
   createQuestion,
   updateQuestion,
   updateQuestionAnswers,
@@ -45,6 +46,12 @@ router.get("/param/thematics", getAllThematics);
 router.get("/param/thematics/:id", getThematicById);
 router.post("/param/thematics", upload.single("icon"), createThematic);
 router.put("/param/thematics/:id", upload.single("icon"), updateThematic);
+router.delete(
+  "/param/thematics/purge",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  purgeThematics
+);
 router.delete("/param/thematics/:id", deleteThematic);
 
 // Sub-thematic CRUD

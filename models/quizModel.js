@@ -102,13 +102,35 @@ export const saveUserAnswerToHistory = async ({
   max_score,
   correct,
 }) => {
-  const [result] = await db.query(
-    `INSERT INTO quiz_game_history 
-     (user_id, sub_thematic_id, score, max_score, total_questions, correct_answers)
-     VALUES (?, ?, ?, ?, 1, ?)`,
-    [user_id, sub_thematic_id, score, max_score, correct ? 1 : 0],
-  );
-  return result;
+  try {
+    const [result] = await db.query(
+      `INSERT INTO quiz_game_history 
+       (user_id, sub_thematic_id, score, max_score, total_questions, correct_answers)
+       VALUES (?, ?, ?, ?, 1, ?)`,
+      [user_id, sub_thematic_id, score, max_score, correct ? 1 : 0],
+    );
+    return result;
+  } catch (err) {
+    // Compatibilité: certains dumps ont history_id sans AUTO_INCREMENT
+    const msg = String(err?.message || "");
+    if (err?.code === "ER_NO_DEFAULT_FOR_FIELD" && /history_id/i.test(msg)) {
+      const [rows] = await db.query(
+        `SELECT COALESCE(MAX(history_id), 0) + 1 AS next_id FROM quiz_game_history`,
+      );
+      const nextId = Number(rows?.[0]?.next_id);
+      if (!Number.isFinite(nextId) || nextId <= 0) throw err;
+
+      const [result] = await db.query(
+        `INSERT INTO quiz_game_history 
+         (history_id, user_id, sub_thematic_id, score, max_score, total_questions, correct_answers)
+         VALUES (?, ?, ?, ?, ?, 1, ?)`,
+        [nextId, user_id, sub_thematic_id, score, max_score, correct ? 1 : 0],
+      );
+      return result;
+    }
+
+    throw err;
+  }
 };
 
 // =============================================================================
@@ -116,27 +138,65 @@ export const saveUserAnswerToHistory = async ({
 // =============================================================================
 
 export const getUserTotalPoints = async (user_id) => {
-  const [rows] = await db.query(
-    `SELECT 
-        u.user_id,
-        CONCAT(u.first_name, ' ', u.name) AS full_name,
-        COALESCE(SUM(gh.score), 0) AS total_points,
-        COUNT(DISTINCT gh.history_id) AS total_games_played
-     FROM funquiz_users u
-     LEFT JOIN quiz_game_history gh ON u.user_id = gh.user_id
-     WHERE u.user_id = ?
-     GROUP BY u.user_id, u.first_name, u.name`,
-    [user_id],
-  );
+  let base = null;
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+          user_id,
+          full_name,
+          total_points_games,
+          total_points_achievements,
+          total_points,
+          total_games_played
+       FROM user_points
+       WHERE user_id = ?`,
+      [user_id],
+    );
+    base = rows?.[0] || null;
+  } catch {
+    base = null;
+  }
 
-  const base = (
-    rows[0] || {
+  if (!base) {
+    const [rows] = await db.query(
+      `SELECT 
+          u.user_id,
+          CONCAT(u.first_name, ' ', u.name) AS full_name,
+          COALESCE(g.total_points_games, 0) AS total_points_games,
+          COALESCE(a.total_points_achievements, 0) AS total_points_achievements,
+          COALESCE(g.total_points_games, 0) + COALESCE(a.total_points_achievements, 0) AS total_points,
+          COALESCE(g.total_games_played, 0) AS total_games_played
+       FROM funquiz_users u
+       LEFT JOIN (
+          SELECT 
+            user_id,
+            COALESCE(SUM(score), 0) AS total_points_games,
+            COUNT(DISTINCT history_id) AS total_games_played
+          FROM quiz_game_history
+          WHERE user_id = ?
+          GROUP BY user_id
+       ) g ON u.user_id = g.user_id
+       LEFT JOIN (
+          SELECT 
+            ua.user_id,
+            COALESCE(SUM(a.points_reward), 0) AS total_points_achievements
+          FROM quiz_user_achievements ua
+          JOIN achievements a ON a.achievement_id = ua.achievement_id
+          WHERE ua.user_id = ?
+          GROUP BY ua.user_id
+       ) a ON u.user_id = a.user_id
+       WHERE u.user_id = ?`,
+      [user_id, user_id, user_id],
+    );
+    base = rows[0] || {
       user_id,
       full_name: "",
       total_points: 0,
+      total_points_games: 0,
+      total_points_achievements: 0,
       total_games_played: 0,
-    }
-  );
+    };
+  }
 
   const LEVEL_THRESHOLDS = [0, 100, 250, 450, 700, 1000, 1350, 1750];
   const total = Number(base.total_points) || 0;
@@ -294,6 +354,8 @@ export const getAllUsersTotalPoints = async () => {
 // =============================================================================
 
 export const createQuestionWithAnswers = async ({
+  question_id,
+  answer_id,
   sub_thematic_id,
   content,
   explanation,
@@ -318,11 +380,28 @@ export const createQuestionWithAnswers = async ({
   try {
     await conn.beginTransaction();
 
+    let nextId = question_id ? Number(question_id) : null;
+    if (!Number.isFinite(nextId)) {
+      const [rows] = await conn.query(
+        "SELECT COALESCE(MAX(question_id), 0) + 1 as next_id FROM quiz_questions",
+      );
+      nextId = Number(rows?.[0]?.next_id) || 1;
+    }
+
+    let nextAnswerId = answer_id ? Number(answer_id) : null;
+    if (!Number.isFinite(nextAnswerId)) {
+      const [rows] = await conn.query(
+        "SELECT COALESCE(MAX(answer_id), 0) + 1 as next_id FROM quiz_answers",
+      );
+      nextAnswerId = Number(rows?.[0]?.next_id) || 1;
+    }
+
     const [qres] = await conn.query(
       `INSERT INTO quiz_questions 
-       (sub_thematic_id, content, explanation, difficulty_level, question_type, points, time_limit, allow_multiple_correct, is_active, media_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (question_id, sub_thematic_id, content, explanation, difficulty_level, question_type, points, time_limit, allow_multiple_correct, is_active, media_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        nextId,
         sub_thematic_id,
         content,
         explanation || null,
@@ -335,14 +414,15 @@ export const createQuestionWithAnswers = async ({
         media_url || null,
       ],
     );
-    const question_id = qres.insertId;
+    const newQuestionId = qres.insertId || nextId;
 
     await conn.query(
       `INSERT INTO quiz_answers
-       (question_id, answer_option1, answer_option2, answer_option3, correct_option, answer_type, media_url, points_value)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (answer_id, question_id, answer_option1, answer_option2, answer_option3, correct_option, answer_type, media_url, points_value)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        question_id,
+        nextAnswerId,
+        newQuestionId,
         answer_option1,
         answer_option2,
         answer_option3,
@@ -354,7 +434,7 @@ export const createQuestionWithAnswers = async ({
     );
 
     await conn.commit();
-    return { question_id };
+    return { question_id: newQuestionId };
   } catch (err) {
     await conn.rollback();
     throw err;
@@ -473,6 +553,7 @@ const quizModel = {
 
   // ➕ Créer une sous-thématique
   createSubThematic: async ({
+    sub_thematic_id,
     thematic_id,
     title,
     description,
@@ -480,11 +561,19 @@ const quizModel = {
     display_order = 0,
     is_active = 1,
   }) => {
+    let nextId = sub_thematic_id ? Number(sub_thematic_id) : null;
+    if (!Number.isFinite(nextId)) {
+      const [rows] = await db.query(
+        "SELECT COALESCE(MAX(sub_thematic_id), 0) + 1 as next_id FROM quiz_sub_thematics",
+      );
+      nextId = Number(rows?.[0]?.next_id) || 1;
+    }
     const [res] = await db.query(
       `INSERT INTO quiz_sub_thematics
-       (thematic_id, title, description, difficulty_level, is_active, display_order)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+       (sub_thematic_id, thematic_id, title, description, difficulty_level, is_active, display_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
+        nextId,
         Number(thematic_id),
         title,
         description ?? null,
@@ -493,7 +582,7 @@ const quizModel = {
         Number(display_order) || 0,
       ],
     );
-    return res.insertId;
+    return res.insertId || nextId;
   },
 
   // ✏️ Mettre à jour une sous-thématique
@@ -572,20 +661,28 @@ const quizModel = {
   },
 
   createThematic: async ({
+    thematic_id,
     title,
     description,
     icon_url,
     color_code,
     display_order,
   }) => {
+    let nextId = thematic_id ? Number(thematic_id) : null;
+    if (!Number.isFinite(nextId)) {
+      const [rows] = await db.query(
+        "SELECT COALESCE(MAX(thematic_id), 0) + 1 as next_id FROM quiz_thematics",
+      );
+      nextId = Number(rows?.[0]?.next_id) || 1;
+    }
     const [result] = await db.query(
       `
-      INSERT INTO quiz_thematics (title, description, icon_url, color_code, display_order)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO quiz_thematics (thematic_id, title, description, icon_url, color_code, display_order)
+      VALUES (?, ?, ?, ?, ?, ?)
     `,
-      [title, description, icon_url, color_code, display_order],
+      [nextId, title, description, icon_url, color_code, display_order],
     );
-    return result.insertId;
+    return result.insertId || nextId;
   },
 
   updateThematic: async (
@@ -604,6 +701,33 @@ const quizModel = {
 
     const [result] = await db.query(sql, params);
     return result;
+  },
+
+  purgeAllThematics: async () => {
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [sessionsRes] = await conn.query(`DELETE FROM quiz_user_sessions`);
+      const [historyRes] = await conn.query(`DELETE FROM quiz_game_history`);
+      const [answersRes] = await conn.query(`DELETE FROM quiz_answers`);
+      const [questionsRes] = await conn.query(`DELETE FROM quiz_questions`);
+      const [subsRes] = await conn.query(`DELETE FROM quiz_sub_thematics`);
+      const [thematicsRes] = await conn.query(`DELETE FROM quiz_thematics`);
+      await conn.commit();
+      return {
+        sessions: sessionsRes.affectedRows ?? 0,
+        history: historyRes.affectedRows ?? 0,
+        answers: answersRes.affectedRows ?? 0,
+        questions: questionsRes.affectedRows ?? 0,
+        sub_thematics: subsRes.affectedRows ?? 0,
+        thematics: thematicsRes.affectedRows ?? 0,
+      };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
   },
 
   deleteThematic: async (id) => {
