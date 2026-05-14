@@ -10,6 +10,8 @@ import { logger } from "./middleware/logger.js";
 import compression from "compression";
 import { initializeWhatsApp } from "./utils/whatsapp.js";
 
+
+
 import authRoutes from "./routes/authRoute.js";
 import quizRoutes from "./routes/quizRoute.js";
 import faqRoutes from "./routes/faqRoute.js";
@@ -142,7 +144,7 @@ app.use(
   })
 );
 
-// Fallback préflight OPTIONS (sans wildcard Express 5)
+// tres bien Fallback préflight OPTIONS (sans wildcard Express 5)
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
