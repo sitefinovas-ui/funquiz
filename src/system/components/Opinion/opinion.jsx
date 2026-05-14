@@ -1,225 +1,296 @@
 import './opinion.css';
 import { useState, useEffect } from 'react';
+import { FaSearch, FaTimes, FaPen, FaTrash } from 'react-icons/fa';
 import commentServices from '../../configurations/Services/commentServices';
 
+const StarSelector = ({ value, onChange }) => {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="op-stars-pick">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <button
+          key={s}
+          type="button"
+          className={`op-star-pick-btn ${(hover || value) >= s ? 'on' : ''}`}
+          onClick={() => onChange(s)}
+          onMouseEnter={() => setHover(s)}
+          onMouseLeave={() => setHover(0)}
+          aria-label={`${s} étoile${s > 1 ? 's' : ''}`}
+        >
+          ★
+        </button>
+      ))}
+      <span className="op-star-pick-label">
+        {['', 'Très mauvais', 'Mauvais', 'Correct', 'Bien', 'Excellent !'][hover || value]}
+      </span>
+    </div>
+  );
+};
+
+const StarDisplay = ({ rating = 5 }) => (
+  <div className="op-stars-row">
+    {[1, 2, 3, 4, 5].map((s) => (
+      <span key={s} className={`op-star ${s <= rating ? 'on' : 'off'}`}>★</span>
+    ))}
+  </div>
+);
+
 const Opinion = ({ closePopup }) => {
-  const token = localStorage.getItem('token');
-  const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
-  const user_id_token = payload?.user_id;
+  const token          = localStorage.getItem('token');
+  const payload        = token ? JSON.parse(atob(token.split('.')[1])) : null;
+  const user_id_token  = payload?.user_id;
 
-  const [active, setActive] = useState(false);
-  const [opinionText, setOpinionText] = useState('');
-  const [submissionStatus, setSubmissionStatus] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [loginMessage, setLoginMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isClosing,        setIsClosing]        = useState(false);
+  const [formOpen,         setFormOpen]          = useState(false);
+  const [opinionText,      setOpinionText]       = useState('');
+  const [rating,           setRating]            = useState(5);
+  const [submissionStatus, setSubmissionStatus]  = useState(null);
+  const [comments,         setComments]          = useState([]);
+  const [loginMessage,     setLoginMessage]      = useState('');
+  const [loading,          setLoading]           = useState(false);
+  const [errorMessage,     setErrorMessage]      = useState('');
+  const [searchTerm,       setSearchTerm]        = useState('');
 
-  // 🔹 Supprimer un commentaire
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => closePopup?.(), 260);
+  };
+
   const deleteComment = async (commentId) => {
     try {
       await commentServices.deleteComment(commentId);
-      setComments(comments.filter((comment) => comment.comment_id !== commentId));
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression :', error);
-      setErrorMessage('Impossible de supprimer le commentaire. Réessayez.');
+      setComments((prev) => prev.filter((c) => c.comment_id !== commentId));
+    } catch {
+      setErrorMessage('Impossible de supprimer le commentaire.');
     }
   };
 
-  // 🔹 Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!user_id_token) {
-      setSubmissionStatus('error');
-      setLoginMessage('⚠️ Vous devez être connecté pour donner un avis.');
+      setLoginMessage('Vous devez être connecté pour laisser un avis.');
       return;
     }
-
+    if (!opinionText.trim()) return;
     setLoading(true);
     setErrorMessage('');
     try {
-      await commentServices.createComment({
-        user_id: user_id_token,
-        content: opinionText,
-      });
-
+      await commentServices.createComment({ user_id: user_id_token, content: opinionText, rating });
       setSubmissionStatus('success');
       setOpinionText('');
-
+      setRating(5);
       const updated = await commentServices.getCommentsWithUserAndQuiz();
-      setComments(updated);
-    } catch (error) {
-      console.error('❌ Erreur lors de l’envoi :', error);
+      setComments(updated.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      setTimeout(() => { setFormOpen(false); setSubmissionStatus(null); }, 2000);
+    } catch {
       setSubmissionStatus('error');
-      setErrorMessage('⚠️ L’envoi de votre avis a échoué. Réessayez.');
+      setErrorMessage("L'envoi de votre avis a échoué. Réessayez.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Récupération des commentaires
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const data = await commentServices.getCommentsWithUserAndQuiz();
-        // Trier du plus récent au plus ancien
-        setComments(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-      } catch (error) {
-        console.error('❌ Erreur lors de la récupération :', error);
-        setErrorMessage('⚠️ Impossible de récupérer les commentaires.');
-      }
-    };
-    fetchComments();
+    commentServices.getCommentsWithUserAndQuiz()
+      .then((data) => setComments(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))))
+      .catch(() => setErrorMessage('Impossible de récupérer les avis.'));
   }, []);
 
-  // 🔹 Toggle du formulaire
   const handleToggleForm = () => {
-    if (!token) {
-      setLoginMessage('⚠️ Vous devez être connecté pour donner un avis.');
-      return;
-    }
+    if (!token) { setLoginMessage('Vous devez être connecté pour laisser un avis.'); return; }
     setLoginMessage('');
-    setActive(!active);
+    setFormOpen((v) => !v);
+    setSubmissionStatus(null);
   };
 
-  // 🔹 Filtrer les commentaires selon la recherche
-  const filteredComments = comments.filter((c) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      c.content.toLowerCase().includes(term) ||
-      c.first_name.toLowerCase().includes(term) ||
-      c.name.toLowerCase().includes(term)
-    );
-  });
-
-  // 🔹 Surligner le texte recherché dans le contenu
   const highlightText = (text) => {
     if (!searchTerm) return text;
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
+    return text.replace(new RegExp(`(${searchTerm})`, 'gi'), '<mark class="op-mark">$1</mark>');
   };
 
+  const approvedComments = comments
+    .filter((c) => Number(c.is_approved) === 1)
+    .filter((c) => {
+      const t = searchTerm.toLowerCase();
+      if (!t) return true;
+      return (
+        c.content?.toLowerCase().includes(t) ||
+        c.first_name?.toLowerCase().includes(t) ||
+        c.name?.toLowerCase().includes(t)
+      );
+    });
+
+  const avgRating = approvedComments.length
+    ? (approvedComments.reduce((sum, c) => sum + (c.rating || 5), 0) / approvedComments.length).toFixed(1)
+    : null;
+
   return (
-    <div
-      className="opinion-backdrop"
-      onClick={() => {
-        closePopup?.();
-      }}
-    >
-      <div
-        className="opinion-popup relative"
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        {/* Bouton fermer */}
-        <button onClick={closePopup} className="text-black bg-white py-2 px-3 top-0 right-0 absolute rounded-circle focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">x</button>
+    <div className={`op-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleClose}>
+      <div className={`op-popup ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
 
-        <h1 className="opinion-title text-light">Avis des Joueurs</h1>
-        {loginMessage && <p className="text-warning text-center mt-2">{loginMessage}</p>}
-        {errorMessage && <p className="text-danger text-center mt-1">{errorMessage}</p>}
-
-        {/* Recherche */}
-        <div className="search-container mb-3">
-          <input
-            type="text"
-            placeholder="Rechercher un commentaire ou un nom..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Toggle du formulaire */}
-        <div className="toggle-form-container mb-3">
-          <button onClick={handleToggleForm} className={`btn-toggle ${active ? 'active' : ''}`}>
-            {active ? 'Fermer le formulaire' : 'Donner mon avis'}
+        {/* ── HEADER ── */}
+        <div className="op-header">
+          <div className="op-header-left">
+            <div className="op-icon-wrap">💬</div>
+            <div>
+              <h1 className="op-title">Avis des joueurs</h1>
+              <p className="op-subtitle">Partagez votre expérience avec la communauté</p>
+            </div>
+          </div>
+          <button onClick={handleClose} className="op-close" aria-label="Fermer">
+            <FaTimes size={13} />
           </button>
         </div>
 
-        {/* Formulaire d’avis */}
-        {active && (
-          <div className="opinion-form mb-3">
-            <h2 className="text-light">Laissez votre avis</h2>
-            {submissionStatus === 'success' && (
-              <div className="alert alert-success">✅ Merci ! Votre avis sera visible après validation.</div>
-            )}
-            {submissionStatus === 'error' && (
-              <div className="alert alert-danger">❌ Une erreur est survenue.</div>
-            )}
+        {/* ── BODY ── */}
+        <div className="op-body">
 
-            <form onSubmit={handleSubmit}>
-              <textarea
-                className="form-control"
-                placeholder="Votre avis..."
-                value={opinionText}
-                onChange={(e) => setOpinionText(e.target.value)}
-                required
+          {/* Alerts */}
+          {loginMessage && (
+            <div className="op-alert warn">
+              <span>⚠️</span> {loginMessage}
+            </div>
+          )}
+          {errorMessage && (
+            <div className="op-alert error">
+              <span>⚠️</span> {errorMessage}
+            </div>
+          )}
+
+          {/* Stats bar */}
+          {approvedComments.length > 0 && (
+            <div className="op-stats">
+              <div className="op-stats-score">
+                <span className="op-stats-num">{avgRating}</span>
+                <div className="op-stats-right">
+                  <StarDisplay rating={Math.round(parseFloat(avgRating))} />
+                  <span className="op-stats-sub">{approvedComments.length} avis</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Search + Write row */}
+          <div className="op-toolbar">
+            <div className="op-search">
+              <FaSearch size={13} className="op-search-ico" />
+              <input
+                type="text"
+                placeholder="Rechercher un avis ou un nom…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? 'Envoi en cours...' : 'Envoyer'}
-              </button>
-            </form>
+              {searchTerm && (
+                <button className="op-search-clear" onClick={() => setSearchTerm('')}>
+                  <FaTimes size={11} />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleToggleForm}
+              className={`op-write-btn ${formOpen ? 'open' : ''}`}
+            >
+              <FaPen size={12} />
+              {formOpen ? 'Annuler' : 'Donner mon avis'}
+            </button>
           </div>
-        )}
 
-        {/* Liste des commentaires */}
-        <div className="comments-list mt-4">
-          {filteredComments
-            .filter((comment) => Number(comment.is_approved) === 1)
-            .map((c) => (
-              <div key={c.comment_id} className="comment-item">
-                {c.avatar_url ? (
-                  <img
-                    src={c.avatar_url}
-                    alt={`${c.first_name} ${c.name}`}
-                    className="rounded-circle"
-                    style={{ width: '48px', height: '48px', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div
-                    className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center"
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      fontSize: '20px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    }}
-                  >
-                    {c.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="comment-content">
-                  <div className="comment-header d-flex justify-content-between align-items-center">
-                    <span className="user-name text-light fs-5">
-                      {c.first_name} {c.name}
-                    </span>
-                    <div className="d-flex align-items-center">
-                      <small className="comment-date">
+          {/* Write form */}
+          {formOpen && (
+            <div className="op-form">
+              <p className="op-form-label">Votre note</p>
+              <StarSelector value={rating} onChange={setRating} />
+
+              <p className="op-form-label" style={{ marginTop: 16 }}>Votre avis</p>
+              <div className="op-textarea-wrap">
+                <textarea
+                  className="op-textarea"
+                  placeholder="Décrivez votre expérience avec FunQuiz…"
+                  value={opinionText}
+                  onChange={(e) => setOpinionText(e.target.value)}
+                  maxLength={400}
+                  required
+                />
+                <span className="op-char-count">{opinionText.length}/400</span>
+              </div>
+
+              {submissionStatus === 'success' && (
+                <div className="op-feedback success">
+                  ✅ Merci ! Votre avis sera visible après validation.
+                </div>
+              )}
+              {submissionStatus === 'error' && (
+                <div className="op-feedback error">❌ Une erreur est survenue.</div>
+              )}
+
+              <button
+                type="button"
+                className="op-submit"
+                onClick={handleSubmit}
+                disabled={loading || !opinionText.trim()}
+              >
+                {loading ? <span className="op-spinner" /> : 'Envoyer mon avis'}
+              </button>
+            </div>
+          )}
+
+          {/* Comments list */}
+          <div className="op-list">
+            {approvedComments.length === 0 ? (
+              <div className="op-empty">
+                <span className="op-empty-icon">💬</span>
+                <p>Aucun avis pour le moment.</p>
+                <span>Soyez le premier à partager votre expérience !</span>
+              </div>
+            ) : (
+              approvedComments.map((c, idx) => (
+                <div
+                  key={c.comment_id}
+                  className="op-card"
+                  style={{ animationDelay: `${idx * 0.045}s` }}
+                >
+                  {/* Card header */}
+                  <div className="op-card-head">
+                    <div className="op-card-left">
+                      {c.avatar_url ? (
+                        <img src={c.avatar_url} alt="" className="op-avatar" />
+                      ) : (
+                        <div className="op-avatar-fb">
+                          {(c.first_name || c.name || '?').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <p className="op-card-name">{c.first_name} {c.name}</p>
+                        <StarDisplay rating={c.rating || 5} />
+                      </div>
+                    </div>
+                    <div className="op-card-right">
+                      <time className="op-card-date">
                         {new Date(c.created_at).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
+                          day: '2-digit', month: 'short', year: 'numeric',
                         })}
-                      </small>
+                      </time>
                       {user_id_token === c.user_id && (
                         <button
+                          className="op-del-btn"
                           onClick={() => deleteComment(c.comment_id)}
-                          className="btn btn-sm btn-danger rounded-circle  ms-2"
+                          aria-label="Supprimer"
                         >
-                          x
+                          <FaTrash size={11} />
                         </button>
                       )}
                     </div>
                   </div>
+
+                  {/* Review text */}
                   <p
-                    className="comment-text text-white"
+                    className="op-card-text"
                     dangerouslySetInnerHTML={{ __html: highlightText(c.content) }}
-                  ></p>
+                  />
                 </div>
-              </div>
-            ))}
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

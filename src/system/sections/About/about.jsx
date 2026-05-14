@@ -4,80 +4,112 @@ import aboutServices from '../../configurations/Services/aboutServices.js';
 
 function About() {
   const [aboutList, setAboutList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,   setLoading]   = useState(true);
 
   useEffect(() => {
-    const loadAbout = async () => {
-      try {
-        const list = await aboutServices.getAll();
-        const sorted = (Array.isArray(list) ? list : []).sort((a, b) => {
-          const da = new Date(a.updated_at || a.created_at || 0);
-          const db = new Date(b.updated_at || b.created_at || 0);
-          return db - da;
-        });
+    document.title = 'FUNQUIZ | À propos';
+    aboutServices.getAll()
+      .then(list => {
+        const sorted = (Array.isArray(list) ? list : []).sort((a, b) =>
+          new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
+        );
         setAboutList(sorted);
-      } catch (error) {
-        console.error('Erreur:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAbout();
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return <div className="loading">Chargement...</div>;
-  }
+  if (loading) return (
+    <div className="ab-page">
+      <div className="ab-loading">Chargement…</div>
+    </div>
+  );
 
-  if (!aboutList.length) {
-    return <div className="loading">Aucune donnée disponible.</div>;
-  }
+  if (!aboutList.length) return (
+    <div className="ab-page">
+      <div className="ab-loading">Aucune donnée disponible.</div>
+    </div>
+  );
 
   return (
-    <div className="about-pagee">
+    <div className="ab-page">
       {aboutList.map((item, idx) => (
         <div key={item.id || idx}>
-          {/* Header */}
-          <div className="headerr">
-            <h1 className=''>{item.title }</h1>
-            {item.subtitle && <p className="subtitlee">{item.subtitle}</p>}
+
+          {/* ── HERO ── */}
+          <div className="ab-hero">
+            <p className="ab-hero-eyebrow">À propos</p>
+            <h1 className="ab-hero-title">
+              {item.title || 'FunQuiz'}
+            </h1>
+            {item.subtitle && (
+              <p className="ab-hero-sub">{item.subtitle}</p>
+            )}
           </div>
 
-          {/* Description */}
-          <div className="sectionn text-light">
-            <h2>Qui sommes-nous ?</h2>
-            <p>{item.description }</p>
-          </div>
+          {/* ── CONTENT ── */}
+          <div className="ab-content">
 
-          {/* Mission et Vision */}
-          <div className="sectionn gray">
-            <div className="gridd">
-              <div className="card">
-                <h3>Notre Mission</h3>
-                <p>{item.mission }</p>
+            {/* Description */}
+            {item.description && (
+              <div className="ab-desc-card">
+                <p className="ab-desc-eyebrow">Notre histoire</p>
+                <h2 className="ab-desc-heading">À propos de FunQuiz</h2>
+                <p className="ab-desc-text">{item.description}</p>
+                <p className="ab-desc-quote">
+                  "Apprendre peut être une aventure — FunQuiz le prouve chaque jour."
+                </p>
               </div>
-              <div className="card">
-                <h3>Notre Vision</h3>
-                <p>{item.vision }</p>
+            )}
+
+            {/* Mission & Vision */}
+            {(item.mission || item.vision) && (
+              <div className="ab-mv-row">
+                {item.mission && (
+                  <div className="ab-mv-card">
+                    <span className="ab-mv-label">Mission</span>
+                    <h3 className="ab-mv-heading">Ce que nous faisons</h3>
+                    <p className="ab-mv-text">{item.mission}</p>
+                  </div>
+                )}
+                {item.vision && (
+                  <div className="ab-mv-card">
+                    <span className="ab-mv-label">Vision</span>
+                    <h3 className="ab-mv-heading">Là où nous allons</h3>
+                    <p className="ab-mv-text">{item.vision}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Contact band */}
+            <div className="ab-contact">
+              <div className="ab-contact-left">
+                <p className="ab-contact-eyebrow">Support</p>
+                <h2 className="ab-contact-heading">
+                  Une question ?<br />On vous répond.
+                </h2>
+              </div>
+              <div className="ab-contact-right">
+                <p className="ab-contact-sub">
+                  Notre équipe est disponible du lundi au vendredi, de 9h à 18h.
+                  Chaque message reçoit une réponse en moins de 24h.
+                </p>
+                {item.contact_email ? (
+                  <a href={`mailto:${item.contact_email}`} className="ab-email-btn">
+                    Nous écrire
+                  </a>
+                ) : (
+                  <span className="ab-email-missing">Email non disponible</span>
+                )}
+                {(item.updated_at || item.created_at) && (
+                  <p className="ab-date">
+                    Mis à jour le {new Date(item.updated_at || item.created_at).toLocaleDateString('fr-FR')}
+                  </p>
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Contact */}
-          <div className="sectionn dark mb-5">
-            <h2>Contactez-nous</h2>
-            {item.contact_email ? (
-              <a href={`mailto:${item.contact_email}`} className="btn-about">
-                {item.contact_email}
-              </a>
-            ) : (
-              <button className="btn" disabled>Email non disponible</button>
-            )}
-            <p className="datee">
-              Mis à jour le {item.updated_at || item.created_at
-                ? new Date(item.updated_at || item.created_at).toLocaleDateString('fr-FR')
-                : '—'}
-            </p>
           </div>
         </div>
       ))}

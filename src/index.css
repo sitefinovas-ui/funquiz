@@ -1,41 +1,232 @@
 @import url('https://fonts.googleapis.com/css2?family=Gantari:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lexend:wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Permanent+Marker&display=swap');
 
-:root {
-  --site-bg: #0d0d19;
-  --site-accent: #9b34d3;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  /* Bootstrap ← thème public */
-  --bs-body-color: var(--site-text);
-  --bs-link-color: var(--site-link);
-  --bs-link-hover-color: var(--site-accent);
+@layer base {
+  :root {
+    --site-bg: #0d0d19;
+    --site-accent: #9b34d3;
+    --site-text: #ffffff;
+    --site-text-muted: #a0a9c0;
+    --site-link: #4ea1ff;
+    --site-accent-default: #9b34d3;
+    --site-accent-default-strong: #7e2ab5;
+    --site-surface: rgba(255, 255, 255, 0.06);
+    --site-border: rgba(255, 255, 255, 0.12);
+    --site-panel: rgba(0, 0, 0, 0.22);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--site-bg);
+    color: var(--site-text);
+    font-family: 'Gantari', 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  a {
+    color: var(--site-link);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  a:hover {
+    color: var(--site-accent);
+  }
+
+  /* Scrollbar custom */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(155, 52, 211, 0.5);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(155, 52, 211, 0.8);
+  }
 }
 
-/* Fond et texte global du site public */
-body {
-  background: var(--site-bg);
-  color: var(--site-text) !important;
+@layer components {
+  /* ── Boutons globaux ── */
+  .btn-primary-glow {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300;
+    background: linear-gradient(135deg, rgb(88, 8, 113), rgba(155, 48, 255, 1), rgb(243, 19, 176));
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+  }
+  .btn-primary-glow:hover {
+    @apply -translate-y-0.5 scale-105;
+    box-shadow: 0 10px 30px rgba(155, 52, 211, 0.5);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white border transition-all duration-300;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+  }
+  .btn-ghost:hover {
+    @apply -translate-y-0.5;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(155, 52, 211, 0.5);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ── Glassmorphism card ── */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(155, 52, 211, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(155, 52, 211, 0.15);
+  }
+
+  /* ── Input style ── */
+  .input-dark {
+    @apply w-full rounded-xl px-4 py-3 text-white outline-none transition-all duration-300;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+  }
+  .input-dark::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .input-dark:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(155, 52, 211, 0.6);
+    box-shadow: 0 0 0 3px rgba(155, 52, 211, 0.15);
+  }
+
+  /* ── Section fade-in animation ── */
+  .section {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+  .section.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Gradient text ── */
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #b597f9, rgb(243, 19, 176));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #d1b3ff 50%, rgb(243, 19, 176) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Glow orb decorations ── */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+  .orb-purple {
+    background: rgba(155, 52, 211, 0.3);
+  }
+  .orb-pink {
+    background: rgba(243, 19, 176, 0.2);
+  }
+  .orb-blue {
+    background: rgba(78, 161, 255, 0.15);
+  }
+
+  /* ── Divider ── */
+  .divider-glow {
+    height: 2px;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgb(155, 52, 211), transparent);
+    margin: 0 auto;
+  }
+
+  /* ── Modal override ── */
+  .modal-dark {
+    background: rgba(13, 13, 25, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 }
 
-/* Liens globaux (public) */
-a {
-  color: var(--site-link);
-}
-a:hover {
-  color: var(--site-accent);
+@layer utilities {
+  .bg-custom-app {
+    background: var(--site-bg);
+    min-height: 100vh;
+  }
+
+  /* Hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Gradient border trick */
+  .border-gradient-purple {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+  .border-gradient-purple::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgb(88, 8, 113), rgba(155, 48, 255, 0.6), rgb(243, 19, 176, 0.6));
+    z-index: -1;
+  }
+
+  .text-muted {
+    color: var(--site-text-muted) !important;
+  }
 }
 
-/* Texte atténué (y compris Bootstrap .text-muted) */
-.text-muted {
-  color: var(--site-text-muted) !important;
+/* ── Animations keyframes ── */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-/* Styles déplacés depuis le composant Users */
-.user-management .table-hover tbody tr:hover {
-  background-color: rgba(59, 130, 246, 0.05);
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
 }
 
-/* Si besoin de limiter la hauteur du contenu modal */
-.modal .modal-content {
-  max-height: 90vh;
-  overflow-y: auto;
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(155, 52, 211, 0.4); }
+  50% { box-shadow: 0 0 40px rgba(155, 52, 211, 0.8), 0 0 80px rgba(155, 52, 211, 0.3); }
+}
+
+@keyframes ripple {
+  to { transform: scale(20); opacity: 0; }
 }

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { BarChartOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
+import { FaChartBar, FaList, FaPlus } from 'react-icons/fa';
 import QuizStats from './QuizStats';
-import './quiz.css';
 import QuizList from './QuizList';
 import QuizCreate from './QuizCreate';
 
@@ -12,17 +11,17 @@ const Quiz = () => {
     () => [
       {
         key: 'stats',
-        icon: <BarChartOutlined />,
+        icon: <FaChartBar />,
         label: 'Statistiques',
       },
       {
         key: 'list',
-        icon: <FileTextOutlined />,
+        icon: <FaList />,
         label: 'Liste des quiz',
       },
       {
         key: 'create',
-        icon: <PlusOutlined />,
+        icon: <FaPlus />,
         label: 'Créer un quiz',
       },
     ],
@@ -43,48 +42,43 @@ const Quiz = () => {
   }, [selectedMenu]);
 
   return (
-    <section className="bo-quiz">
-      <header className="bo-quiz-header">
-        <div>
-          <h1 className="bo-quiz-title">Quiz</h1>
-          <p className="bo-quiz-subtitle">Statistiques, liste et création.</p>
-        </div>
-      </header>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      {/* Header */}
+      <div className="space-y-1">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Quiz</h1>
+        <p className="text-slate-500 font-medium">Gérez vos contenus pédagogiques et ludiques</p>
+      </div>
 
-      <nav className="bo-quiz-nav" role="tablist" aria-label="Navigation Quiz">
+      {/* Navigation Tabs */}
+      <div className="flex p-1.5 bg-slate-100 rounded-[24px] w-fit">
         {menuItems.map((item) => {
           const isActive = selectedMenu === item.key;
           return (
             <button
               key={item.key}
-              id={`bo-quiz-tab-${item.key}`}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`bo-quiz-panel-${item.key}`}
-              tabIndex={isActive ? 0 : -1}
-              className={`bo-quiz-tab ${isActive ? 'is-active' : ''}`}
               onClick={() => setSelectedMenu(item.key)}
+              className={`flex items-center gap-2.5 px-6 py-3 rounded-[18px] text-sm font-bold transition-all duration-300 ${
+                isActive 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+              }`}
             >
-              <span className="bo-quiz-tabIcon" aria-hidden="true">
+              <span className={isActive ? 'text-blue-600' : 'text-slate-400'}>
                 {item.icon}
               </span>
-              <span className="bo-quiz-tabLabel">{item.label}</span>
+              {item.label}
             </button>
           );
         })}
-      </nav>
+      </div>
 
-      <div
-        className="bo-quiz-content"
-        role="tabpanel"
-        id={`bo-quiz-panel-${selectedMenu}`}
-        aria-labelledby={`bo-quiz-tab-${selectedMenu}`}
-      >
+      {/* Content Area */}
+      <div className="animate-in slide-in-from-bottom-4 duration-500">
         {content}
       </div>
-    </section>
+    </div>
   );
 };
 
 export default Quiz;
+

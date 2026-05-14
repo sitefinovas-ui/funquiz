@@ -19,7 +19,7 @@ export default function Layout() {
   const location = useLocation();
 
   // Liste des routes où Header/Footer ne doivent pas s'afficher
-  const noHeaderFooterRoutes = ['/login', '/sign-up', '/reset'];
+  const noHeaderFooterRoutes = ['/login', '/sign-up', '/reset', '/dashboard'];
 
   // Vérifie si la route actuelle commence par l'une des routes à cacher
   const shouldHideHeaderFooter = noHeaderFooterRoutes.some((path) =>

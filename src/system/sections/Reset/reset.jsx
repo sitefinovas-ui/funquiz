@@ -4,85 +4,78 @@ import { FaEye, FaEyeSlash, FaRedo } from 'react-icons/fa';
 import authService from '../../configurations/Services/authServices';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+const evalStrength = (pwd) => {
+  if (!pwd) return { percent: 0, label: 'Faible', color: '#ff3b30' };
+  let score = Math.min(pwd.length, 12) * 4;
+  if (/[a-z]/.test(pwd)) score += 10;
+  if (/[A-Z]/.test(pwd)) score += 10;
+  if (/[0-9]/.test(pwd)) score += 10;
+  if (/[^A-Za-z0-9]/.test(pwd)) score += 20;
+  if (pwd.length >= 12) score += 10;
+  const percent = Math.min(100, Math.max(0, score));
+  if (percent < 40) return { percent, label: 'Faible',  color: '#ff3b30' };
+  if (percent < 70) return { percent, label: 'Moyenne', color: '#ff9f0a' };
+  return             { percent, label: 'Forte',   color: '#34c759' };
+};
+
+const STEPS = [
+  { eyebrow: 'Étape 1 sur 3', title: 'Saisissez votre email',    sub: 'Nous vous enverrons un code de vérification.',          icon: '✉️', iconClass: 'blue'  },
+  { eyebrow: 'Étape 2 sur 3', title: 'Entrez le code reçu',      sub: 'Consultez votre boîte mail et saisissez le code.',       icon: '🔢', iconClass: ''      },
+  { eyebrow: 'Étape 3 sur 3', title: 'Nouveau mot de passe',     sub: 'Choisissez un mot de passe sécurisé pour votre compte.', icon: '🔒', iconClass: ''      },
+  { eyebrow: 'Terminé',       title: 'Mot de passe réinitialisé', sub: 'Vous allez être redirigé vers la connexion.',            icon: '✅', iconClass: 'green' },
+];
+
 export default function ResetPassword() {
-  useEffect(() => {
-    document.title = 'FUNQUIZ | Réinitialiser mon mot de passe';
-  }, []);
+  useEffect(() => { document.title = 'FUNQUIZ | Réinitialiser mon mot de passe'; }, []);
+
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('');
-  const [emailLocked, setEmailLocked] = useState(false);
-  const [code, setCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [email,           setEmail]           = useState('');
+  const [emailLocked,     setEmailLocked]     = useState(false);
+  const [code,            setCode]            = useState('');
+  const [newPassword,     setNewPassword]     = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [cooldown, setCooldown] = useState(0);
-  const [showPwd, setShowPwd] = useState(false);
-  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
-  const [pwdStrength, setPwdStrength] = useState({ percent: 0, label: 'Faible' });
+  const [step,            setStep]            = useState(1);
+  const [loading,         setLoading]         = useState(false);
+  const [error,           setError]           = useState('');
+  const [success,         setSuccess]         = useState('');
+  const [cooldown,        setCooldown]        = useState(0);
+  const [showPwd,         setShowPwd]         = useState(false);
+  const [showConfirm,     setShowConfirm]     = useState(false);
+  const [strength,        setStrength]        = useState({ percent: 0, label: 'Faible', color: '#ff3b30' });
 
-  // Strength meter
-  const evalStrength = (pwd) => {
-    let score = 0;
-    if (!pwd) return { percent: 0, label: 'Faible' };
-    const len = pwd.length;
-    score += Math.min(len, 12) * 4;
-    if (/[a-z]/.test(pwd)) score += 10;
-    if (/[A-Z]/.test(pwd)) score += 10;
-    if (/[0-9]/.test(pwd)) score += 10;
-    if (/[^A-Za-z0-9]/.test(pwd)) score += 20;
-    if (len >= 12) score += 10;
-    const percent = Math.max(0, Math.min(100, score));
-    const label = percent < 40 ? 'Faible' : percent < 70 ? 'Moyenne' : 'Forte';
-    return { percent, label };
-  };
-
-  // Cooldown timer for resend
   useEffect(() => {
     if (cooldown <= 0) return;
-    const id = setInterval(() => setCooldown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    const id = setInterval(() => setCooldown(c => c > 0 ? c - 1 : 0), 1000);
     return () => clearInterval(id);
   }, [cooldown]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search || '');
-    const prefillEmail = params.get('email');
-    if (!prefillEmail) return;
-    const normalized = String(prefillEmail).trim();
-    if (!normalized) return;
-    setEmail(normalized);
+    const prefill = params.get('email');
+    if (!prefill) return;
+    const v = String(prefill).trim();
+    if (!v) return;
+    setEmail(v);
     setEmailLocked(true);
   }, [location.search]);
 
+  const clear = () => { setError(''); setSuccess(''); };
+
   const handleRequestCode = async () => {
-    setError('');
-    setSuccess('');
-    const normalizedEmail = String(email || '').trim().toLowerCase();
-    if (!normalizedEmail) {
-      setError('Veuillez saisir votre email.');
-      return;
-    }
-    if (normalizedEmail !== email) setEmail(normalizedEmail);
+    clear();
+    const normalized = String(email || '').trim().toLowerCase();
+    if (!normalized) { setError('Veuillez saisir votre adresse email.'); return; }
     setLoading(true);
     try {
-      const resp = await authService.requestResetPassword(normalizedEmail);
-      setSuccess(resp?.message || 'Si un compte existe pour cet email, un code a été envoyé.');
+      const resp = await authService.requestResetPassword(normalized);
+      setSuccess(resp?.message || 'Code envoyé — vérifiez votre boîte mail.');
       setStep(2);
       setCooldown(30);
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          'Erreur lors de la demande.'
-      );
-    } finally {
-      setLoading(false);
-    }
+      setError(err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Erreur lors de l\'envoi.');
+    } finally { setLoading(false); }
   };
 
   const handleResendCode = async () => {
@@ -91,219 +84,208 @@ export default function ResetPassword() {
   };
 
   const handleValidateCode = () => {
-    const normalizedCode = String(code || '').trim();
-    if (!normalizedCode) {
-      setError('Veuillez saisir le code reçu.');
-      return;
-    }
-    if (normalizedCode !== code) setCode(normalizedCode);
-    setError('');
-    setSuccess('Code validé avec succès ✅');
+    const normalized = String(code || '').trim();
+    if (!normalized) { setError('Veuillez saisir le code reçu.'); return; }
+    clear();
+    setSuccess('Code validé.');
     setStep(3);
   };
 
   const handleResetPassword = async () => {
-    setError('');
-    setSuccess('');
+    clear();
+    if (newPassword !== confirmPassword) { setError('Les mots de passe ne correspondent pas.'); return; }
     setLoading(true);
-    const normalizedCode = String(code || '').trim();
-    if (!normalizedCode) {
-      setError('Veuillez saisir le code reçu.');
-      setLoading(false);
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
-      setLoading(false);
-      return;
-    }
     try {
-      const resp = await authService.resetPassword({ code: normalizedCode, newPassword });
-      setSuccess(resp?.message || 'Mot de passe réinitialisé 🎉');
+      const resp = await authService.resetPassword({ code: String(code || '').trim(), newPassword });
+      setSuccess(resp?.message || 'Mot de passe réinitialisé avec succès.');
       setStep(4);
       setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          'Erreur lors du changement.'
-      );
-    } finally {
-      setLoading(false);
-    }
+      setError(err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Erreur lors du changement.');
+    } finally { setLoading(false); }
   };
 
-  const progress = Math.min(100, Math.max(0, ((step - 1) / 3) * 100));
+  const s = STEPS[step - 1];
 
   return (
-    <div className="reset-full">
-      
+    <div className="rs-page">
+      <div className="rs-card">
 
-      <section className="reset-stage">
-        <div className="reset-band" aria-hidden="true" />
-        <div className="reset-panel">
-          <div className="reset-card">
-            <div className="reset-header text-center">
-              <h1 className="title">Réinitialiser votre mot de passe</h1>
-              <p className="subtitle">
-                Suivez les étapes pour récupérer l’accès à votre compte.
-              </p>
-              <div className="progress-container mt-3">
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${progress}%` }} />
+        {/* ── DOTS ── */}
+        <div className="rs-dots">
+          {[1, 2, 3].map(n => (
+            <div
+              key={n}
+              className={`rs-dot ${step > n ? 'done' : step === n ? 'active' : ''}`}
+            />
+          ))}
+        </div>
+
+        {/* ── HEAD ── */}
+        <div className="rs-head">
+          <div className={`rs-icon ${s.iconClass}`}>{s.icon}</div>
+          <p className="rs-eyebrow">{s.eyebrow}</p>
+          <h1 className="rs-title">{s.title}</h1>
+          <p className="rs-sub">{s.sub}</p>
+        </div>
+
+        {/* ── STEPS ── */}
+        {step === 4 ? (
+
+          /* SUCCESS */
+          <div className="rs-success-wrap">
+            <p style={{ fontSize: 15, color: '#34c759', fontWeight: 600, margin: 0 }}>
+              Redirection en cours…
+            </p>
+          </div>
+
+        ) : (
+          <>
+            <div className="rs-form">
+
+              {/* Step 1 — Email */}
+              {step === 1 && (
+                <div className="rs-field">
+                  <label htmlFor="email" className="rs-label">Adresse email</label>
+                  <input
+                    id="email" type="email" className="rs-input"
+                    placeholder="exemple@mail.com"
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    autoComplete="email"
+                    disabled={loading || emailLocked}
+                  />
                 </div>
-                <div className="progress-steps">
-                  <span className={step >= 1 ? 'active' : ''}>1</span>
-                  <span className={step >= 2 ? 'active' : ''}>2</span>
-                  <span className={step >= 3 ? 'active' : ''}>3</span>
+              )}
+
+              {/* Step 2 — Code */}
+              {step === 2 && (
+                <div className="rs-field">
+                  <label htmlFor="code" className="rs-label">Code de vérification</label>
+                  <input
+                    id="code" type="text" inputMode="numeric"
+                    className="rs-input rs-otp"
+                    placeholder="· · · · · ·"
+                    value={code} onChange={e => setCode(e.target.value)}
+                    autoComplete="one-time-code"
+                    disabled={loading}
+                  />
                 </div>
-              </div>
+              )}
+
+              {/* Step 3 — Passwords */}
+              {step === 3 && (
+                <>
+                  <div className="rs-field">
+                    <label htmlFor="newPwd" className="rs-label">Nouveau mot de passe</label>
+                    <div className="rs-pw-wrap">
+                      <input
+                        id="newPwd"
+                        type={showPwd ? 'text' : 'password'}
+                        className="rs-input"
+                        placeholder="Minimum 6 caractères"
+                        value={newPassword}
+                        onChange={e => { setNewPassword(e.target.value); setStrength(evalStrength(e.target.value)); }}
+                        autoComplete="new-password" minLength={6}
+                        disabled={loading}
+                      />
+                      <button type="button" className="rs-pw-toggle" onClick={() => setShowPwd(v => !v)}>
+                        {showPwd ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                    {newPassword.length > 0 && (
+                      <div className="rs-strength">
+                        <div className="rs-strength-row">
+                          <span className="rs-strength-lbl">Sécurité du mot de passe</span>
+                          <span className="rs-strength-val" style={{ color: strength.color }}>{strength.label}</span>
+                        </div>
+                        <div className="rs-strength-track">
+                          <div className="rs-strength-fill" style={{ width: `${strength.percent}%`, background: strength.color }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rs-field">
+                    <label htmlFor="confirmPwd" className="rs-label">Confirmer le mot de passe</label>
+                    <div className="rs-pw-wrap">
+                      <input
+                        id="confirmPwd"
+                        type={showConfirm ? 'text' : 'password'}
+                        className={`rs-input ${confirmPassword && confirmPassword !== newPassword ? 'invalid' : ''}`}
+                        placeholder="Répétez le mot de passe"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                        disabled={loading}
+                      />
+                      <button type="button" className="rs-pw-toggle" onClick={() => setShowConfirm(v => !v)}>
+                        {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                    {confirmPassword && confirmPassword !== newPassword && (
+                      <p className="rs-hint">Les mots de passe ne correspondent pas.</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Messages */}
+              {error   && <p className="rs-msg error">{error}</p>}
+              {success && step !== 4 && <p className="rs-msg success">{success}</p>}
             </div>
 
-            <div className="reset-body">
-              <div className="back-link text-start mb-3">
-                <button className="link-back" onClick={() => navigate('/login')}>← Retour</button>
-              </div>
-              {/* Step 1 */}
-              <div className={`step ${step === 1 ? 'visible' : 'disabled'}`}>
-                <label htmlFor="email" className="form-label">Adresse email</label>
-                <input
-                  id="email"
-                  type="email"
-                  className="form-control pill"
-                  placeholder="Entrez votre email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  disabled={loading || step > 1 || emailLocked}
-                />
+            {/* Actions */}
+            <div className="rs-actions">
+              {step === 1 && (
                 <button
-                  className="btn-gradient w-100 mt-3"
+                  className="rs-btn-primary"
                   onClick={handleRequestCode}
-                  disabled={loading || !email || step > 1}
+                  disabled={loading || !email}
                 >
-                  Recevoir le code
+                  {loading ? <><span className="rs-spinner" /> Envoi…</> : 'Envoyer le code'}
                 </button>
-              </div>
+              )}
 
-              {/* Step 2 */}
-              <div className={`step ${step === 2 ? 'visible' : 'disabled'}`}>
-                <label htmlFor="code" className="form-label">Code reçu par mail</label>
-                <input
-                  id="code"
-                  type="text"
-                  className="form-control pill"
-                  placeholder="Entrez le code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  disabled={loading || step !== 2}
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                />
-                <div className="d-flex gap-2 mt-3">
+              {step === 2 && (
+                <>
                   <button
-                    className="btn btn-light flex-grow-1 pill"
+                    className="rs-btn-primary"
                     onClick={handleValidateCode}
-                    disabled={loading || !code || step !== 2}
+                    disabled={loading || !code}
                   >
                     Valider le code
                   </button>
                   <button
-                    className="btn btn-outline-secondary d-flex align-items-center gap-2 pill"
+                    className="rs-btn-secondary"
                     onClick={handleResendCode}
                     disabled={loading || cooldown > 0}
-                    aria-live="polite"
                   >
-                    <FaRedo /> {cooldown > 0 ? `Renvoyer (${cooldown}s)` : 'Renvoyer'}
+                    <FaRedo size={12} />
+                    {cooldown > 0 ? `Renvoyer dans ${cooldown}s` : 'Renvoyer le code'}
                   </button>
-                </div>
-              </div>
+                </>
+              )}
 
-              {/* Step 3 */}
-              <div className={`step ${step === 3 ? 'visible' : 'disabled'}`}>
-                <label htmlFor="newPassword" className="form-label">Nouveau mot de passe</label>
-                <div className="position-relative">
-                  <input
-                    id="newPassword"
-                    type={showPwd ? 'text' : 'password'}
-                    className="form-control pe-5 pill"
-                    placeholder="Nouveau mot de passe"
-                    value={newPassword}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setNewPassword(val);
-                      setPwdStrength(evalStrength(val));
-                    }}
-                    disabled={loading || step !== 3}
-                    autoComplete="new-password"
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowPwd((s) => !s)}
-                  >
-                    {showPwd ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-                <div className="d-flex align-items-center gap-2 mt-2">
-                  <small className="text-muted-custom">Sécurité: {pwdStrength.label}</small>
-                  <small className="text-muted-custom">{pwdStrength.percent}%</small>
-                </div>
-                <div className="progress w-50" style={{ height: '6px' }}>
-                  <div
-                    className={`progress-bar ${
-                      pwdStrength.percent < 30 ? 'bg-danger' : pwdStrength.percent < 70 ? 'bg-warning' : 'bg-success'
-                    }`}
-                    style={{ width: `${pwdStrength.percent}%` }}
-                  />
-                </div>
-
-                <label htmlFor="confirmPassword" className="form-label mt-3">Confirmer le mot de passe</label>
-                <div className="position-relative">
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPwd ? 'text' : 'password'}
-                    className={`form-control pe-5 pill ${confirmPassword && confirmPassword !== newPassword ? 'is-invalid' : ''}`}
-                    placeholder="Confirmez le mot de passe"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={loading || step !== 3}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowConfirmPwd((s) => !s)}
-                  >
-                    {showConfirmPwd ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                  <div className="invalid-feedback">Les mots de passe ne correspondent pas</div>
-                </div>
-
+              {step === 3 && (
                 <button
-                  className="btn btn-success w-100 mt-3 pill"
+                  className="rs-btn-primary green"
                   onClick={handleResetPassword}
-                  disabled={loading || !newPassword || !confirmPassword || step !== 3}
+                  disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
                 >
-                  Changer le mot de passe
+                  {loading ? <><span className="rs-spinner" /> Modification…</> : 'Changer le mot de passe'}
                 </button>
-              </div>
-              <div className="reset-footer text-center">
-                {error && <div className="alert alert-danger mb-2">{error}</div>}
-                {success && <div className="alert alert-success mb-2">{success}</div>}
-                <small className="text-muted-custom">Besoin d’aide ? Contacte le support via la page Contact.</small>
-              </div>
+              )}
             </div>
-          </div>
-        </div>
-      </section>
 
-      <div className="reset-dots" aria-hidden="true">
-        <span />
-        <span className="active" />
-        <span />
+            {/* Footer */}
+            <div className="rs-footer">
+              <button className="rs-back" onClick={() => navigate('/login')}>
+                ← Retour à la connexion
+              </button>
+              <span>Besoin d'aide ? Visitez la page Contact.</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

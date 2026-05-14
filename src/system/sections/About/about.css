@@ -1,218 +1,230 @@
-/* about.css */
+/* ══════════════════════════════════════════
+   ABOUT — Apple Design Language
+══════════════════════════════════════════ */
+@keyframes abFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
 
-.about-pagee {
-  font-family: Arial, sans-serif;
-  color: #333;
+.ab-page {
+  min-height: 100vh;
+  background: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
 }
 
-.loading {
-  text-align: center;
-  padding: 100px 20px;
-  font-size: 18px;
-  color: #666;
-}
-
-/* Header */
-.headerr {
-  text-align: center;
-  padding: 80px 20px;
-  background: linear-gradient(135deg, #3103421d, #2a0330);
-}
-
-.headerr h1 {
-  font-family:
-    'SF Pro Display',
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-    font-weight: 400;
-      letter-spacing: -0.01em;
-  font-size: 3.5rem;
-  margin-bottom: 15px;
-  color: #ffffff;
-}
-
-.subtitlee {
-  font-size: 1.2rem;
-  color: #b0aeae;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-/* Sections */
-.sectionn {
-  padding: 60px 20px;
-  max-width: 1100px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.sectionn.gray {
-  background: #f5f5f5;
-}
-
-.sectionn.dark {
-  background: #1a1a1a;
-  color: white;
-}
-
-.sectionn h2 {
-  font-size: 2rem;
-  margin-bottom: 40px;
-}
-
-.sectionn p {
-  font-size: 1.1rem;
-  line-height: 1.7;
-  color: #666;
-}
-
-.sectionn.dark p {
-  color: #ccc;
-}
-
-/* Grid */
-.gridd {  
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
-  margin-top: 30px;
-}
-
-/* Cards */
-.card {
-  background: white;
-  padding: 30px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.card h3 {
-  font-size: 1.3rem;
-  margin-bottom: 15px;
-  color: #1a1a1a;
-}
-
-.card p {
-  font-size: 1rem;
-  color: #666;
-}
-
-.icon {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
-}
-
-/* Stats */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 30px;
-  margin-top: 30px;
-}
-
-.stat {
-  text-align: center;
-}
-
-.stat-number {
-  font-size: 3rem;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 10px;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: #999;
-  text-transform: uppercase;
-}
-
-/* Team Cards */
-.team-card {
-  background: white;
-  padding: 30px;
-  border: 1px solid #ddd;
-}
-
-.team-photo {
-  width: 120px;
-  height: 120px;
-  background: #e5e5e5;
-  border-radius: 50%;
+.ab-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  margin: 0 auto 20px;
+  min-height: 60vh;
+  font-size: 15px;
+  color: #86868b;
 }
 
-.team-card h3 {
-  font-size: 1.3rem;
-  margin-bottom: 5px;
-  color: #1a1a1a;
+/* ── HERO (full-width dark) ── */
+.ab-hero {
+  position: relative;
+  overflow: hidden;
+  background: #1d1d1f url('/footer_rainbow.jpg') center/cover no-repeat;
+  padding: 100px 24px 80px;
+  text-align: center;
 }
-
-.role {
-  font-size: 0.9rem;
-  color: #999;
+.ab-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(29,29,31,.60) 0%,
+    rgba(29,29,31,.40) 50%,
+    rgba(29,29,31,.75) 100%
+  );
+  pointer-events: none;
+}
+.ab-hero > * { position: relative; z-index: 1; }
+.ab-hero-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  margin-bottom: 15px;
+  color: #6e6e73;
+  margin: 0 0 18px;
+}
+.ab-hero-title {
+  font-size: clamp(40px, 6vw, 76px);
+  font-weight: 700;
+  color: #f5f5f7;
+  letter-spacing: -.04em;
+  line-height: 1.04;
+  margin: 0 auto 22px;
+  max-width: 720px;
+}
+.ab-hero-sub {
+  font-size: 17px;
+  color: #86868b;
+  line-height: 1.65;
+  margin: 0 auto;
+  max-width: 520px;
 }
 
-.team-card p {
-  font-size: 1rem;
-  color: #666;
+/* ── CONTENT WRAPPER ── */
+.ab-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 64px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-/* Button */
-.btn-about {
-  display: inline-block;
-  padding: 15px 40px;
-  background: white;
-  color: #46073a;
-  border: 1px solid white;
+/* ── DESCRIPTION CARD ── */
+.ab-desc-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 40px;
+  animation: abFadeUp .4s ease both;
+}
+.ab-desc-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #86868b;
+  margin: 0 0 14px;
+}
+.ab-desc-heading {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  margin: 0 0 20px;
+}
+.ab-desc-text {
+  font-size: 15px;
+  color: #6e6e73;
+  line-height: 1.8;
+  margin: 0 0 24px;
+  max-width: 640px;
+}
+.ab-desc-quote {
+  background: #f5f5f7;
+  border-radius: 14px;
+  padding: 20px 22px;
+  font-size: 15px;
+  font-style: italic;
+  color: #1d1d1f;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── MISSION / VISION CARDS ── */
+.ab-mv-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  animation: abFadeUp .4s .06s ease both;
+}
+.ab-mv-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ab-mv-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #86868b;
+}
+.ab-mv-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -.02em;
+  margin: 0;
+}
+.ab-mv-text {
+  font-size: 15px;
+  color: #6e6e73;
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* ── CONTACT DARK BAND ── */
+.ab-contact {
+  background: #1d1d1f;
+  border-radius: 20px;
+  padding: 56px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  animation: abFadeUp .4s .1s ease both;
+}
+.ab-contact-left {}
+.ab-contact-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6e6e73;
+  margin: 0 0 14px;
+}
+.ab-contact-heading {
+  font-size: clamp(24px, 3.5vw, 40px);
+  font-weight: 700;
+  color: #f5f5f7;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  margin: 0;
+}
+.ab-contact-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ab-contact-sub {
+  font-size: 15px;
+  color: #86868b;
+  line-height: 1.7;
+  margin: 0;
+}
+.ab-email-btn {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 13px 26px;
+  border-radius: 980px;
+  background: #0071e3;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
-  font-size: 1rem;
-  font-weight: bold;
-  margin-top: 10px;
-  cursor: pointer;
-  border-radius: 15px;
-  transition: 0.3s;
+  transition: background .18s, transform .15s, box-shadow .18s;
+  box-shadow: 0 2px 12px rgba(0,113,227,.35);
+  font-family: inherit;
+}
+.ab-email-btn:hover {
+  background: #0077ed;
+  box-shadow: 0 4px 20px rgba(0,113,227,.45);
+  transform: translateY(-1px);
+}
+.ab-email-missing {
+  font-size: 14px;
+  color: #6e6e73;
+}
+.ab-date {
+  font-size: 12px;
+  color: #48484a;
+  margin: 0;
 }
 
-.btn-about:hover {
-  background: transparent;
-  color: white;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.datee {
-  margin-top: 30px;
-  font-size: 0.9rem;
-  color: #ca2121;
-}
-
-.sectionn.dark .datee {
-  color: #ffffff3a;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .headerr h1 {
-    font-size: 2rem;
-  }
-  
-  .sectionn h2 {
-    font-size: 1.5rem;
-  }
-  
-  .stat-number {
-    font-size: 2rem;
-  }
+/* RESPONSIVE */
+@media (max-width: 780px) {
+  .ab-hero     { padding: 72px 20px 56px; }
+  .ab-content  { padding: 40px 16px 60px; gap: 14px; }
+  .ab-desc-card { padding: 28px 22px; }
+  .ab-mv-row   { grid-template-columns: 1fr; }
+  .ab-mv-card  { padding: 28px 22px; }
+  .ab-contact  { grid-template-columns: 1fr; padding: 36px 24px; gap: 28px; }
 }

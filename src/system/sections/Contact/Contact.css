@@ -1,73 +1,219 @@
-/* ====== HEADER ====== */
-.header-contact-cus {
-  background: url('../../../assets/icons/wall_quiz_3.png');
-  background-size: cover;
-  width: 100%;
-  height: 300px;
+/* ══════════════════════════════════════════
+   CONTACT — Apple Design Language
+══════════════════════════════════════════ */
+@keyframes ctFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+
+.ct-page {
+  min-height: 100vh;
+  background: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+}
+
+/* ── HERO ── */
+.ct-hero {
   position: relative;
+  overflow: hidden;
+  background: #1d1d1f;
+  padding: 100px 24px 80px;
+  text-align: center;
 }
-
-.fs-custom-contact {
-  font-size: 12rem;
+.ct-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: .45;
+  pointer-events: none;
+  z-index: 0;
+}
+.ct-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(29,29,31,.55) 0%,
+    rgba(29,29,31,.35) 50%,
+    rgba(29,29,31,.75) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+.ct-hero-content {
+  position: relative;
+  z-index: 2;
+}
+.ct-hero-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #6e6e73;
+  margin: 0 0 18px;
+}
+.ct-hero-title {
+  font-size: clamp(40px, 6vw, 72px);
   font-weight: 700;
-  color: #ffffff;
-  text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.7);
+  color: #f5f5f7;
+  letter-spacing: -.04em;
+  line-height: 1.04;
+  margin: 0 auto 20px;
+  max-width: 700px;
+}
+.ct-hero-sub {
+  font-size: 17px;
+  color: #86868b;
+  line-height: 1.65;
+  margin: 0 auto;
+  max-width: 480px;
 }
 
-.subtitle-contact {
-  font-size: 1.2rem;
-  font-weight: 300;
-  color: #f1f1f1;
-  margin-top: -10px;
-  text-shadow: 1px 1px 8px rgba(0, 0, 0, 0.5);
+/* ── BODY ── */
+.ct-body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
-/* ====== FORMULAIRE ====== */
-.contact-form {
-  max-width: 650px;
-  background-color: #16171a !important;
-  margin: 3rem auto;
-  border: 0.5px solid #3d1c61;
+/* ── LEFT — info cards ── */
+.ct-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ct-info-item {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: ctFadeUp .4s ease both;
+}
+.ct-info-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #86868b;
+}
+.ct-info-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1d1d1f;
+  line-height: 1.4;
 }
 
-.text-muted-custom {
-  color: #bbb !important;
-  font-size: 0.9rem;
+/* ── RIGHT — form card ── */
+.ct-form-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 36px;
+  animation: ctFadeUp .4s .06s ease both;
+}
+.ct-form-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -.025em;
+  margin: 0 0 6px;
+}
+.ct-form-card-sub {
+  font-size: 14px;
+  color: #86868b;
+  margin: 0 0 32px;
+  line-height: 1.5;
 }
 
-/* ====== BOUTON ====== */
-.btn-contact {
-  background: linear-gradient(90deg, #6a11cb, #a76b03);
-  color: white;
+.ct-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ct-field { display: flex; flex-direction: column; gap: 7px; }
+
+.ct-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -.01em;
+}
+
+.ct-input, .ct-textarea {
+  background: #f5f5f7;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: #1d1d1f;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color .18s, background .18s;
+}
+.ct-input::placeholder, .ct-textarea::placeholder { color: #c7c7cc; }
+.ct-input:focus, .ct-textarea:focus {
+  border-color: #0071e3;
+  background: #fff;
+}
+
+.ct-textarea {
+  resize: none;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.ct-word-count {
+  font-size: 11px;
+  color: #86868b;
+  text-align: right;
+}
+.ct-word-count.limit { color: #ff3b30; font-weight: 600; }
+
+.ct-status-msg {
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+.ct-status-msg.success { background: #d1fae5; color: #065f46; }
+.ct-status-msg.error   { background: #fee2e2; color: #991b1b; }
+
+.ct-submit {
+  align-self: flex-start;
+  padding: 13px 28px;
   border: none;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: #0071e3;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 980px;
+  letter-spacing: -.01em;
+  transition: background .18s, transform .15s, box-shadow .18s;
+  box-shadow: 0 2px 12px rgba(0,113,227,.3);
 }
-
-.btn-contact:hover {
-  transform: scale(1.05);
-  background: linear-gradient(90deg, #2575fc, #6a11cb);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+.ct-submit:hover:not(:disabled) {
+  background: #0077ed;
+  box-shadow: 0 4px 20px rgba(0,113,227,.4);
+  transform: translateY(-1px);
 }
+.ct-submit:active:not(:disabled) { transform: scale(.97); }
+.ct-submit:disabled { opacity: .45; cursor: not-allowed; }
+.ct-submit.sent { background: #34c759; box-shadow: 0 2px 12px rgba(52,199,89,.3); }
 
-/* ====== RESPONSIVE ====== */
-@media (max-width: 768px) {
-  .header-contact {
-    height: 200px;
-  }
-
-  .fs-custom-contact {
-    font-size: 3.5rem;
-  }
-
-  .subtitle-contact {
-    width: 50%;
-  }
-
-  .contact-form {
-    background-color: transparent !important;
-    border: none;
-    box-shadow: none;
-    margin: 0;
-  }
+/* RESPONSIVE */
+@media (max-width: 780px) {
+  .ct-body { grid-template-columns: 1fr; padding: 40px 16px 60px; }
+  .ct-hero  { padding: 72px 20px 56px; }
+  .ct-form-card { padding: 28px 20px; }
+  .ct-row   { grid-template-columns: 1fr; }
 }

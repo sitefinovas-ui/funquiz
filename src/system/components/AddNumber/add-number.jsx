@@ -53,12 +53,12 @@ export default function AddNumber({ closePopup }) {
 
   return (
     <div
-      className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+      className="fixed inset-0 flex justify-center items-center"
       style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.5)' }}
     >
-      <div className="shadow-lg p-4 rounded-4 bg-white" style={{ width: 420 }}>
-        <h3 className="mb-3">Ajouter un numéro</h3>
-        <p className="text-muted mb-3">
+      <div className="shadow-lg p-4 rounded-2xl bg-white" style={{ width: 420 }}>
+        <h3 className="mb-3 text-gray-900">Ajouter un numéro</h3>
+        <p className="text-gray-500 mb-3">
           Entrez votre numéro de téléphone pour lier votre compte.
         </p>
         <form onSubmit={handleSubmit}>
@@ -70,17 +70,17 @@ export default function AddNumber({ closePopup }) {
             onChange={(e) => setNumber(sanitizeDigits(e.target.value))}
             disabled={saving}
           />
-          {error && <div className="alert alert-danger">{error}</div>}
-          <div className="d-flex justify-content-end gap-2">
+          {error && <div className="rounded-xl px-4 py-2 mb-2 text-red-400 text-sm border border-red-500/20 bg-red-500/10">{error}</div>}
+          <div className="flex justify-end gap-2">
             <button
               type="button"
-              className="btn btn-outline-secondary"
+              className="border border-gray-400 text-gray-700 rounded-full px-4 py-2 hover:bg-gray-100 transition-colors text-sm"
               onClick={closePopup}
               disabled={saving}
             >
               Annuler
             </button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
+            <button type="submit" className="bg-purple-600 text-white rounded-full px-4 py-2 hover:bg-purple-700 transition-colors text-sm disabled:opacity-50" disabled={saving}>
               {saving ? 'Enregistrement...' : 'Enregistrer'}
             </button>
           </div>

@@ -5,6 +5,8 @@ import thematicService from '../../configurations/Services/thematicServices.js';
 
 function Thematic({ closePopup, highlightThematicId }) {
   const [thematics, setThematics] = useState([]);
+  const [isClosing, setIsClosing] = useState(false);
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,16 +21,17 @@ function Thematic({ closePopup, highlightThematicId }) {
     fetchThematics();
   }, []);
 
-  // Mettez en évidence et scrollez vers la thématique ciblée
   useEffect(() => {
     if (!highlightThematicId) return;
     const el = document.getElementById(`thematic-${highlightThematicId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [highlightThematicId, thematics]);
 
-  // rediriger vers QuizComponent avec la sous-thématique choisie
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => closePopup?.(), 260);
+  };
+
   const handleSubThematicClick = (sub, thematic) => {
     navigate('/step', {
       state: {
@@ -39,102 +42,109 @@ function Thematic({ closePopup, highlightThematicId }) {
     });
   };
 
-  return (
-    <div
-      className="backdrop-blur position-fixed bg-dark bg-opacity-50 top-0 end-0 bottom-0 start-0 h-100 w-100"
-      style={{ zIndex: 1055 }}
-      onClick={() => {
-        closePopup?.();
-      }}
-    >
-      <div className="position-relative w-100">
-        <div
-          style={{ top: '-10px' }}
-          className="text-dark p-5 start-0 end-0 bg-white position-absolute"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <div className="d-flex align-items-center justify-content-between mx-5">
-            <h2 className="title-selec-quiz fw-bold">Toutes les thématiques</h2>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                closePopup?.();
-              }}
-              style={{color:'#0000008c'}}
-              className="border-0 btn-close"
-            >
-              x
-            </button>
-          </div>
+  const filtered = thematics.filter((t) =>
+    t.thematic_title.toLowerCase().includes(search.toLowerCase()) ||
+    (t.sub_thematics || []).some((s) => s.title.toLowerCase().includes(search.toLowerCase()))
+  );
 
-          <div className="dropdown-menu-large w-100">
-            <div className="dropdown-content w-100">
-              {thematics.map((thematic) => (
+  return (
+    <div className={`th-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleClose}>
+      <div className={`th-panel ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="th-header">
+          <div className="th-header-left">
+            <div className="th-header-icon">🎮</div>
+            <div>
+              <h2 className="th-title">Toutes les thématiques</h2>
+              <p className="th-subtitle">Choisissez un univers et lancez-vous</p>
+            </div>
+          </div>
+          <button className="th-close-btn" onClick={handleClose} aria-label="Fermer">✕</button>
+        </div>
+
+        {/* Toolbar */}
+        <div className="th-toolbar">
+          <div className="th-search">
+            <span className="th-search-icon">🔍</span>
+            <input
+              type="text"
+              className="th-search-input"
+              placeholder="Rechercher une thématique..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className="th-search-clear" onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
+          <span className="th-count-label">
+            {filtered.length} thématique{filtered.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* Grid */}
+        <div className="th-body">
+          {filtered.length === 0 ? (
+            <div className="th-empty">Aucune thématique pour « {search} »</div>
+          ) : (
+            <div className="th-grid">
+              {filtered.map((thematic, idx) => (
                 <div
                   key={thematic.thematic_id}
                   id={`thematic-${thematic.thematic_id}`}
-                  className="dropdown-column"
-                  style={
-                    highlightThematicId === thematic.thematic_id
-                      ? { backgroundColor: 'rgba(179, 14, 182, 0.13)', borderRadius: '12px', padding: '12px' }
-                      : undefined
-                  }
+                  className={`th-card ${highlightThematicId === thematic.thematic_id ? 'highlighted' : ''}`}
+                  style={{ '--card-color': thematic.color_code || '#9b34d3', animationDelay: `${idx * 0.04}s` }}
                 >
-                  {/* Icône thématique */}
                   <div
-                    className="image-container rounded-circle overflow-hidden mb-3"
-                    style={{
-                      width: '100px',
-                      height: '100px',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor: thematic.color_code,
-                    }}
+                    className="th-card-icon"
+                    style={{ background: thematic.color_code || '#9b34d3' }}
                   >
                     <img
                       src={thematic.icon_url}
                       loading="lazy"
                       decoding="async"
                       fetchpriority="low"
-                      className="rounded-circle w-100 h-100 object-fit-cover"
-                      alt="Thematic category"
+                      className="th-card-icon-img"
+                      alt={thematic.thematic_title}
                     />
                   </div>
 
-                  <h4 className={highlightThematicId === thematic.thematic_id ? '' : ''}>
-                    {thematic.thematic_title}
-                  </h4>
+                  <h4 className="th-card-title">{thematic.thematic_title}</h4>
 
-                  <ul className="list-unstyled text-start">
+                  {thematic.sub_thematics?.length > 0 && (
+                    <span className="th-card-badge">{thematic.sub_thematics.length} quiz</span>
+                  )}
+
+                  <ul className="th-sub-list">
                     {Array.isArray(thematic.sub_thematics) && thematic.sub_thematics.length > 0 ? (
                       thematic.sub_thematics.map((sub) => (
-                        <li className="hover-custom text-start" key={sub.sub_thematic_id}>
+                        <li key={sub.sub_thematic_id}>
                           <button
+                            className="th-sub-btn"
                             onClick={() => {
                               handleSubThematicClick(sub, thematic);
                               closePopup?.();
                             }}
-                            className="text-decoration-none bg-transparent border-0 text-primary"
                           >
+                            <span className="th-sub-arrow">›</span>
                             {sub.title}
                           </button>
                         </li>
                       ))
                     ) : (
-                      <li className="text-muted fst-italic small">Aucune sous-thématique</li>
+                      <li className="th-sub-empty">Aucune sous-thématique</li>
                     )}
                   </ul>
                 </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
+
       </div>
     </div>
   );
-};
+}
 
 export default Thematic;

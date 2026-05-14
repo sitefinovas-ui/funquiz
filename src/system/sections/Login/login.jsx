@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../configurations/Context/useAuth';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
 import { GoogleLogin } from '@react-oauth/google';
 import './login.css';
 
@@ -9,43 +9,15 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showManual, setShowManual] = useState(false);
   const [error, setError] = useState('');
+
   const navigate = useNavigate();
   const { login, loginWithGoogle, loading } = useAuth();
 
   useEffect(() => {
     document.title = 'FUNQUIZ | Se connecter';
   }, []);
-
-  const togglePassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleRippleEffect = (e) => {
-    const button = e.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const ripple = document.createElement('div');
-    ripple.style.cssText = `
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.35);
-      transform: scale(0);
-      animation: ripple 0.6s linear;
-      left: ${x}px;
-      top: ${y}px;
-      width: 20px;
-      height: 20px;
-      margin-left: -10px;
-      margin-top: -10px;
-      pointer-events: none;
-    `;
-
-    button.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -54,12 +26,11 @@ const Login = () => {
       await login({ email, password });
       navigate('/');
     } catch (err) {
-      // Lis d'abord `message` renvoyé par l'API, puis `error` (compatibilité)
       setError(
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        'Erreur lors de la connexion. Veuillez réessayer.'
+        'Erreur lors de la connexion'
       );
     }
   };
@@ -68,115 +39,191 @@ const Login = () => {
     try {
       setError('');
       const googleToken = credentialResponse.credential;
-      if (!googleToken) throw new Error('Aucun token Google reçu');
+      if (!googleToken) throw new Error('Token Google manquant');
       await loginWithGoogle(googleToken);
       navigate('/');
     } catch (err) {
-      setError('Erreur Google: ' + (err.response?.data?.message || err.message));
+      setError('Erreur Google : ' + err.message);
     }
   };
 
-  const handleGoogleError = (error) => {
-    console.error('Google login error:', error);
-    setError('Échec de la connexion Google. Veuillez réessayer.');
+  const handleGoogleError = () => {
+    setError('Erreur de connexion Google');
   };
 
   return (
-    <div className=" d-flex">
-      <div className="anthropic-left-panel">
-        <div className="anthropic-content">
-          <div className="anthropic-header">
-            <h1 className="anthropic-title">
-              Apprendre ?<br />
-              S'amuser.
-            </h1>
-            <p className="anthropic-subtitle">Le quiz pour les esprits curieux</p>
+    <div className="min-h-screen relative flex bg-[#f5f5f7]">
+
+      {/* ── Form panel — identique desktop, centré mobile ── */}
+      <div className="
+        flex flex-1
+        absolute z-10
+        top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+        items-center justify-center
+        px-6
+        w-full lg:w-auto
+      ">
+        <div className="w-full max-w-md">
+
+          <h1 className="text-3xl text-center animate-[fadeInUp_0.5s_ease-in-out] font-semibold text-white">
+            Bon retour
+          </h1>
+
+          <p className="mt-2 text-sm text-center text-white/50">
+            Connectez-vous à votre compte FunQuiz
+          </p>
+
+          <div className="flex mt-8 justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              shape="pill"
+              width="320"
+            />
           </div>
 
-          <div className="anthropic-card">
-            <div className="anthropic-google-wrapper">
-               <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="filled_black"
-                  shape="rectangular"
-                  width="320"
-                  text="continue_with"
-                />
-            </div>
+          <div className="my-4 text-center text-xs text-gray-400">
+            ou
+          </div>
 
-            <div className="anthropic-divider">
-              <span>OU</span>
-            </div>
+          <button
+            type="button"
+            onClick={() => setShowManual(!showManual)}
+            className="
+              w-full py-3 rounded-xl
+              bg-black text-white
+              hover:bg-gray-800
+              transition
+              relative z-10
+            "
+            style={{ display: showManual ? 'none' : 'block' }}
+          >
+            Continuer manuellement
+          </button>
 
-            {error && <div className="anthropic-error">{error}</div>}
+          <div
+            className="rounded-2xl shadow-sm"
+            style={{ display: showManual ? 'block' : 'none' }}
+          >
+            {error && (
+              <div className="mt-3 text-sm text-red-500">{error}</div>
+            )}
 
-            <form onSubmit={handleLogin} className="anthropic-form">
-              <div className="anthropic-input-group">
+            <div
+              className="overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out"
+              style={{
+                maxHeight: showManual ? '420px' : '0px',
+                opacity: showManual ? 1 : 0,
+              }}
+            >
+              <div className="pt-4 space-y-3">
+
                 <input
                   type="email"
-                  className="anthropic-input"
-                  placeholder="nom@exemple.com"
+                  placeholder="Adresse email"
+                  className="
+                    w-full px-4 py-3
+                    text-sm text-black
+                    rounded-xl
+                    border border-gray-200
+                    focus:outline-none focus:ring-2 focus:ring-gray-300
+                  "
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
                   required
                 />
-              </div>
 
-              <div className="anthropic-input-group">
-                <div className="anthropic-password-wrapper">
+                <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    className="anthropic-input"
                     placeholder="Mot de passe"
+                    className="
+                      w-full px-4 py-3
+                      rounded-xl
+                      border border-gray-200
+                      focus:outline-none focus:ring-2 focus:ring-gray-300
+                      text-sm text-black
+                    "
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
                     required
                   />
                   <button
                     type="button"
-                    className="anthropic-eye-btn"
-                    onClick={togglePassword}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
+
+                <button
+                  type="submit"
+                  onClick={handleLogin}
+                  disabled={loading}
+                  className="
+                    w-full py-3
+                    rounded-xl
+                    bg-black text-white
+                    hover:bg-gray-800
+                    transition
+                  "
+                >
+                  {loading ? 'Connexion...' : 'Se connecter'}
+                </button>
+
               </div>
-
-              <button type="submit" className="anthropic-btn-primary" disabled={loading}>
-                {loading ? 'Chargement...' : "Continuer avec l'email"}
-              </button>
-            </form>
-            
-             <div className="anthropic-footer-links">
-               <Link
-                 to={
-                   email && email.trim().length > 0
-                     ? `/reset?email=${encodeURIComponent(email.trim())}`
-                     : '/reset'
-                 }
-               >
-                 Mot de passe oublié ?
-               </Link>
-               <span>•</span>
-               <Link to="/sign-up">S'inscrire</Link>
             </div>
-
-            <p className="anthropic-disclaimer">
-              En continuant, vous acceptez nos <a href="/terms#cgu">Conditions d'utilisation</a> et notre <a href="/terms#privacy">Politique de confidentialité</a>.
-            </p>
           </div>
+
+          <div
+            className="flex justify-between mt-10 text-sm text-gray-500"
+            style={{ display: showManual ? 'flex' : 'none' }}
+          >
+            <Link to="/reset" className="hover:text-black text-white">
+              Mot de passe oublié
+            </Link>
+            <Link to="/sign-up" className="hover:text-black text-white">
+              Créer un compte
+            </Link>
+          </div>
+
+          <div
+            className="mt-8"
+            style={{ display: showManual ? 'none' : 'block' }}
+          >
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full gap-2 flex items-center justify-center py-3 rounded-xl text-[12px] text-white hover:animate-pulse transition"
+            >
+              <FaArrowLeft /> Retour
+            </button>
+          </div>
+
         </div>
       </div>
 
-      <div className="anthropic-right-panel">
-         {/* Placeholder for the artistic image */}
-         <div className="anthropic-art-container">
-            <img src="/play.webp" alt="Funquiz Art" className="w-100 h-100 anthropic-art-logo" />
-         </div>
+      {/* ── Mobile background — uniquement sous lg ── */}
+      <div className="absolute inset-0 lg:hidden">
+        <img
+          src="/play.webp"
+          alt=""
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/55 backdrop-blur-[6px]" />
       </div>
+
+      {/* ── RIGHT desktop — identique, inchangé ── */}
+      <div className="hidden lg:flex flex-1 items-center justify-center relative w-screen h-screen bg-[#fafafa] overflow-hidden">
+        <img
+          src="/play.webp"
+          className="absolute inset-0 w-full h-full object-cover scale-105"
+        />
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-[08px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
+      </div>
+
     </div>
   );
 };

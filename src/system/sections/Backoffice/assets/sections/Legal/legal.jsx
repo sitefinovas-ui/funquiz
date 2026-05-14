@@ -1,5 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Modal, Form, Input, Button, message, Radio, Grid } from 'antd';
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaCheckCircle,
+  FaTimes,
+  FaFileContract,
+  FaUserShield,
+  FaCookieBite,
+  FaInfoCircle,
+  FaHeadset,
+  FaQuestionCircle,
+  FaSpinner,
+  FaSave,
+} from 'react-icons/fa';
 import cguServices from '../../../../../configurations/Services/cguServices.js';
 import privacyPolicyServices from '../../../../../configurations/Services/privacyPolicyServices.js';
 import cookiesPolicyServices from '../../../../../configurations/Services/cookiesPolicyServices.js';
@@ -7,29 +21,26 @@ import aboutServices from '../../../../../configurations/Services/aboutServices.
 import contactServices from '../../../../../configurations/Services/contactServices.js';
 import faqServices from '../../../../../configurations/Services/faqService.js';
 
-const statusOptions = [
-  { value: 'draft', label: 'Brouillon' },
-  { value: 'published', label: 'Publié' },
-];
-
-function Legal() {
+const Legal = () => {
   const [loading, setLoading] = useState(true);
-  const [cgu, setCgu] = useState([]);
-  const [privacy, setPrivacy] = useState([]);
-  const [cookies, setCookies] = useState([]);
-  const [about, setAbout] = useState([]);
-  const [contacts, setContacts] = useState([]);
-  const [faq, setFaq] = useState([]);
+  const [activeTab, setActiveTab] = useState('cgu');
+  const [data, setData] = useState({
+    cgu: [], privacy: [], cookies: [], about: [], contacts: [], faq: []
+  });
 
-  const [modal, setModal] = useState({ type: null, item: null });
-  const [form] = Form.useForm();
-  const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
-  const tableSize = isMobile ? 'small' : 'middle';
-  const tableScroll = { x: 'max-content' };
-  const modalWidth = isMobile ? 'calc(100vw - 24px)' : 700;
+  const [modal, setModal] = useState({ show: false, type: null, item: null });
+  const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
 
-  // === Chargement des données ===
+  const tabs = [
+    { id: 'cgu', label: 'CGU', icon: FaFileContract },
+    { id: 'privacy', label: 'Confidentialité', icon: FaUserShield },
+    { id: 'cookies', label: 'Cookies', icon: FaCookieBite },
+    { id: 'about', label: 'À propos', icon: FaInfoCircle },
+    { id: 'contacts', label: 'Contacts', icon: FaHeadset },
+    { id: 'faq', label: 'FAQ', icon: FaQuestionCircle },
+  ];
+
   const loadAll = async () => {
     setLoading(true);
     try {
@@ -41,511 +52,296 @@ function Legal() {
         contactServices.getAll().catch(() => []),
         faqServices.getAllFaq().catch(() => []),
       ]);
-      setContacts(ct); // Afficher tous les contacts dans le dash, même "cachés"
-      setCgu(c);
-      setPrivacy(p);
-      setCookies(k);
-      setAbout(a);
-      setFaq(f);
+      setData({ cgu: c, privacy: p, cookies: k, about: a, contacts: ct, faq: f });
     } catch (e) {
       console.error(e);
-      message.error('Erreur de chargement des données légales');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+  useEffect(() => { loadAll(); }, []);
 
-  // === Modal ===
   const openModal = (type, item = null) => {
-    setModal({ type, item });
-    setTimeout(() => {
-      if (item) {
-        form.setFieldsValue(item);
-      } else {
-        form.resetFields();
-        if (type.includes('contact')) {
-          form.setFieldsValue({ status: 'operationnel' });
-        } else if (type.includes('faq')) {
-          form.setFieldsValue({ is_active: 1 });
-        } else if (!type.includes('about')) {
-          form.setFieldsValue({ status: 'draft' });
-        }
-      }
-    }, 0);
+    setModal({ show: true, type, item });
+    if (item) {
+      setFormData(item);
+    } else {
+      setFormData(type === 'faq' ? { is_active: 1 } : type === 'contacts' ? { status: 'operationnel' } : { status: 'draft' });
+    }
   };
 
-  const closeModal = () => {
-    setModal({ type: null, item: null });
-    form.resetFields();
-  };
+  const closeModal = () => { setModal({ show: false, type: null, item: null }); setFormData({}); };
 
-  // === Sauvegarde ===
-  const saveItem = async () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const v = await form.validateFields();
-      switch (modal.type) {
-        case 'cgu-create':
-          await cguServices.create(v);
-          break;
-        case 'cgu-edit':
-          await cguServices.update(modal.item.id, v);
-          break;
-        case 'privacy-create':
-          await privacyPolicyServices.create(v);
-          break;
-        case 'privacy-edit':
-          await privacyPolicyServices.update(modal.item.id, v);
-          break;
-        case 'cookies-create':
-          await cookiesPolicyServices.create(v);
-          break;
-        case 'cookies-edit':
-          await cookiesPolicyServices.update(modal.item.id, v);
-          break;
-        case 'about-create':
-          await aboutServices.create(v);
-          break;
-        case 'about-edit':
-          await aboutServices.update(modal.item.id, v);
-          break;
-        case 'contact-create':
-          await contactServices.create(v);
-          break;
-        case 'contact-edit':
-          await contactServices.update(modal.item.id, v);
-          break;
-        case 'faq-create':
-          await faqServices.createFaq({
-            question: v.question,
-            answer: v.answer,
-            is_active: Number(v.is_active ?? 1),
-          });
-          break;
-        case 'faq-edit':
-          await faqServices.updateFaq(modal.item.faq_id, {
-            question: v.question,
-            answer: v.answer,
-            is_active: Number(v.is_active),
-          });
-          break;
-        default:
-          break;
-      }
-      message.success('Enregistré avec succès');
+      const type = modal.type;
+      const id = modal.item?.id || modal.item?.faq_id;
+      const isEdit = !!modal.item;
+
+      if (type === 'cgu') await (isEdit ? cguServices.update(id, formData) : cguServices.create(formData));
+      if (type === 'privacy') await (isEdit ? privacyPolicyServices.update(id, formData) : privacyPolicyServices.create(formData));
+      if (type === 'cookies') await (isEdit ? cookiesPolicyServices.update(id, formData) : cookiesPolicyServices.create(formData));
+      if (type === 'about') await (isEdit ? aboutServices.update(id, formData) : aboutServices.create(formData));
+      if (type === 'contacts') await (isEdit ? contactServices.update(id, formData) : contactServices.create(formData));
+      if (type === 'faq') await (isEdit ? faqServices.updateFaq(id, { question: formData.question, answer: formData.answer, is_active: Number(formData.is_active) }) : faqServices.createFaq({ question: formData.question, answer: formData.answer, is_active: Number(formData.is_active) }));
+
       closeModal();
       await loadAll();
     } catch (e) {
       console.error(e);
-      message.error('Erreur lors de l’enregistrement');
+      alert('Erreur lors de l’enregistrement');
+    } finally {
+      setSaving(false);
     }
   };
 
-  // === Suppression ===
-  const deleteItem = async (type, id) => {
-    Modal.confirm({
-      title: 'Supprimer cet élément ?',
-      okText: 'Supprimer',
-      okButtonProps: { danger: true },
-      cancelText: 'Annuler',
-      onOk: async () => {
-        try {
-          if (type === 'cgu') await cguServices.delete(id);
-          if (type === 'privacy') await privacyPolicyServices.delete(id);
-          if (type === 'cookies') await cookiesPolicyServices.delete(id);
-          if (type === 'about') await aboutServices.delete(id);
-          if (type === 'contact') await contactServices.delete(id);
-          if (type === 'faq') await faqServices.deleteFaq(id);
-          message.success('Supprimé');
-          await loadAll();
-        } catch {
-          message.error('Erreur lors de la suppression');
-        }
-      },
-    });
-  };
-
-  // === Mise à jour du statut des contacts ===
-  const updateContactStatus = async (item, status) => {
+  const handleDelete = async (type, id) => {
+    if (!confirm('Supprimer cet élément ?')) return;
     try {
-      await contactServices.update(item.id, { ...item, status });
-      message.success('Statut du contact mis à jour');
+      if (type === 'cgu') await cguServices.delete(id);
+      if (type === 'privacy') await privacyPolicyServices.delete(id);
+      if (type === 'cookies') await cookiesPolicyServices.delete(id);
+      if (type === 'about') await aboutServices.delete(id);
+      if (type === 'contacts') await contactServices.delete(id);
+      if (type === 'faq') await faqServices.deleteFaq(id);
       await loadAll();
-    } catch {
-      message.error('Erreur mise à jour contact');
+    } catch (e) {
+      alert('Erreur lors de la suppression');
     }
   };
 
-  // === Colonnes communes ===
-  const columnsCommon = (type) => [
-    { title: 'Titre', dataIndex: 'title', key: 'title' },
-    {
-      title: 'Statut',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const opt = statusOptions.find((s) => s.value === status);
-        return opt ? opt.label : status || 'N/A';
-      },
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, r) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          <Button
-            size="small"
-            onClick={() => openModal(`${type}-edit`, r)}
-          >
-            Éditer
-          </Button>
-          <Button danger size="small" onClick={() => deleteItem(type, r.id)}>
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  // === Colonnes "À propos" ===
-  const aboutColumns = [
-    { title: 'Titre', dataIndex: 'title', key: 'title' },
-    { title: 'Sous-titre', dataIndex: 'subtitle', key: 'subtitle' },
-    { title: 'Email', dataIndex: 'contact_email', key: 'contact_email' },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, r) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          <Button
-            size="small"
-            onClick={() => openModal('about-edit', r)}
-          >
-            Éditer
-          </Button>
-          <Button danger size="small" onClick={() => deleteItem('about', r.id)}>
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  // === Colonnes "Contacts" ===
-  const contactColumns = [
-    { title: 'Service', dataIndex: 'service', key: 'service' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    {
-      title: 'Contenu',
-      dataIndex: 'content',
-      key: 'content',
-      render: (text) => (text?.length > 100 ? `${text.slice(0, 100)}…` : text || ''),
-    },
-    {
-      title: 'Statut',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, r) => (
-        <Radio.Group
-          value={status}
-          onChange={(e) => updateContactStatus(r, e.target.value)}
-          size="small"
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
-        >
-          <Radio.Button value="operationnel">Opérationnel</Radio.Button>
-          <Radio.Button value="cacher">Caché</Radio.Button>
-        </Radio.Group>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, r) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          <Button
-            size="small"
-            onClick={() => openModal('contact-edit', r)}
-          >
-            Éditer
-          </Button>
-          <Button danger size="small" onClick={() => deleteItem('contact', r.id)}>
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  // === Colonnes FAQ ===
-  const faqColumns = [
-    { title: 'Question', dataIndex: 'question', key: 'question' },
-    { title: 'Réponse', dataIndex: 'answer', key: 'answer', width: 400 },
-    {
-      title: 'Statut',
-      dataIndex: 'is_active',
-      key: 'is_active',
-      render: (is_active, r) => (
-        <Radio.Group
-          value={Number(is_active)}
-          onChange={(e) => updateFaqStatus(r, e.target.value)}
-          size="small"
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
-        >
-          <Radio.Button value={1}>Actif</Radio.Button>
-          <Radio.Button value={0}>Inactif</Radio.Button>
-        </Radio.Group>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, r) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          <Button size="small" onClick={() => openModal('faq-edit', r)}>
-            Éditer
-          </Button>
-          <Button danger size="small" onClick={() => deleteItem('faq', r.faq_id)}>
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const updateFaqStatus = async (item, is_active) => {
-    try {
-      await faqServices.updateFaq(item.faq_id, { is_active: Number(is_active) });
-      message.success('Statut FAQ mis à jour');
-      await loadAll();
-    } catch {
-      message.error('Erreur mise à jour FAQ');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <FaSpinner className="animate-spin text-blue-600" size={32} />
+        <p className="text-slate-500 font-medium">Chargement des documents légaux...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-2 p-sm-3">
-      <Card
-        title="CGU"
-        extra={<Button onClick={() => openModal('cgu-create')}>Ajouter</Button>}
-        loading={loading}
-      >
-        <Table
-          dataSource={cgu}
-          columns={columnsCommon('cgu')}
-          rowKey="id"
-          pagination={false}
-          size={tableSize}
-          scroll={tableScroll}
-        />
-      </Card>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Espace Légal</h1>
+          <p className="text-slate-500 font-medium">Gérez les documents contractuels et les informations d'aide</p>
+        </div>
+        <button
+          onClick={() => openModal(activeTab)}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+        >
+          <FaPlus /> <span>Ajouter</span>
+        </button>
+      </div>
 
-      <Card
-        title="Politique de confidentialité"
-        className="mt-3"
-        extra={<Button onClick={() => openModal('privacy-create')}>Ajouter</Button>}
-        loading={loading}
-      >
-        <Table
-          dataSource={privacy}
-          columns={columnsCommon('privacy')}
-          rowKey="id"
-          pagination={false}
-          size={tableSize}
-          scroll={tableScroll}
-        />
-      </Card>
+      {/* Tabs Navigation */}
+      <div className="flex flex-wrap p-1.5 bg-slate-100 rounded-[28px] w-fit">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2.5 px-6 py-3 rounded-[22px] text-sm font-bold transition-all duration-300 ${
+                isActive ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+              }`}
+            >
+              <Icon className={isActive ? 'text-blue-600' : 'text-slate-400'} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-      <Card
-        title="Politique des cookies"
-        className="mt-3"
-        extra={<Button onClick={() => openModal('cookies-create')}>Ajouter</Button>}
-        loading={loading}
-      >
-        <Table
-          dataSource={cookies}
-          columns={columnsCommon('cookies')}
-          rowKey="id"
-          pagination={false}
-          size={tableSize}
-          scroll={tableScroll}
-        />
-      </Card>
+      {/* Content Table */}
+      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50">
+                <th className="p-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Informations</th>
+                <th className="p-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Détails</th>
+                <th className="p-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Statut</th>
+                <th className="p-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {data[activeTab].map((item) => {
+                const id = item.id || item.faq_id;
+                return (
+                  <tr key={id} className="hover:bg-slate-50/30 transition-colors group">
+                    <td className="p-8">
+                      <p className="font-bold text-slate-900 leading-tight">
+                        {item.title || item.question || item.service || 'Sans titre'}
+                      </p>
+                      {item.subtitle && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">{item.subtitle}</p>}
+                    </td>
+                    <td className="p-8 max-w-md">
+                      <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed italic">
+                        {item.content || item.answer || item.description || item.mission || '—'}
+                      </p>
+                    </td>
+                    <td className="p-8">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        (item.status === 'published' || item.status === 'operationnel' || item.is_active === 1) ? 'bg-emerald-500 text-white' : 'bg-slate-400 text-white'
+                      }`}>
+                        {(item.status === 'published' || item.status === 'operationnel' || item.is_active === 1) ? <FaCheckCircle size={8} /> : <FaTimes size={8} />}
+                        {item.status === 'published' ? 'Publié' : item.status === 'draft' ? 'Brouillon' : item.status === 'operationnel' ? 'Opérationnel' : item.status === 'cacher' ? 'Caché' : item.is_active === 1 ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    <td className="p-8 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => openModal(activeTab, item)} className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Modifier"><FaEdit size={16} /></button>
+                        <button onClick={() => handleDelete(activeTab, id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Supprimer"><FaTrash size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {data[activeTab].length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-20 text-center">
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Aucun contenu disponible</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      <Card
-        title="À propos"
-        className="mt-3"
-        extra={<Button onClick={() => openModal('about-create')}>Ajouter</Button>}
-        loading={loading}
-      >
-        <Table
-          dataSource={about}
-          columns={aboutColumns}
-          rowKey="id"
-          pagination={false}
-          size={tableSize}
-          scroll={tableScroll}
-        />
-      </Card>
+      {/* Modal */}
+      {modal.show && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={closeModal}></div>
+          <div className="relative w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-10 border-b border-slate-100">
+              <h3 className="text-2xl font-black text-slate-900">
+                {modal.item ? 'Éditer' : 'Créer'} {tabs.find(t => t.id === modal.type)?.label}
+              </h3>
+              <button onClick={closeModal} className="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl transition-all"><FaTimes /></button>
+            </div>
 
-      <Card
-        title="Contacts"
-        className="mt-3"
-        loading={loading}
-        extra={<Button onClick={() => openModal('contact-create')}>Ajouter</Button>}
-      >
-        <Table
-          dataSource={contacts}
-          columns={contactColumns}
-          rowKey="id"
-          pagination={false}
-          size={tableSize}
-          scroll={tableScroll}
-        />
-      </Card>
+            <div className="p-10 space-y-6 max-h-[60vh] overflow-y-auto">
+              {/* Common Fields */}
+              {(modal.type === 'cgu' || modal.type === 'privacy' || modal.type === 'cookies') && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Titre</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Contenu</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[200px] resize-none" value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <div className="flex gap-2">
+                      {['draft', 'published'].map(s => (
+                        <button key={s} onClick={() => setFormData({...formData, status: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${formData.status === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          {s === 'draft' ? 'Brouillon' : 'Publié'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-      <Card
-        title="FAQ"
-        className="mt-3"
-        loading={loading}
-        extra={<Button onClick={() => openModal('faq-create')}>Ajouter</Button>}
-      >
-        <Table
-          dataSource={faq}
-          columns={faqColumns}
-          rowKey="faq_id"
-          pagination={false}
-          size={tableSize}
-          scroll={tableScroll}
-        />
-      </Card>
+              {/* FAQ Fields */}
+              {modal.type === 'faq' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Question</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.question || ''} onChange={e => setFormData({...formData, question: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Réponse</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[160px] resize-none" value={formData.answer || ''} onChange={e => setFormData({...formData, answer: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <div className="flex gap-2">
+                      {[1, 0].map(s => (
+                        <button key={s} onClick={() => setFormData({...formData, is_active: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${Number(formData.is_active) === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          {s === 1 ? 'Actif' : 'Inactif'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-      {/* MODAL UNIQUE */}
-      <Modal
-        title={
-          modal.type?.includes('cgu')
-            ? modal.type.endsWith('create')
-              ? 'Créer CGU'
-              : 'Éditer CGU'
-            : modal.type?.includes('privacy')
-              ? modal.type.endsWith('create')
-                ? 'Créer Politique de confidentialité'
-                : 'Éditer Politique de confidentialité'
-              : modal.type?.includes('cookies')
-                ? modal.type.endsWith('create')
-                  ? 'Créer Politique des cookies'
-                  : 'Éditer Politique des cookies'
-                : modal.type?.includes('about')
-                  ? modal.type.endsWith('create')
-                    ? 'Créer À propos'
-                    : 'Éditer À propos'
-                  : modal.type?.includes('contact')
-                    ? modal.type.endsWith('create')
-                      ? 'Créer Contact'
-                      : 'Éditer Contact'
-                    : modal.type?.includes('faq')
-                      ? modal.type.endsWith('create')
-                        ? 'Créer FAQ'
-                        : 'Éditer FAQ'
-                      : ''
-        }
-        open={!!modal.type}
-        onCancel={closeModal}
-        onOk={saveItem}
-        okText="Enregistrer"
-        cancelText="Annuler"
-        width={modalWidth}
-        style={isMobile ? { top: 12 } : undefined}
-      >
-        <Form form={form} layout="vertical">
-          {/* ABOUT */}
-          {modal.type?.includes('about') && (
-            <>
-              <Form.Item name="title" label="Titre" rules={[{ required: true }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="subtitle" label="Sous-titre">
-                <Input />
-              </Form.Item>
-              <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-                <Input.TextArea rows={4} />
-              </Form.Item>
-              <Form.Item name="mission" label="Mission">
-                <Input.TextArea rows={3} />
-              </Form.Item>
-              <Form.Item name="vision" label="Vision">
-                <Input.TextArea rows={3} />
-              </Form.Item>
-              <Form.Item name="contact_email" label="Email de contact">
-                <Input />
-              </Form.Item>
-            </>
-          )}
+              {/* Contact Fields */}
+              {modal.type === 'contacts' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Service</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.service || ''} onChange={e => setFormData({...formData, service: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Email</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Description</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[120px] resize-none" value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <div className="flex gap-2">
+                      {['operationnel', 'cacher'].map(s => (
+                        <button key={s} onClick={() => setFormData({...formData, status: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${formData.status === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          {s === 'operationnel' ? 'Opérationnel' : 'Caché'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-          {/* CONTACT */}
-          {modal.type?.includes('contact') && (
-            <>
-              <Form.Item name="service" label="Service" rules={[{ required: true }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="content" label="Description" rules={[{ required: true }]}>
-                <Input.TextArea rows={6} />
-              </Form.Item>
-              <Form.Item name="status" label="Statut">
-                <Radio.Group>
-                  <Radio value="operationnel">Opérationnel</Radio>
-                  <Radio value="cacher">Caché</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </>
-          )}
+              {/* About Fields */}
+              {modal.type === 'about' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Titre</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Description</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[120px] resize-none" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Mission</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[100px] resize-none" value={formData.mission || ''} onChange={e => setFormData({...formData, mission: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Vision</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[100px] resize-none" value={formData.vision || ''} onChange={e => setFormData({...formData, vision: e.target.value})} />
+                  </div>
+                </>
+              )}
+            </div>
 
-          {/* FAQ */}
-          {modal.type?.includes('faq') && (
-            <>
-              <Form.Item name="question" label="Question" rules={[{ required: true }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="answer" label="Réponse" rules={[{ required: true }]}>
-                <Input.TextArea rows={6} />
-              </Form.Item>
-              <Form.Item name="is_active" label="Statut">
-                <Radio.Group>
-                  <Radio value={1}>Actif</Radio>
-                  <Radio value={0}>Inactif</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </>
-          )}
-
-          {/* CGU / PRIVACY / COOKIES */}
-          {!modal.type?.includes('about') &&
-            !modal.type?.includes('contact') &&
-            !modal.type?.includes('faq') && (
-              <>
-                <Form.Item name="title" label="Titre" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="content" label="Contenu" rules={[{ required: true }]}>
-                  <Input.TextArea rows={6} />
-                </Form.Item>
-                <Form.Item name="status" label="Statut">
-                  <Radio.Group>
-                    <Radio value="draft">Brouillon</Radio>
-                    <Radio value="published">Publié</Radio>
-                  </Radio.Group>
-                </Form.Item>
-              </>
-            )}
-        </Form>
-      </Modal>
+            <div className="p-10 bg-slate-50 flex gap-4">
+              <button onClick={closeModal} className="flex-1 px-8 py-4 bg-white text-slate-600 rounded-3xl font-bold hover:bg-slate-100 transition-all">Annuler</button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-[2] px-8 py-4 bg-blue-600 text-white rounded-3xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
+              >
+                {saving ? <FaSpinner className="animate-spin mx-auto" /> : <div className="flex items-center justify-center gap-2"><FaSave /> <span>Enregistrer les modifications</span></div>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default Legal;
+

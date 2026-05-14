@@ -1,118 +1,224 @@
-/* Styles principaux du footer */
+/* ══════════════════════════════════
+   Footer
+   ══════════════════════════════════ */
 .footer-funquiz {
-  background: var(--gradient-footer);
-  color: var(--text-light);
-  font-family: 'Poppins', sans-serif;
-  box-shadow: var(--shadow-footer);
-  border-radius: 30px 30px 0 0;
+  background: #07040e;
+  border-top: 1px solid rgba(155, 52, 211, 0.18);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
 }
 
-/* Titres du footer */
-.logo-title {
-  font-family: 'Permanent Marker', cursive;
-  font-size: 30px;
+/* Ambient glow top */
+.footer-funquiz::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 280px;
+  background: radial-gradient(ellipse at center, rgba(155, 52, 211, 0.08) 0%, transparent 65%);
+  pointer-events: none;
 }
+
+/* Diagonal color strip top */
+.footer-funquiz::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(88, 8, 113, 0.6) 15%,
+    rgba(155, 52, 211, 0.9) 35%,
+    rgba(243, 19, 176, 1) 50%,
+    rgba(155, 52, 211, 0.9) 65%,
+    rgba(88, 8, 113, 0.6) 85%,
+    transparent 100%
+  );
+}
+
+/* ── Logo title ── */
+.logo-title {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #d1b3ff 50%, rgb(243, 19, 176) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+
+/* ── Section titles ── */
 .footer-title {
-  color: var(--text-light);
+  font-size: 10.5px;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 18px;
   position: relative;
-  text-shadow: var(--shadow-text);
+  padding-bottom: 10px;
 }
 
 .footer-title::after {
   content: '';
   position: absolute;
+  bottom: 0;
   left: 0;
-  bottom: -8px;
-  width: 40px;
-  height: 3px;
-  background: var(--pink);
-  border-radius: 2px;
+  width: 22px;
+  height: 1.5px;
+  background: linear-gradient(90deg, rgba(155, 52, 211, 0.8), transparent);
+  border-radius: 99px;
 }
 
-/* Liens du footer */
+/* ── Links ── */
 .footer-links {
   list-style: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
-.footer-links li {
-  margin-bottom: 1rem;
-}
-
-.footer-links a {
-  color: var(--purple-lighter);
+.footer-links li a {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 13.5px;
+  transition: all 0.2s ease;
   text-decoration: none;
-  transition: var(--transition-normal);
-}
-
-.footer-links a:hover {
-  color: var(--text-light);
-  transform: translateX(5px);
-}
-
-/* Liens sociaux */
-.social-links a {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
+  gap: 5px;
+  position: relative;
+}
+
+.footer-links li a::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: var(--white-15);
-  color: var(--text-light);
-  margin-right: 10px;
-  font-size: 18px;
-  transition: var(--transition-normal);
-  box-shadow: var(--shadow-social);
+  background: rgba(155, 52, 211, 0.4);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.footer-links li a:hover {
+  color: rgba(255, 255, 255, 0.9);
+  padding-left: 4px;
+}
+
+.footer-links li a:hover::before {
+  background: rgb(243, 19, 176);
+  box-shadow: 0 0 6px rgba(243, 19, 176, 0.6);
+}
+
+/* ── Social icons ── */
+.social-links {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.social-links a {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.25s ease;
 }
 
 .social-links a:hover {
-  background: var(--pink);
-  transform: translateY(-4px) rotate(5deg);
-  box-shadow: var(--shadow-social-hover);
+  background: rgba(155, 52, 211, 0.18);
+  border-color: rgba(155, 52, 211, 0.4);
+  color: #d1b3ff;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(155, 52, 211, 0.25);
 }
 
-/* Newsletter */
+/* ── Newsletter ── */
 .newsletter-input {
-  background: var(--white-15);
-  border: 1px solid var(--border-white-30);
-  color: var(--text-light);
-  border-radius: 8px 0 0 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  width: 100%;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.newsletter-input::placeholder {
+  color: rgba(255, 255, 255, 0.24);
 }
 
 .newsletter-input:focus {
-  background: var(--white-25);
-  border-color: var(--pink);
-  box-shadow: 0 0 10px var(--pink);
-  color: var(--text-light);
+  border-color: rgba(155, 52, 211, 0.5);
+  background: rgba(155, 52, 211, 0.05);
+  box-shadow: 0 0 0 2.5px rgba(155, 52, 211, 0.1);
 }
 
 .btn-subscribe {
-  background-color: var(--bg-button-pink) !important;
+  background: linear-gradient(135deg, rgb(88, 8, 113) 0%, rgba(155, 48, 255, 1) 60%, rgb(243, 19, 176) 100%);
+  background-size: 200% 200%;
   border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0 8px 8px 0;
-  transition: var(--transition-normal);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  animation: subGradient 4s ease infinite;
 }
 
-.btn-subscribe:hover {
-  background: var(--bg-button-pink-hover);
-  transform: translateY(1px) scale(1.05);
+@keyframes subGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-/* Footer bottom */
+.btn-subscribe:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(155, 52, 211, 0.45), 0 2px 8px rgba(243, 19, 176, 0.25);
+}
+
+.btn-subscribe:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Footer bottom ── */
 .footer-bottom {
-  background: var(--black-25);
-  text-shadow: 1px 1px 2px var(--black-40);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 48px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .footer-bottom a {
-  color: var(--pink);
+  color: rgb(243, 19, 176);
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .footer-bottom a:hover {
-  color: var(--text-light);
+  color: #fff;
+}
+
+.bottom-custom {
+  height: 72px;
 }

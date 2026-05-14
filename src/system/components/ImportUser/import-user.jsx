@@ -50,47 +50,47 @@ const ImportUsers = ({ closePopup }) => {
   return createPortal(
     <div
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2000 }}
-      className="bg-black bg-opacity-50 w-100 vh-100 d-flex align-items-center justify-content-center"
+      className="bg-black/50 w-full min-h-screen flex items-center justify-center"
     >
       <div className="bg-white rounded shadow p-4" style={{ width: 'min(700px, 95vw)' }}>
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="fw-bold mb-0 text-primary">📥 Importer des utilisateurs</h5>
+        <div className="flex justify-between items-center mb-3">
+          <h5 className="font-bold mb-0 text-purple-600">📥 Importer des utilisateurs</h5>
         </div>
 
-        <div className="mb-3 d-flex flex-column gap-2">
-          <label className="form-label fw-semibold">Fichier CSV ou XLSX</label>
+        <div className="mb-3 flex flex-col gap-2">
+          <label className="block text-sm font-semibold mb-1">Fichier CSV ou XLSX</label>
           <input
             type="file"
             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            className="form-control text-black"
+            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2"
             onChange={handleFileChange}
             disabled={uploading}
             placeholder="Sélectionner un fichier"
           />
 
           {/* ✅ Une seule section pour les paramètres par défaut */}
-          <div className="row g-3 mt-1">
-            <div className="col-12 col-sm-6">
-              <label className="form-label fw-semibold">Activer les utilisateurs</label>
-              <div className="form-check form-switch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+            <div>
+              <label className="block text-sm font-semibold mb-1">Activer les utilisateurs</label>
+              <div className="flex items-center gap-2">
                 <input
-                  className="form-check-input"
                   type="checkbox"
                   id="defaultIsActive"
                   checked={defaultIsActive}
                   onChange={(e) => setDefaultIsActive(e.target.checked)}
                   disabled={uploading}
+                  className="w-4 h-4 accent-purple-600"
                 />
-                <label className="form-check-label" htmlFor="defaultIsActive">
+                <label htmlFor="defaultIsActive" className="text-sm">
                   {defaultIsActive ? 'Actif' : 'Inactif'}
                 </label>
               </div>
             </div>
 
-            <div className="col-12 col-sm-6">
-              <label className="form-label fw-semibold">Statut par défaut</label>
+            <div>
+              <label className="block text-sm font-semibold mb-1">Statut par défaut</label>
               <select
-                className="form-select"
+                className="block w-full p-2 text-sm border border-gray-300 rounded-lg bg-white"
                 value={defaultStatus}
                 onChange={(e) => setDefaultStatus(e.target.value)}
                 disabled={uploading}
@@ -103,16 +103,16 @@ const ImportUsers = ({ closePopup }) => {
           </div>
         </div>
 
-        <div className="d-flex gap-2">
+        <div className="flex gap-2">
           <button
-            className="btn btn-primary d-flex align-items-center gap-2"
+            className="bg-purple-600 text-white rounded-full px-4 py-2 flex items-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50 text-sm"
             onClick={handleUpload}
             disabled={uploading || !file}
           >
             {uploading ? <FaSpinner className="spin" /> : <FaFileExcel />}
             <span>{uploading ? 'Import en cours...' : 'Importer'}</span>
           </button>
-          <button className="btn btn-outline-secondary" onClick={closePopup} disabled={uploading}>
+          <button className="border border-gray-400 text-gray-700 rounded-full px-4 py-2 hover:bg-gray-100 transition-colors text-sm" onClick={closePopup} disabled={uploading}>
             Fermer
           </button>
         </div>
@@ -120,20 +120,20 @@ const ImportUsers = ({ closePopup }) => {
         {/* ✅ Résultat */}
         {result && (
           <div
-            className={`alert ${result.success ? 'alert-success' : 'alert-danger'} d-flex flex-column gap-2 mt-3`}
+            className={`rounded-xl px-4 py-3 flex flex-col gap-2 mt-3 text-sm border ${result.success ? 'text-green-400 border-green-500/20 bg-green-500/10' : 'text-red-400 border-red-500/20 bg-red-500/10'}`}
           >
-            <div className="d-flex align-items-center gap-2">
+            <div className="flex items-center gap-2">
               {result.success ? <FaCheckCircle /> : <FaTimesCircle />}
-              <span className="fw-semibold">{result.message}</span>
+              <span className="font-semibold">{result.message}</span>
             </div>
 
             {result.success && (
               <>
-                <div className="small">
-                  <span className="me-3">
+                <div className="text-xs">
+                  <span className="mr-3">
                     Insérés: <strong>{result.inserted ?? 0}</strong>
                   </span>
-                  <span className="me-3">
+                  <span className="mr-3">
                     Doublons: <strong>{result.duplicates?.length ?? 0}</strong>
                   </span>
                   <span>
@@ -143,15 +143,15 @@ const ImportUsers = ({ closePopup }) => {
 
                 {result.duplicates?.length > 0 && (
                   <div className="mt-2">
-                    <div className="fw-semibold small mb-1">Doublons (emails):</div>
-                    <div className="small">{result.duplicates.join(', ')}</div>
+                    <div className="font-semibold text-xs mb-1">Doublons (emails):</div>
+                    <div className="text-xs">{result.duplicates.join(', ')}</div>
                   </div>
                 )}
 
                 {result.errors?.length > 0 && (
                   <div className="mt-2">
-                    <div className="fw-semibold small mb-1">Erreurs:</div>
-                    <ul className="small mb-0">
+                    <div className="font-semibold text-xs mb-1">Erreurs:</div>
+                    <ul className="text-xs mb-0 list-disc pl-4">
                       {result.errors.map((e, i) => (
                         <li key={i}>
                           {e.email}: {e.error}

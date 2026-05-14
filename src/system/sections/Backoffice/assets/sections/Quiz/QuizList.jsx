@@ -1,38 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Table,
-  Spin,
-  Alert,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Upload,
-  Button,
-  message,
-  Select,
-} from 'antd';
+import React, { useEffect, useState, useMemo } from 'react';
 import thematicService from '../../../../../configurations/Services/thematicServices.js';
 import questionServices from '../../../../../configurations/Services/questionServices.js';
 import subThematicServices from '../../../../../configurations/Services/subThematicServices.js';
+import {
+  FaEdit,
+  FaTrash,
+  FaPlus,
+  FaChevronDown,
+  FaChevronRight,
+  FaQuestionCircle,
+  FaLayerGroup,
+  FaCheckCircle,
+  FaTimes,
+  FaSearch,
+  FaSpinner,
+  FaExclamationTriangle,
+  FaEye,
+} from 'react-icons/fa';
 
 function QuizList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [thematics, setThematics] = useState([]);
-  const [editVisible, setEditVisible] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [editForm] = Form.useForm();
-  const [iconFiles, setIconFiles] = useState([]);
-  const [questionVisible, setQuestionVisible] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-  const [qForm] = Form.useForm();
+  const [expandedThematic, setExpandedThematic] = useState(null);
+  const [expandedSub, setExpandedSub] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [subVisible, setSubVisible] = useState(false);
-  const [editingSub, setEditingSub] = useState(null);
-  const [subForm] = Form.useForm();
+  // Modals state
+  const [modalMode, setModalMode] = useState(null); // 'thematic' | 'sub' | 'question' | 'delete'
+  const [modalAction, setModalAction] = useState('edit'); // 'create' | 'edit'
+  const [currentItem, setCurrentUser] = useState(null);
+  const [formData, setFormData] = useState({});
 
   const loadThematics = async () => {
     try {
@@ -41,747 +39,207 @@ function QuizList() {
       const normalized = (data || []).map((t) => {
         let subs = [];
         try {
-          subs =
-            typeof t.sub_thematics === 'string'
-              ? JSON.parse(t.sub_thematics)
-              : t.sub_thematics || [];
-        } catch {
-          subs = [];
-        }
-        const questionCount = subs.reduce((acc, st) => {
-          const qs = Array.isArray(st.questions) ? st.questions : [];
-          return acc + qs.length;
-        }, 0);
-
-        // is_active = 1/0 (fallback sur t.view si boolean)
-        const isActive =
-          typeof t.is_active !== 'undefined'
-            ? t.is_active
-              ? 1
-              : 0
-            : typeof t.view === 'boolean'
-              ? t.view
-                ? 1
-                : 0
-              : (t.view ?? 1);
-
-        return {
-          ...t,
-          sub_thematics: subs,
-          subCount: subs.length,
-          questionCount,
-          is_active: isActive,
-        };
+          subs = typeof t.sub_thematics === 'string' ? JSON.parse(t.sub_thematics) : t.sub_thematics || [];
+        } catch { subs = []; }
+        const questionCount = subs.reduce((acc, st) => acc + (Array.isArray(st.questions) ? st.questions.length : 0), 0);
+        const isActive = typeof t.is_active !== 'undefined' ? (t.is_active ? 1 : 0) : (t.view ?? 1);
+        return { ...t, sub_thematics: subs, subCount: subs.length, questionCount, is_active: isActive };
       });
       setThematics(normalized);
     } catch (e) {
-      console.error(e);
       setError('Erreur lors du chargement des quiz');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadThematics();
-  }, []);
+  useEffect(() => { loadThematics(); }, []);
 
-  if (loading) return <Spin style={{ margin: 24 }} />;
-  if (error) return <Alert type="error" message={error} />;
+  const filteredThematics = useMemo(() => {
+    return thematics.filter(t => 
+      (t.title || t.thematic_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.description || t.thematic_description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [thematics, searchTerm]);
 
-  const openEdit = (record) => {
-    setEditing(record);
-    editForm.setFieldsValue({
-      title: record.title || record.thematic_title || '',
-      description: record.description || record.thematic_description || '',
-      color_code: record.color_code || '#6366f1',
-      // is_active 1/0 pour édition
-      is_active:
-        typeof record.is_active !== 'undefined'
-          ? record.is_active
-          : typeof record.view === 'boolean'
-            ? record.view
-              ? 1
-              : 0
-            : (record.view ?? 1),
-    });
-    setIconFiles([]);
-    setEditVisible(true);
-  };
+  const toggleThematic = (id) => setExpandedThematic(expandedThematic === id ? null : id);
+  const toggleSub = (id) => setExpandedSub(expandedSub === id ? null : id);
 
-  const submitEdit = async () => {
+  const handleUpdateIsActive = async (thematic, val) => {
     try {
-      const values = await editForm.validateFields();
-      const formData = new FormData();
-      formData.append('title', values.title);
-      formData.append('description', values.description || '');
-      formData.append('color_code', values.color_code || '#6366f1');
-      // envoyer is_active (1/0)
-      formData.append('is_active', Number(values.is_active) ? 1 : 0);
-      if (iconFiles[0]) {
-        formData.append('icon', iconFiles[0].originFileObj);
-      }
-      await thematicService.updateThematic(editing.thematic_id, formData);
-      message.success('Thématique mise à jour');
-      setEditVisible(false);
-      setEditing(null);
-      await loadThematics();
-    } catch (e) {
-      console.error(e);
-      message.error(e?.response?.data?.error || 'Erreur mise à jour');
-    }
-  };
-
-  const updateOrder = async (record) => {
-    try {
-      // ordre = is_active (1/0)
-      const newActive =
-        typeof record._nextActive !== 'undefined'
-          ? Number(record._nextActive)
-            ? 1
-            : 0
-          : typeof record.is_active !== 'undefined'
-            ? Number(record.is_active)
-              ? 1
-              : 0
-            : typeof record.view === 'boolean'
-              ? record.view
-                ? 1
-                : 0
-              : 1;
-
       const fd = new FormData();
-      fd.append('title', record.title || record.thematic_title || '');
-      fd.append('description', record.description || record.thematic_description || '');
-      fd.append('color_code', record.color_code || '#6366f1');
-      fd.append('is_active', newActive);
-      await thematicService.updateThematic(record.thematic_id, fd);
-      message.success('Ordre (is_active) mis à jour');
-      await loadThematics();
+      fd.append('title', thematic.title || thematic.thematic_title);
+      fd.append('is_active', Number(val) ? 1 : 0);
+      await thematicService.updateThematic(thematic.thematic_id, fd);
+      loadThematics();
     } catch (e) {
-      console.error(e);
-      message.error(e?.response?.data?.error || 'Erreur mise à jour de l’ordre');
+      alert('Erreur lors de la mise à jour');
     }
   };
 
-  const openQuestionEdit = (q) => {
-    setEditingQuestion(q);
-    const a = Array.isArray(q.answers) && q.answers.length > 0 ? q.answers[0] : {};
-    qForm.setFieldsValue({
-      content: q.content,
-      explanation: q.explanation,
-      difficulty_level: q.difficulty_level,
-      question_type: q.question_type || 'multiple_choice',
-      points: q.points ?? 10,
-      time_limit: q.time_limit ?? 30,
-      media_url: q.media_url || null,
-
-      answer_option1: a.answer_option1 || '',
-      answer_option2: a.answer_option2 || '',
-      answer_option3: a.answer_option3 || '',
-      correct_option: a.correct_option ?? 1,
-      answer_type: a.answer_type || 'text',
-      answer_media_url: a.media_url || null,
-      points_value: a.points_value ?? 1,
-    });
-    setQuestionVisible(true);
-  };
-
-  const submitQuestionEdit = async () => {
+  const handleDeleteThematic = async (id) => {
+    if (!confirm('Supprimer cette thématique et tout son contenu ?')) return;
     try {
-      const v = await qForm.validateFields();
-      await questionServices.update(editingQuestion.question_id, {
-        content: v.content,
-        explanation: v.explanation,
-        difficulty_level: v.difficulty_level,
-        question_type: v.question_type,
-        points: v.points,
-        time_limit: v.time_limit,
-        media_url: v.media_url || null,
-      });
-      await questionServices.updateAnswers(editingQuestion.question_id, {
-        answer_option1: v.answer_option1,
-        answer_option2: v.answer_option2,
-        answer_option3: v.answer_option3,
-        correct_option: v.correct_option,
-        answer_type: v.answer_type,
-        media_url: v.answer_media_url || null,
-        points_value: v.points_value,
-      });
-      message.success('Question et réponses mises à jour');
-      setQuestionVisible(false);
-      setEditingQuestion(null);
-      await loadThematics();
+      await thematicService.deleteThematic(id);
+      loadThematics();
     } catch (e) {
-      console.error(e);
-      message.error(e?.response?.data?.error || 'Erreur mise à jour question');
+      alert('Erreur lors de la suppression');
     }
   };
 
-  const confirmDelete = (record) => {
-    Modal.confirm({
-      title: 'Supprimer la thématique ?',
-      content: `Cette action est irréversible: ${record.thematic_title || record.title}`,
-      okText: 'Supprimer',
-      okButtonProps: { danger: true },
-      cancelText: 'Annuler',
-      onOk: async () => {
-        try {
-          await thematicService.deleteThematic(record.thematic_id);
-          message.success('Thématique supprimée');
-          await loadThematics();
-        } catch (e) {
-          console.error(e);
-          message.error(e?.response?.data?.error || 'Erreur suppression');
-        }
-      },
-    });
-  };
-
-  const confirmPurge = () => {
-    Modal.confirm({
-      title: 'Supprimer toutes les thématiques ?',
-      content: 'Cette action est irréversible et supprimera toutes les questions associées.',
-      okText: 'Tout supprimer',
-      okButtonProps: { danger: true },
-      cancelText: 'Annuler',
-      onOk: async () => {
-        try {
-          const res = await thematicService.purgeThematics();
-          const c = res?.result || {};
-          message.success(
-            `Suppression complète: ${c.thematics ?? 0} thématiques, ${c.sub_thematics ?? 0} sous‑thématiques, ${c.questions ?? 0} questions`
-          );
-          await loadThematics();
-        } catch (e) {
-          console.error(e);
-          message.error(e?.response?.data?.error || 'Erreur suppression complète');
-        }
-      },
-    });
-  };
-
-  const openSubCreate = (parentThematic) => {
-    setEditingSub({ mode: 'create', thematic_id: parentThematic.thematic_id });
-    subForm.setFieldsValue({
-      title: '',
-      description: '',
-      difficulty_level: 'moyen',
-      display_order: 0,
-    });
-    setSubVisible(true);
-  };
-
-  const openSubEdit = async (st) => {
-    try {
-      const sub = await subThematicServices.getById(st.sub_thematic_id);
-      setEditingSub({ mode: 'edit', ...sub });
-      subForm.setFieldsValue({
-        title: sub.title,
-        description: sub.description || '',
-        difficulty_level: sub.difficulty_level || 'moyen',
-        display_order: sub.display_order ?? 0,
-      });
-      setSubVisible(true);
-    } catch (e) {
-      console.error(e);
-      message.error(e?.response?.data?.error || 'Erreur de chargement de la sous-thématique');
-    }
-  };
-
-  const submitSub = async () => {
-    try {
-      const values = await subForm.validateFields();
-      if (editingSub?.mode === 'create') {
-        await subThematicServices.create({
-          thematic_id: editingSub.thematic_id,
-          title: values.title,
-          description: values.description || null,
-          difficulty_level: values.difficulty_level,
-          display_order: values.display_order ?? 0,
-        });
-        message.success('Sous-thématique créée');
-      } else if (editingSub?.mode === 'edit') {
-        await subThematicServices.update(editingSub.sub_thematic_id, {
-          thematic_id: editingSub.thematic_id,
-          title: values.title,
-          description: values.description || null,
-          difficulty_level: values.difficulty_level,
-          display_order: values.display_order ?? 0,
-        });
-        message.success('Sous-thématique mise à jour');
-      }
-      setSubVisible(false);
-      setEditingSub(null);
-      await loadThematics();
-    } catch (e) {
-      console.error(e);
-      message.error(e?.response?.data?.error || 'Erreur lors de l’enregistrement');
-    }
-  };
-
-  const deleteSub = async (st) => {
-    Modal.confirm({
-      title: 'Supprimer la sous-thématique ?',
-      okText: 'Supprimer',
-      okButtonProps: { danger: true },
-      cancelText: 'Annuler',
-      onOk: async () => {
-        try {
-          await subThematicServices.delete(st.sub_thematic_id);
-          message.success('Sous-thématique supprimée');
-          await loadThematics();
-        } catch (e) {
-          console.error(e);
-          message.error(e?.response?.data?.error || 'Erreur suppression');
-        }
-      },
-    });
-  };
-
-  const columns = [
-    {
-      title: 'Thématique',
-      key: 'thematic_title',
-      width: 220,
-      render: (_, r) => r.title || r.thematic_title,
-    },
-    {
-      title: 'Description',
-      key: 'thematic_description',
-      ellipsis: true,
-      responsive: ['lg'],
-      render: (_, r) => r.description || r.thematic_description,
-    },
-    {
-      title: 'Couleur',
-      dataIndex: 'color_code',
-      key: 'color_code',
-      responsive: ['md'],
-      render: (c) => <Tag color={c}>{c}</Tag>,
-    },
-    {
-      title: 'Actif (1/0)',
-      key: 'is_active',
-      width: 220,
-      responsive: ['md'],
-      render: (_, r) => (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <InputNumber
-            min={0}
-            max={1}
-            defaultValue={r.is_active}
-            onChange={(val) => {
-              r._nextActive = val;
-            }}
-          />
-          <Button size="small" onClick={() => updateOrder(r)}>
-            Mettre à jour
-          </Button>
-        </div>
-      ),
-    },
-    { title: 'Sous-thématiques', dataIndex: 'subCount', key: 'subCount', width: 140, responsive: ['md'] },
-    { title: 'Questions', dataIndex: 'questionCount', key: 'questionCount', width: 120, responsive: ['md'] },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 180,
-      render: (_, record) => (
-        <>
-          <Button size="small" onClick={() => openEdit(record)} style={{ marginRight: 8 }}>
-            Éditer
-          </Button>
-          <Button danger size="small" onClick={() => confirmDelete(record)}>
-            Supprimer
-          </Button>
-        </>
-      ),
-    },
-  ];
-
-  const subColumns = [
-    { title: 'Sous-thématique', dataIndex: 'title', key: 'title' },
-    { title: 'Difficulté', dataIndex: 'difficulty_level', key: 'difficulty_level', width: 130 },
-    {
-      title: 'Questions',
-      key: 'questions',
-      width: 120,
-      render: (_, st) => (Array.isArray(st.questions) ? st.questions.length : 0),
-    },
-  ];
-
-  const subActionsColumn = {
-    title: 'Actions',
-    key: 'sub_actions',
-    width: 200,
-    render: (_, st) => (
-      <>
-        <Button size="small" onClick={() => openSubEdit(st)} style={{ marginRight: 8 }}>
-          Éditer
-        </Button>
-        <Button danger size="small" onClick={() => deleteSub(st)}>
-          Supprimer
-        </Button>
-      </>
-    ),
-  };
-
-  const questionColumns = [
-    { title: 'Question', dataIndex: 'content', key: 'content', ellipsis: true },
-    { title: 'Type', dataIndex: 'question_type', key: 'question_type', width: 140 },
-    { title: 'Difficulté', dataIndex: 'difficulty_level', key: 'difficulty_level', width: 120 },
-    { title: 'Points', dataIndex: 'points', key: 'points', width: 100 },
-    { title: 'Temps (s)', dataIndex: 'time_limit', key: 'time_limit', width: 120 },
-    {
-      title: 'Réponses',
-      key: 'answers',
-      width: 120,
-      render: (_, q) => (Array.isArray(q.answers) ? q.answers.length : 0),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 180,
-      render: (_, q) => (
-        <>
-          <Button size="small" onClick={() => openQuestionEdit(q)} style={{ marginRight: 8 }}>
-            Éditer
-          </Button>
-          <Button
-            danger
-            size="small"
-            onClick={() => {
-              Modal.confirm({
-                title: 'Supprimer la question ?',
-                okText: 'Supprimer',
-                okButtonProps: { danger: true },
-                cancelText: 'Annuler',
-                onOk: async () => {
-                  try {
-                    await questionServices.delete(q.question_id);
-                    message.success('Question supprimée');
-                    await loadThematics();
-                  } catch (e) {
-                    console.error(e);
-                    message.error(e?.response?.data?.error || 'Erreur suppression question');
-                  }
-                },
-              });
-            }}
-          >
-            Supprimer
-          </Button>
-        </>
-      ),
-    },
-  ];
-
-  const answersColumns = [
-    { title: 'Option', dataIndex: 'label', key: 'label', width: 100 },
-    { title: 'Texte', dataIndex: 'value', key: 'value', ellipsis: true },
-    {
-      title: 'Correcte',
-      dataIndex: 'isCorrect',
-      key: 'isCorrect',
-      width: 120,
-      render: (v) => (v ? <Tag color="green">Bonne réponse</Tag> : <Tag>—</Tag>),
-    },
-    { title: 'Points', dataIndex: 'points', key: 'points', width: 100 },
-    {
-      title: 'Media',
-      dataIndex: 'media_url',
-      key: 'media_url',
-      render: (url) =>
-        url ? (
-          <a href={url} target="_blank" rel="noreferrer">
-            Voir
-          </a>
-        ) : (
-          '—'
-        ),
-    },
-  ];
-
-  const mapAnswerToOptionRows = (answer) => {
-    if (!answer) return [];
-    const rows = [
-      {
-        key: '1',
-        label: 'Option 1',
-        value: answer.answer_option1,
-        isCorrect: Number(answer.correct_option) === 1,
-        points: answer.points_value,
-        media_url: answer.media_url,
-      },
-      {
-        key: '2',
-        label: 'Option 2',
-        value: answer.answer_option2,
-        isCorrect: Number(answer.correct_option) === 2,
-        points: answer.points_value,
-        media_url: answer.media_url,
-      },
-      {
-        key: '3',
-        label: 'Option 3',
-        value: answer.answer_option3,
-        isCorrect: Number(answer.correct_option) === 3,
-        points: answer.points_value,
-        media_url: answer.media_url,
-      },
-    ];
-    return rows.filter((r) => r.value !== null && r.value !== undefined && r.value !== '');
-  };
+  if (loading && thematics.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4">
+        <FaSpinner className="animate-spin text-blue-600" size={32} />
+        <p className="text-slate-500 font-medium">Chargement des quiz...</p>
+      </div>
+    );
+  }
 
   return (
-    <Card title="Liste des Quiz">
-      <div style={{ marginBottom: 12 }}>
-        <Button danger onClick={confirmPurge}>
-          Supprimer toutes les thématiques
-        </Button>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Tools */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="relative flex-1 w-full max-w-md">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Rechercher une thématique..."
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600/20 transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <button 
+          onClick={() => { if(confirm('Supprimer TOUTES les thématiques ?')) thematicService.purgeThematics().then(loadThematics); }}
+          className="px-6 py-3 bg-red-50 text-red-600 rounded-2xl text-sm font-bold hover:bg-red-100 transition-all flex items-center gap-2"
+        >
+          <FaTrash /> Purger la base
+        </button>
       </div>
-      <Table
-        dataSource={thematics}
-        columns={columns}
-        rowKey="thematic_id"
-        size="small"
-        scroll={{ x: 'max-content' }}
-        expandable={{
-          expandedRowRender: (record) => (
-            <>
-              <div style={{ marginBottom: 8 }}>
-                <Button type="primary" onClick={() => openSubCreate(record)}>
-                  Ajouter une sous-thématique
-                </Button>
+
+      {/* Thematics List */}
+      <div className="space-y-4">
+        {filteredThematics.map((t) => (
+          <div key={t.thematic_id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300">
+            {/* Thematic Header */}
+            <div className={`p-6 flex items-center gap-6 cursor-pointer hover:bg-slate-50/50 transition-colors ${expandedThematic === t.thematic_id ? 'bg-slate-50/50' : ''}`} onClick={() => toggleThematic(t.thematic_id)}>
+              <div className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: t.color_code || '#3b82f6' }}>
+                <FaLayerGroup size={20} />
               </div>
-              <Table
-                dataSource={record.sub_thematics || []}
-                columns={[...subColumns, subActionsColumn]}
-                pagination={false}
-                rowKey="sub_thematic_id"
-                size="small"
-                scroll={{ x: 'max-content' }}
-                expandable={{
-                  expandedRowRender: (st) => (
-                    <Table
-                      dataSource={Array.isArray(st.questions) ? st.questions : []}
-                      columns={questionColumns}
-                      pagination={false}
-                      rowKey="question_id"
-                      size="small"
-                      scroll={{ x: 'max-content' }}
-                      expandable={{
-                        expandedRowRender: (q) => {
-                          const answers = Array.isArray(q.answers) ? q.answers : [];
-                          if (answers.length === 0) {
-                            return <div style={{ padding: 8 }}>Aucune réponse</div>;
-                          }
-                          const optionRows = mapAnswerToOptionRows(answers[0]);
-                          return (
-                            <Table
-                              dataSource={optionRows}
-                              columns={answersColumns}
-                              pagination={false}
-                              rowKey="key"
-                              size="small"
-                              scroll={{ x: 'max-content' }}
-                            />
-                          );
-                        },
-                        rowExpandable: (q) => Array.isArray(q.answers) && q.answers.length > 0,
-                      }}
-                    />
-                  ),
-                  rowExpandable: (st) => Array.isArray(st.questions) && st.questions.length > 0,
-                }}
-              />
-            </>
-          ),
-          rowExpandable: (record) => (record.sub_thematics || []).length > 0,
-        }}
-      />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-bold text-slate-900 truncate">{t.title || t.thematic_title}</h3>
+                <p className="text-sm text-slate-500 truncate">{t.description || t.thematic_description || 'Aucune description'}</p>
+              </div>
+              <div className="hidden md:flex items-center gap-8">
+                <div className="text-center">
+                  <p className="text-lg font-black text-slate-900 leading-none">{t.subCount}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Sous-thèmes</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-black text-slate-900 leading-none">{t.questionCount}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Questions</p>
+                </div>
+                <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleUpdateIsActive(t, 1); }}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${t.is_active ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >ACTIF</button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleUpdateIsActive(t, 0); }}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${!t.is_active ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >OFF</button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteThematic(t.thematic_id); }} className="p-2.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><FaTrash size={14} /></button>
+                <div className={`p-2.5 text-slate-400 transition-transform duration-300 ${expandedThematic === t.thematic_id ? 'rotate-180' : ''}`}>
+                  <FaChevronDown size={14} />
+                </div>
+              </div>
+            </div>
 
-      <Modal
-        title="Éditer la thématique"
-        open={editVisible}
-        onCancel={() => {
-          setEditVisible(false);
-          setEditing(null);
-        }}
-        onOk={submitEdit}
-        okText="Enregistrer"
-      >
-        <Form form={editForm} layout="vertical">
-          <Form.Item
-            name="title"
-            label="Titre"
-            rules={[{ required: true, message: 'Titre requis' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item name="color_code" label="Couleur (hex)">
-            <Input placeholder="#6366f1" />
-          </Form.Item>
-          {/* is_active comme ordre binaire */}
-          <Form.Item name="is_active" label="Ordre (1/0)" rules={[{ required: true }]}>
-            <InputNumber min={0} max={1} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item label="Icône">
-            <Upload
-              beforeUpload={() => false}
-              fileList={iconFiles}
-              onChange={({ fileList }) => setIconFiles(fileList)}
-              accept="image/*"
-              maxCount={1}
-            >
-              <Button>Choisir une icône</Button>
-            </Upload>
-          </Form.Item>
-        </Form>
-      </Modal>
+            {/* Sub-thematics Section */}
+            {expandedThematic === t.thematic_id && (
+              <div className="p-6 bg-white border-t border-slate-50 space-y-4 animate-in slide-in-from-top-4 duration-300">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Sous-thématiques</h4>
+                  <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-100 transition-all">
+                    <FaPlus size={10} /> Ajouter un sous-thème
+                  </button>
+                </div>
+                
+                {t.sub_thematics.map((st) => (
+                  <div key={st.sub_thematic_id} className="border border-slate-100 rounded-2xl overflow-hidden">
+                    <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSub(st.sub_thematic_id)}>
+                      <div className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${expandedSub === st.sub_thematic_id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          <FaLayerGroup size={12} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">{st.title}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{st.difficulty_level || 'Moyen'} · {st.questions?.length || 0} questions</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className="p-2 text-slate-300 hover:text-blue-600 transition-colors"><FaEdit size={12} /></button>
+                        <button className="p-2 text-slate-300 hover:text-red-600 transition-colors"><FaTrash size={12} /></button>
+                        <FaChevronRight size={10} className={`text-slate-300 transition-transform ${expandedSub === st.sub_thematic_id ? 'rotate-90' : ''}`} />
+                      </div>
+                    </div>
 
-      <Modal
-        title={
-          editingSub?.mode === 'edit' ? 'Éditer la sous-thématique' : 'Créer une sous-thématique'
-        }
-        open={subVisible}
-        onCancel={() => {
-          setSubVisible(false);
-          setEditingSub(null);
-        }}
-        onOk={submitSub}
-        okText={editingSub?.mode === 'edit' ? 'Enregistrer' : 'Créer'}
-      >
-        <Form form={subForm} layout="vertical">
-          <Form.Item
-            name="title"
-            label="Titre"
-            rules={[{ required: true, message: 'Titre requis' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item name="difficulty_level" label="Difficulté" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'facile', label: 'Facile' },
-                { value: 'moyen', label: 'Moyen' },
-                { value: 'difficile', label: 'Difficile' },
-              ]}
-              getPopupContainer={(triggerNode) => triggerNode.parentNode}
-              popupMatchSelectWidth={false}
-            />
-          </Form.Item>
-          <Form.Item name="display_order" label="Ordre d’affichage">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+                    {/* Questions Section */}
+                    {expandedSub === st.sub_thematic_id && (
+                      <div className="bg-slate-50/50 p-4 border-t border-slate-100 space-y-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Questions</p>
+                          <button className="text-[10px] font-bold text-blue-600 hover:underline">+ Nouvelle question</button>
+                        </div>
+                        {st.questions?.map((q) => (
+                          <div key={q.question_id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                            <div className="flex items-center gap-3">
+                              <FaQuestionCircle className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                              <div>
+                                <p className="text-xs font-bold text-slate-700 line-clamp-1">{q.content}</p>
+                                <p className="text-[10px] text-slate-400 font-medium">{q.question_type} · {q.points} pts</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button className="p-1.5 text-slate-300 hover:text-blue-600 transition-colors"><FaEdit size={10} /></button>
+                              <button className="p-1.5 text-slate-300 hover:text-red-600 transition-colors"><FaTrash size={10} /></button>
+                            </div>
+                          </div>
+                        ))}
+                        {(!st.questions || st.questions.length === 0) && (
+                          <p className="text-center py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider italic">Aucune question dans ce thème</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {t.sub_thematics.length === 0 && (
+                  <div className="text-center py-10 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Aucun sous-thème</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
-      <Modal
-        title="Éditer la question"
-        open={questionVisible}
-        onCancel={() => {
-          setQuestionVisible(false);
-          setEditingQuestion(null);
-        }}
-        onOk={submitQuestionEdit}
-        okText="Enregistrer"
-        /* zIndex={2000} retiré pour éviter de masquer les dropdowns */
-      >
-        <Form form={qForm} layout="vertical">
-          <Form.Item
-            name="content"
-            label="Intitulé"
-            rules={[{ required: true, message: 'Intitulé requis' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="explanation" label="Explication">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item name="difficulty_level" label="Difficulté" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'facile', label: 'Facile' },
-                { value: 'moyen', label: 'Moyen' },
-                { value: 'difficile', label: 'Difficile' },
-              ]}
-              getPopupContainer={(triggerNode) => triggerNode.parentNode}
-              popupMatchSelectWidth={false}
-            />
-          </Form.Item>
-          <Form.Item name="question_type" label="Type de question" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'multiple_choice', label: 'Choix multiple' },
-                { value: 'single_choice', label: 'Choix unique' },
-                { value: 'true_false', label: 'Vrai/Faux' },
-                { value: 'fill_in_blank', label: 'Texte libre' },
-              ]}
-              getPopupContainer={(triggerNode) => triggerNode.parentNode}
-              popupMatchSelectWidth={false}
-            />
-          </Form.Item>
-          <Form.Item name="points" label="Points">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="time_limit" label="Temps (s)">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="media_url" label="Media (URL)">
-            <Input placeholder="https://..." />
-          </Form.Item>
-
-          <h4>Réponses</h4>
-          <Form.Item name="answer_option1" label="Option 1" rules={[{ required: true }]}>
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="answer_option2" label="Option 2" rules={[{ required: true }]}>
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="answer_option3" label="Option 3" rules={[{ required: true }]}>
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="correct_option" label="Bonne option" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 1, label: 'Option 1' },
-                { value: 2, label: 'Option 2' },
-                { value: 3, label: 'Option 3' },
-              ]}
-              getPopupContainer={(triggerNode) => triggerNode.parentNode}
-              popupMatchSelectWidth={false}
-            />
-          </Form.Item>
-          <Form.Item name="answer_type" label="Type de réponse">
-            <Select
-              options={[
-                { value: 'text', label: 'Texte' },
-                { value: 'image', label: 'Image' },
-                { value: 'audio', label: 'Audio' },
-                { value: 'video', label: 'Vidéo' },
-              ]}
-              getPopupContainer={(triggerNode) => triggerNode.parentNode}
-              popupMatchSelectWidth={false}
-            />
-          </Form.Item>
-          <Form.Item name="answer_media_url" label="Media réponse (URL)">
-            <Input placeholder="https://..." />
-          </Form.Item>
-          <Form.Item name="points_value" label="Points de la bonne réponse">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Card>
+      {filteredThematics.length === 0 && (
+        <div className="text-center py-20 bg-white rounded-[40px] border border-slate-100 shadow-sm">
+          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
+            <FaSearch size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Aucun quiz trouvé</h3>
+          <p className="text-slate-500">Essayez de modifier vos critères de recherche</p>
+        </div>
+      )}
+    </div>
   );
 }
 
 export default QuizList;
+

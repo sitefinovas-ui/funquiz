@@ -1,816 +1,611 @@
-// profil.jsx (version corrigée et nettoyée)
 import React, { useState, useRef, useEffect } from 'react';
 import useAuth from '../../configurations/Context/useAuth';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import uploadAvatar from '../../configurations/Services/uploadAvatar';
 import authService from '../../configurations/Services/authServices';
 import verification from '../../configurations/Services/verifyOtpServices.js';
 import { usePopup } from '../../configurations/Context/PopupContext.jsx';
-import { FaCheckCircle } from 'react-icons/fa';
-import { FcAddressBook, FcPlanner } from 'react-icons/fc';
-import { GiFireDash } from "react-icons/gi";
 import { CgDanger } from 'react-icons/cg';
-import Price from '../../../assets/icons/price/second_price.png';
+import { GiFireDash } from 'react-icons/gi';
 import userIcon from '../../../assets/user_icon.png';
-
-import './profil.css';
-
 import pointService from '../../configurations/Services/pointService.js';
 import quizSessionService from '../../configurations/Services/quizSessionService.js';
+import thematicService from '../../configurations/Services/thematicServices.js';
 import { computeBackendOrigin } from '../../configurations/Api/api_axios.js';
 
+/* ─── helpers ─── */
+const pill = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium';
+const card = 'rounded-2xl border border-slate-200 bg-white shadow-sm';
+const inputCls = 'w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+const selectCls = `${inputCls} appearance-none`;
+const labelCls = 'block text-xs font-medium text-slate-500 mb-1.5';
+
+function StatusBadge({ completed }) {
+  return completed
+    ? <span className={`${pill} bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200`}>Terminé</span>
+    : <span className={`${pill} bg-amber-50 text-amber-600 ring-1 ring-amber-200`}>En cours</span>;
+}
+function ScoreBadge({ score }) {
+  return <span className={`${pill} bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200`}>{score} pts</span>;
+}
+function Toggle({ checked, onChange }) {
+  return (
+    <button type="button" onClick={() => onChange(!checked)}
+      className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${checked ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+      <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-1'}`} />
+    </button>
+  );
+}
+
+const NAV = [
+  { id: 'overview',     label: "Vue d'ensemble", icon: '📈' },
+  { id: 'quizzes',      label: 'Mes Quiz',        icon: '📝' },
+  { id: 'achievements', label: 'Succès',           icon: '🏆' },
+  { id: 'history',      label: 'Historique',       icon: '🕘' },
+  { id: 'settings',     label: 'Paramètres',       icon: '⚙️' },
+];
+
+const DEFAULT_PREFS = {
+  theme: 'system', accent: 'purple',
+  gameplay: { defaultDifficulty: 'normal', timer: true, hints: false },
+  privacy: { visibility: 'friends', leaderboardOptIn: true, hideUsername: false },
+  accessibility: { fontScale: 1.0, reduceMotion: false },
+};
+const PREFS_KEY = 'profile.prefs.v1';
+
 function ProfilePage() {
-  // --- UI / flags ---
-  const [activeTab, setActiveTab] = useState('overview');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isVisible, setVisible] = useState(false);
-  const [isDelete, setDelete] = useState(false);
+  const [activeTab,      setActiveTab]      = useState('overview');
+  const [isVisible,      setVisible]        = useState(false);
+  const [isDelete,       setDelete]         = useState(false);
+  const [selectedFile,   setSelectedFile]   = useState(null);
+  const [previewUrl,     setPreviewUrl]     = useState(null);
+  const [uploading,      setUploading]      = useState(false);
+  const [successMsg,     setSuccessMsg]     = useState('');
+  const [errorMsg,       setErrorMsg]       = useState('');
+  const [activeOtp,      setActiveOtp]      = useState(false);
+  const [showOtpPopup,   setShowOtpPopup]   = useState(false);
+  const [alert0,         setAlert0]         = useState(true);
+  const [otpCode,        setOtpCode]        = useState('');
+  const [status,         setStatus]         = useState('');
+  const [editData,       setEditData]       = useState({ name: '', first_name: '', email: '', number: '' });
+  const [userPoints,     setUserPoints]     = useState(null);
+  const [quizHistory,    setQuizHistory]    = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [resumingId,     setResumingId]     = useState(null);
+  const [deleteReason,   setDeleteReason]   = useState('');
+  const [deleteComment,  setDeleteComment]  = useState('');
+  const [confirmText,    setConfirmText]    = useState('');
+  const [deleting,       setDeleting]       = useState(false);
+  const [quizFilter,     setQuizFilter]     = useState('all');
+  const [quizQuery,      setQuizQuery]      = useState('');
+  const [prefs,          setPrefs]          = useState(DEFAULT_PREFS);
+  const [prefsReady,     setPrefsReady]     = useState(false);
+  const [prefsSavedAt,   setPrefsSavedAt]   = useState(null);
+  const [prefsUiMessage, setPrefsUiMessage] = useState('');
+  const [sidebarOpen,    setSidebarOpen]    = useState(false);
 
-  // --- avatar upload ---
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [uploading, setUploading] = useState(false);
-
-  // --- messages ---
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-
-  // --- OTP ---
-  const [activeOtp, setActiveOtp] = useState(false);
-  const [showOtpPopup, setShowOtpPopup] = useState(false);
-  const [alert0, setAlert0] = useState(true);
-  const [otpCode, setOtpCode] = useState('');
-  const [status, setStatus] = useState('');
-
-  // --- refs / navigation / auth / popup ---
-  const fileInputRef = useRef();
   const prefsMsgTimerRef = useRef(null);
-  const prefsTouchedRef = useRef(false);
-  const navigate = useNavigate();
+  const prefsTouchedRef  = useRef(false);
+  const navigate         = useNavigate();
+  const location         = useLocation();
+
   const { user, logout, loading, refreshUser } = useAuth();
-  const { setActivePopup } = usePopup();
+  const { setActivePopup }                      = usePopup();
 
-  useEffect(() => {
-    return () => {
-      if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
-    };
-  }, []);
+  const backendOrigin   = computeBackendOrigin();
+  const resolveMediaUrl = v => {
+    if (!v || typeof v !== 'string') return v;
+    if (v.startsWith('/uploads/') || v.startsWith('/public/')) return `${backendOrigin}${v}`;
+    return v;
+  };
 
-  const [editData, setEditData] = useState({
-    name: '',
-    first_name: '',
-    email: '',
-    number: '',
+  const mergePrefs = (base, inc) => ({
+    ...base, ...(inc || {}),
+    gameplay:      { ...base.gameplay,      ...(inc?.gameplay || {}) },
+    privacy:       { ...base.privacy,       ...(inc?.privacy || {}) },
+    accessibility: { ...base.accessibility, ...(inc?.accessibility || {}) },
   });
 
-  // --- points & history ---
-  const [userPoints, setUserPoints] = useState(null);
-  const [quizHistory, setQuizHistory] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab    = params.get('tab');
+    const valid  = ['overview','quizzes','achievements','history','settings'];
+    if (tab && valid.includes(tab)) setActiveTab(tab);
+  }, [location.search]);
 
-  // --- Suppression de compte (Paramètres > Zone de danger)
-  const [deleteReason, setDeleteReason] = useState('');
-  const [deleteComment, setDeleteComment] = useState('');
-  const [confirmText, setConfirmText] = useState('');
-  const [deleting, setDeleting] = useState(false);
-
-  const backendOrigin = computeBackendOrigin();
-  const resolveMediaUrl = (value) => {
-    if (!value || typeof value !== 'string') return value;
-    if (value.startsWith('/uploads/') || value.startsWith('/public/')) return `${backendOrigin}${value}`;
-    return value;
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!user?.user_id) {
-      alert('Utilisateur non identifié.');
-      return;
-    }
-    if (!deleteReason) {
-      alert('Veuillez sélectionner une raison.');
-      return;
-    }
-    if (confirmText.trim() !== 'SUPPRIMER') {
-      alert('Veuillez taper “SUPPRIMER” pour confirmer.');
-      return;
-    }
-    setDeleting(true);
-    try {
-      const res = await authService.deleteUserSoft({
-        user_id: user.user_id,
-        reason: deleteReason,
-        comment: deleteComment,
-      });
-      alert(res?.message || 'Compte supprimé avec succès.');
-      if (logout) logout();
-      navigate('/');
-    } catch (error) {
-      alert(error.message || 'Erreur lors de la suppression.');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const PREFS_STORAGE_KEY = 'profile.prefs.v1';
-  const DEFAULT_PREFS = {
-    theme: 'system',
-    accent: 'purple',
-    gameplay: { defaultDifficulty: 'normal', timer: true, hints: false },
-    privacy: { visibility: 'friends', leaderboardOptIn: true, hideUsername: false },
-    accessibility: { fontScale: 1.0, reduceMotion: false },
-  };
-
-  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
-  const [prefsReady, setPrefsReady] = useState(false);
-  const [prefsSavedAt, setPrefsSavedAt] = useState(null);
-  const [prefsUiMessage, setPrefsUiMessage] = useState('');
-
-  // --- Handlers ---
-  const handlePrefChange = (path, value) => {
-    prefsTouchedRef.current = true;
-    setPrefs((prev) => {
-      const next = { ...prev };
-      const keys = path.split('.');
-      let obj = next;
-      for (let i = 0; i < keys.length - 1; i++) {
-        obj[keys[i]] = { ...obj[keys[i]] };
-        obj = obj[keys[i]];
-      }
-      obj[keys[keys.length - 1]] = value;
-      return next;
-    });
-  };
-
-  const mergePrefs = (base, incoming) => {
-    const next = { ...base, ...(incoming || {}) };
-    next.gameplay = { ...base.gameplay, ...(incoming?.gameplay || {}) };
-    next.privacy = { ...base.privacy, ...(incoming?.privacy || {}) };
-    next.accessibility = { ...base.accessibility, ...(incoming?.accessibility || {}) };
-    return next;
-  };
-
-  const applyPublicThemeVars = (vars) => {
-    const el = document.documentElement;
-    if (vars.bg) {
-      el.style.setProperty('--site-bg', vars.bg);
-      localStorage.setItem('public.site.bg', vars.bg);
-    }
-    if (vars.accent) {
-      el.style.setProperty('--site-accent', vars.accent);
-      el.style.setProperty('--site-accent-default', vars.accent);
-      localStorage.setItem('public.site.accent', vars.accent);
-    }
-    if (vars.accentStrong) {
-      el.style.setProperty('--site-accent-default-strong', vars.accentStrong);
-    }
-    if (vars.text) {
-      el.style.setProperty('--site-text', vars.text);
-      localStorage.setItem('public.site.text', vars.text);
-    }
-    if (vars.textMuted) {
-      el.style.setProperty('--site-text-muted', vars.textMuted);
-      localStorage.setItem('public.site.textMuted', vars.textMuted);
-    }
-    if (vars.link) {
-      el.style.setProperty('--site-link', vars.link);
-      localStorage.setItem('public.site.link', vars.link);
-    }
-    if (vars.surface) {
-      el.style.setProperty('--site-surface', vars.surface);
-      localStorage.setItem('public.site.surface', vars.surface);
-    }
-    if (vars.border) {
-      el.style.setProperty('--site-border', vars.border);
-      localStorage.setItem('public.site.border', vars.border);
-    }
-    if (vars.panel) {
-      el.style.setProperty('--site-panel', vars.panel);
-      localStorage.setItem('public.site.panel', vars.panel);
-    }
-  };
-
-  const getAccentPalette = (accent) => {
-    if (accent === 'blue') return { accent: '#3b82f6', accentStrong: '#2563eb', link: '#3b82f6' };
-    if (accent === 'green') return { accent: '#06d47b', accentStrong: '#05b868', link: '#06d47b' };
-    if (accent === 'orange') return { accent: '#ff9900', accentStrong: '#c17700', link: '#ff9900' };
-    return { accent: '#9b34d3', accentStrong: '#7e2ab5', link: '#9b34d3' };
-  };
-
-  const getThemePalette = (theme) => {
-    if (theme === 'light') {
-      return {
-        bg: '#f8fafc',
-        text: '#0b1220',
-        textMuted: '#4b5563',
-        link: '#2563eb',
-        surface: '#ffffff',
-        border: 'rgba(0, 0, 0, 0.10)',
-        panel: 'rgba(255, 255, 255, 0.85)',
-      };
-    }
-    return {
-      bg: '#0d0d19',
-      text: '#ffffff',
-      textMuted: '#a0a9c0',
-      link: '#4ea1ff',
-      surface: 'rgba(255, 255, 255, 0.06)',
-      border: 'rgba(255, 255, 255, 0.12)',
-      panel: 'rgba(0, 0, 0, 0.22)',
-    };
-  };
+  useEffect(() => () => { if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current); }, []);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(PREFS_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setPrefs(mergePrefs(DEFAULT_PREFS, parsed));
-      }
-    } catch {
-    } finally {
-      setPrefsReady(true);
-    }
+    try { const r = localStorage.getItem(PREFS_KEY); if (r) setPrefs(mergePrefs(DEFAULT_PREFS, JSON.parse(r))); }
+    catch {} finally { setPrefsReady(true); }
   }, []);
 
   useEffect(() => {
     if (!prefsReady) return;
-
     try {
-      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(prefs));
-      const now = Date.now();
-      setPrefsSavedAt(now);
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); setPrefsSavedAt(Date.now());
       if (prefsTouchedRef.current) {
         setPrefsUiMessage('Paramètres sauvegardés.');
         if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
         prefsMsgTimerRef.current = window.setTimeout(() => setPrefsUiMessage(''), 2500);
       }
-    } catch {
-    }
-
-    const el = document.documentElement;
-    const scale = Number(prefs.accessibility.fontScale);
-    el.style.setProperty('--site-font-scale', String(Number.isFinite(scale) ? scale : 1));
-    el.dataset.reduceMotion = prefs.accessibility.reduceMotion ? 'true' : 'false';
-
-    const resolvedTheme =
-      prefs.theme === 'system'
-        ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light'
-        : prefs.theme;
-    const themeVars = getThemePalette(resolvedTheme);
-    const accentVars = getAccentPalette(prefs.accent);
-    applyPublicThemeVars({ ...themeVars, ...accentVars });
+    } catch {}
   }, [prefs, prefsReady]);
 
   useEffect(() => {
-    if (!prefsReady) return;
-    if (!window.matchMedia) return;
-    if (prefs.theme !== 'system') return;
+    document.title = 'FUNQUIZ | Mon profil';
+    if (user) setEditData({ name: user.name || user.username || '', first_name: user.first_name || '', email: user.email || '', number: user.number || '' });
+  }, [user]);
 
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => {
-      const resolvedTheme = mql.matches ? 'dark' : 'light';
-      const themeVars = getThemePalette(resolvedTheme);
-      const accentVars = getAccentPalette(prefs.accent);
-      applyPublicThemeVars({ ...themeVars, ...accentVars });
+  useEffect(() => {
+    if (showOtpPopup && user?.number) {
+      verification.sendOtp(user.number).then(() => setStatus('sent')).catch(e => {
+        setStatus('error'); window.alert('❌ ' + (e?.response?.data?.error || "Erreur d'envoi."));
+      });
+    }
+  }, [showOtpPopup, user?.number]);
+
+  useEffect(() => {
+    let dead = false;
+    const go = async () => {
+      if (!user?.user_id) return;
+      try { const d = await pointService.getUserPoints(user.user_id); if (!dead) setUserPoints(d || null); }
+      catch { if (!dead) setUserPoints(null); }
     };
-    mql.addEventListener?.('change', handler);
-    return () => mql.removeEventListener?.('change', handler);
-  }, [prefs.theme, prefs.accent, prefsReady]);
+    go(); window.addEventListener('points:updated', go);
+    return () => { dead = true; window.removeEventListener('points:updated', go); };
+  }, [user?.user_id]);
+
+  useEffect(() => {
+    let dead = false;
+    const go = async () => {
+      if (!user?.user_id) return; setHistoryLoading(true);
+      try { const l = await quizSessionService.getUserSessions(user.user_id); if (!dead) setQuizHistory(Array.isArray(l) ? l : []); }
+      catch { if (!dead) setQuizHistory([]); }
+      finally { if (!dead) setHistoryLoading(false); }
+    };
+    go(); return () => { dead = true; };
+  }, [user?.user_id]);
+
+  const handlePrefChange = (path, value) => {
+    prefsTouchedRef.current = true;
+    setPrefs(prev => {
+      const next = { ...prev }; const keys = path.split('.');
+      let obj = next;
+      for (let i = 0; i < keys.length - 1; i++) { obj[keys[i]] = { ...obj[keys[i]] }; obj = obj[keys[i]]; }
+      obj[keys[keys.length - 1]] = value; return next;
+    });
+  };
 
   const resetPrefs = () => {
-    try {
-      localStorage.removeItem(PREFS_STORAGE_KEY);
-    } catch {
-    }
-    setPrefs(DEFAULT_PREFS);
-    setPrefsUiMessage('Paramètres réinitialisés.');
+    try { localStorage.removeItem(PREFS_KEY); } catch {}
+    setPrefs(DEFAULT_PREFS); setPrefsUiMessage('Réinitialisés.');
     if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
     prefsMsgTimerRef.current = window.setTimeout(() => setPrefsUiMessage(''), 2500);
   };
 
-  // Filtres / recherche pour "Mes Quiz"
-  const [quizFilter, setQuizFilter] = useState('all'); // 'all' | 'en_cours' | 'termine'
-  const [quizQuery, setQuizQuery] = useState('');
+  const handleDeleteAccount = async () => {
+    if (!user?.user_id) { alert('Utilisateur non identifié.'); return; }
+    if (!deleteReason) { alert('Veuillez sélectionner une raison.'); return; }
+    if (confirmText.trim() !== 'SUPPRIMER') { alert('Veuillez taper "SUPPRIMER" pour confirmer.'); return; }
+    setDeleting(true);
+    try {
+      const res = await authService.deleteUserSoft({ user_id: user.user_id, reason: deleteReason, comment: deleteComment });
+      alert(res?.message || 'Compte supprimé.'); if (logout) logout(); navigate('/');
+    } catch (e) { alert(e.message || 'Erreur.'); }
+    finally { setDeleting(false); }
+  };
 
-
-  // --- Effets init / remplir editData ---
-  useEffect(() => {
-    document.title = 'FUNQUIZ | Mon profil';
-    if (user) {
-      setEditData({
-        name: user.name || user.username || '',
-        first_name: user.first_name || '',
-        email: user.email || '',
-        number: user.number || '',
-      });
-    }
-  }, [user]);
-
-  // --- Envoi OTP automatiquement quand showOtpPopup devient true ---
-  useEffect(() => {
-    if (showOtpPopup && user?.number) {
-      verification
-        .sendOtp(user.number)
-        .then(() => {
-          setStatus('sent');
-        })
-        .catch((error) => {
-          console.error('Erreur envoi OTP:', error);
-          setStatus('error');
-          const errorMsg = error?.response?.data?.error || "Erreur lors de l'envoi du code.";
-          window.alert('❌ ' + errorMsg);
-        });
-    }
-  }, [showOtpPopup, user?.number]);
-
-  // --- Récupération des points (détails) ---
-  useEffect(() => {
-    let ignore = false;
-    const fetchUserPoints = async () => {
-      if (!user?.user_id) return;
-      try {
-        const data = await pointService.getUserPoints(user.user_id);
-        if (!ignore) setUserPoints(data || null);
-      } catch (e) {
-        console.error('Erreur récupération des points utilisateur:', e);
-        if (!ignore) setUserPoints(null);
-      }
-    };
-    fetchUserPoints();
-    const handler = () => fetchUserPoints();
-    window.addEventListener('points:updated', handler);
-    return () => {
-      ignore = true;
-      window.removeEventListener('points:updated', handler);
-    };
-  }, [user?.user_id]);
-
-  // (SUPPRIMÉ) --- Points dynamiques (header) ---
-  // L'effet et l'état 'points' ont été retirés car non utilisés et source d'avertissements.
-
-  // --- Historique quiz ---
-  useEffect(() => {
-    let ignore = false;
-    const fetchHistory = async () => {
-      if (!user?.user_id) return;
-      setHistoryLoading(true);
-      try {
-        const list = await quizSessionService.getUserSessions(user.user_id);
-        if (!ignore) setQuizHistory(Array.isArray(list) ? list : []);
-      } catch (e) {
-        console.error('Erreur récupération historique:', e);
-        if (!ignore) setQuizHistory([]);
-      } finally {
-        if (!ignore) setHistoryLoading(false);
-      }
-    };
-    fetchHistory();
-    return () => {
-      ignore = true;
-    };
-  }, [user?.user_id]);
-
-  // --- OTP verification handler ---
   const handleVerify = async () => {
-    if (!otpCode.trim()) {
-      setStatus('error');
-      window.alert('Veuillez entrer un code.');
-      return;
-    }
-
+    if (!otpCode.trim()) { setStatus('error'); window.alert('Veuillez entrer un code.'); return; }
     setStatus('pending');
     try {
       const res = await verification.verifyOtp(user.number, otpCode.trim());
       if (res?.verified || res?.success) {
-        setStatus('success');
-        setActiveOtp(false);
-        setShowOtpPopup(false);
-        setAlert0(true);
-        setOtpCode('');
-        if (refreshUser) await refreshUser();
-        window.alert('✅ Numéro vérifié avec succès !');
-        window.location.reload();
-      } else {
-        setStatus('error');
-        window.alert('❌ Code incorrect, veuillez réessayer.');
-      }
-    } catch (error) {
-      setStatus('error');
-      const errorMsg =
-        error?.response?.data?.message || error.message || 'Erreur lors de la vérification du code.';
-      window.alert('❌ ' + errorMsg);
-    }
+        setStatus('success'); setActiveOtp(false); setShowOtpPopup(false); setAlert0(true); setOtpCode('');
+        if (refreshUser) await refreshUser(); window.alert('✅ Numéro vérifié !'); window.location.reload();
+      } else { setStatus('error'); window.alert('❌ Code incorrect.'); }
+    } catch (e) { setStatus('error'); window.alert('❌ ' + (e?.response?.data?.message || e.message || 'Erreur.')); }
   };
 
-  // --- Normalisation userInfo pour le JSX ---
+  const handleResumeSession = async session => {
+    const sid = session.session_id ?? session.id; setResumingId(sid);
+    try {
+      const thematics = await thematicService.getAllThematics();
+      const thematic  = thematics.find(t => Number(t.thematic_id) === Number(session.thematic_id));
+      if (!thematic) return;
+      const sub = thematic.sub_thematics?.find(st => Number(st.sub_thematic_id ?? st.id) === Number(session.sub_thematic_id));
+      navigate('/step', { state: { questions: sub?.questions || thematic.questions || [], subTitle: sub?.title || thematic.thematic_title || '', thematicTitle: thematic.thematic_title || '' } });
+    } catch {}
+    finally { setResumingId(null); }
+  };
+
+  const isCompleted = s => Number(s?.is_completed) === 1;
+
   const userInfo = {
-    username: user?.name || '',
+    username:  user?.name || '',
     firstname: user?.first_name || '',
-    email: user?.email || '',
-    number: user?.number || '',
+    email:     user?.email || '',
+    number:    user?.number || '',
     is_verify: user?.is_verify ?? 0,
-    joinDate: user?.joinDate || user?.created_at || user?.createdAt || null,
-    avatar: resolveMediaUrl(user?.avatar || user?.avatar_url || ''),
-    favoriteCategory: user?.favoriteCategory || user?.favorite_thematic || '—',
+    joinDate:  user?.joinDate || user?.created_at || user?.createdAt || null,
+    avatar:    resolveMediaUrl(user?.avatar || user?.avatar_url || ''),
   };
 
-  // --- Calcul des userStats (utilise points et userPoints si dispo) ---
-  const level = Number(userPoints?.level) || Number(user?.level) || 1;
-  const xpInLevel = Number(userPoints?.xp_in_level) || 0;
-  const levelSpan = Number(userPoints?.level_span) || 100; // fallback raisonnable
-  const nextLevelXP = Number(userPoints?.next_level_xp) || Math.max(0, levelSpan - xpInLevel);
+  const level          = Number(userPoints?.level)                 || Number(user?.level)          || 1;
+  const xpInLevel      = Number(userPoints?.xp_in_level)           || 0;
+  const levelSpan      = Number(userPoints?.level_span)            || 100;
+  const totalQuizzes   = Number(userPoints?.total_games_played)    || Number(user?.totalQuizzes)   || 0;
+  const correctAnswers = Number(userPoints?.total_correct_answers) || Number(user?.correctAnswers) || 0;
+  const streak         = Number(userPoints?.current_streak)        || Number(user?.streak)         || 0;
+  const totalPoints    = Number(userPoints?.total_points) || Number(userPoints?.total_points_games) || Number(user?.total_points) || 0;
+  const progressPct    = Math.max(0, Math.min(100, levelSpan ? Math.round((xpInLevel / levelSpan) * 100) : 0));
+  const displayName    = prefs.privacy.hideUsername ? 'Utilisateur' : `${userInfo.firstname} ${userInfo.username}`.trim() || 'Joueur';
 
-  const totalQuizzes = Number(userPoints?.total_games_played) || Number(user?.totalQuizzes) || 0;
-  const correctAnswers =
-    Number(userPoints?.total_correct_answers) || Number(user?.correctAnswers) || 0;
-  const streak = Number(userPoints?.current_streak) || Number(user?.streak) || 0;
-  const totalPoints =
-    Number(userPoints?.total_points) ||
-    Number(userPoints?.total_points_games) ||
-    Number(user?.total_points) ||
-    0;
-
-  const userStats = {
-    level,
-    xpInLevel,
-    levelSpan,
-    nextLevelXP,
-    totalQuizzes,
-    correctAnswers,
-    streak,
-  };
-
-  const progressPercentage = Math.max(
-    0,
-    Math.min(100, userStats.levelSpan ? Math.round((userStats.xpInLevel / userStats.levelSpan) * 100) : 0)
-  );
-
-  const isSessionCompleted = (s) => Number(s?.is_completed) === 1;
-
-  // --- contenu des onglets (fonction interne unique) ---
+  /* ─────── TAB CONTENT ─────── */
   const renderTabContent = () => {
+
+    /* OVERVIEW */
     if (activeTab === 'overview') {
-      const accuracyHint =
-        userStats.correctAnswers >= 200 ? 'Excellent rythme, continue comme ça !' :
-        userStats.correctAnswers >= 100 ? 'Super progression, vise les 200 réponses correctes.' :
-        'Commence par des quiz courts et réguliers pour progresser.';
-      return (
-        <div className="profile-tab-pane fade-in">
-          <h4 className="profile-section-title">Vue d&apos;ensemble</h4>
-
-          <div className="profile-stats-grid">
-            <div className="profile-stat-card">
-              <div className="stat-label">Niveau</div>
-              <div className="stat-value highlight">Niv {userStats.level}</div>
-            </div>
-            <div className="profile-stat-card">
-              <div className="stat-label">XP</div>
-              <div className="stat-value">{userStats.xpInLevel} <span className="stat-sub">/ {userStats.levelSpan}</span></div>
-              <div className="profile-progress-bar">
-                <div className="profile-progress-fill" style={{ width: `${progressPercentage}%` }} />
-              </div>
-            </div>
-            <div className="profile-stat-card">
-              <div className="stat-label">Série</div>
-              <div className="stat-value">🔥 {userStats.streak}</div>
-            </div>
-            <div className="profile-stat-card">
-              <div className="stat-label">Quiz joués</div>
-              <div className="stat-value">📊 {userStats.totalQuizzes}</div>
-            </div>
-          </div>
-
-          <div className="profile-section mt-4">
-            <h6 className="profile-subsection-title">Dernières activités</h6>
-            {quizHistory.length === 0 ? (
-              <p className="profile-empty-text">Aucune activité récente.</p>
-            ) : (
-              <div className="profile-activity-list">
-                {quizHistory.slice(0, 3).map((s, idx) => {
-                  const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
-                  const score = s.current_score ?? s.score ?? 0;
-                  const completed = isSessionCompleted(s);
-                  const statusText = completed ? 'Terminé' : 'En cours';
-                  return (
-                    <div key={s.session_id ?? s.id ?? idx} className="profile-activity-item">
-                      <div className="activity-info">
-                        <strong className="activity-title">Session #{s.session_id ?? s.id}</strong>
-                        <small className="activity-date">{dateStr}</small>
-                      </div>
-                      <div className="activity-badges">
-                        <span className="profile-badge">Score: {score}</span>
-                        <span className={`profile-badge ${completed ? 'success' : 'pending'}`}>{statusText}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="profile-tip-box mt-4">
-            <div className="tip-title">💡 Conseil</div>
-            <div className="tip-content">{accuracyHint}</div>
-          </div>
-        </div>
-      );
-    }
-  
-    if (activeTab === 'quizzes') {
-      const items = quizHistory
-        .filter((s) => {
-          const completed = isSessionCompleted(s);
-          if (quizFilter === 'en_cours') return !completed;
-          if (quizFilter === 'termine') return completed;
-          return true;
-        })
-        .filter((s) => {
-          const hay = `${s.session_id ?? s.id ?? ''} ${s.last_activity ?? ''}`.toLowerCase();
-          return hay.includes(quizQuery.trim().toLowerCase());
-        })
-        .slice(0, 20);
+      const hint = correctAnswers >= 200 ? 'Excellent rythme, continue comme ça !'
+        : correctAnswers >= 100 ? 'Super progression, vise les 200 réponses correctes.'
+        : 'Commence par des quiz courts et réguliers pour progresser.';
 
       return (
-        <div className="profile-tab-pane fade-in">
-          <h4 className="profile-section-title">Mes Quiz</h4>
-
-          <div className="profile-filters">
-            <div className="profile-btn-group">
-              <button type="button" className={`profile-filter-btn ${quizFilter === 'all' ? 'active' : ''}`} onClick={() => setQuizFilter('all')}>Tous</button>
-              <button type="button" className={`profile-filter-btn ${quizFilter === 'en_cours' ? 'active' : ''}`} onClick={() => setQuizFilter('en_cours')}>En cours</button>
-              <button type="button" className={`profile-filter-btn ${quizFilter === 'termine' ? 'active' : ''}`} onClick={() => setQuizFilter('termine')}>Terminés</button>
+        <div className="space-y-5">
+          {/* Hero */}
+          <div className={`${card} p-6 flex flex-col sm:flex-row items-center gap-5`}>
+            <div className="relative shrink-0">
+              <img src={userInfo.avatar || userIcon} alt="avatar"
+                className="w-20 h-20 rounded-2xl object-cover ring-2 ring-indigo-200"
+                onError={e => { e.target.onerror = null; e.target.src = userIcon; }} />
+              <button onClick={() => setVisible(true)}
+                className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-indigo-600 hover:bg-indigo-500 rounded-lg flex items-center justify-center text-sm transition-colors shadow">
+                📷
+              </button>
             </div>
-            <input
-              className="profile-search-input"
-              placeholder="Recherche par ID/date..."
-              value={quizQuery}
-              onChange={(e) => setQuizQuery(e.target.value)}
-            />
-          </div>
-
-          {items.length === 0 ? (
-            <p className="profile-empty-text">Aucun résultat trouvé.</p>
-          ) : (
-            <div className="profile-activity-list">
-              {items.map((s, idx) => {
-                const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
-                const score = s.current_score ?? s.score ?? 0;
-                const completed = isSessionCompleted(s);
-                const statusText = completed ? 'Terminé' : 'En cours';
-                return (
-                  <div
-                    key={s.session_id ?? s.id ?? idx}
-                    className="profile-activity-item"
-                  >
-                    <div className="activity-info">
-                      <strong className="activity-title">Session #{s.session_id ?? s.id}</strong>
-                      <small className="activity-date">{dateStr}</small>
-                    </div>
-                    <div className="activity-badges">
-                      <span className={`profile-badge ${completed ? 'success' : 'pending'}`}>
-                        {statusText}
-                      </span>
-                      <span className="profile-badge">Score: {score}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      );
-    }
-  
-    if (activeTab === 'achievements') {
-      const badges = [
-        { key: 'level5', name: 'Pilote', desc: 'Atteindre le niveau 5', unlocked: userStats.level >= 5, emoji: '🛡️' },
-        { key: 'quizzes10', name: 'Assidu', desc: '10 quiz joués', unlocked: userStats.totalQuizzes >= 10, emoji: '📚' },
-        { key: 'streak5', name: 'En série', desc: 'Série de 5 jours', unlocked: userStats.streak >= 5, emoji: '🔥' },
-        { key: 'correct100', name: 'Érudit', desc: '100 réponses correctes', unlocked: userStats.correctAnswers >= 100, emoji: '🎓' },
-      ];
-      const nextObjective =
-        badges.find((b) => !b.unlocked)?.desc || 'Tous les objectifs atteints, superbe !';
-
-      return (
-        <div className="profile-tab-pane fade-in">
-          <h4 className="profile-section-title">Succès</h4>
-          <div className="profile-badges-grid">
-            {badges.map((b) => (
-              <div key={b.key} className={`profile-badge-card ${b.unlocked ? 'unlocked' : 'locked'}`}>
-                <div className="badge-emoji">{b.emoji}</div>
-                <div className="badge-name">{b.name}</div>
-                <div className="badge-desc">{b.desc}</div>
-                <span className={`badge-status ${b.unlocked ? 'success' : ''}`}>
-                  {b.unlocked ? 'Débloqué' : 'Verrouillé'}
+            <div className="text-center sm:text-left flex-1">
+              <h1 className="text-xl font-bold text-slate-900">{displayName}</h1>
+              <p className="text-sm text-slate-500 mt-0.5">{userInfo.email}</p>
+              <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
+                {userInfo.number ? (
+                  userInfo.is_verify === 0 ? (
+                    <button onClick={() => setActiveOtp(true)} className={`${pill} bg-amber-50 text-amber-600 ring-1 ring-amber-200 hover:bg-amber-100 transition-colors cursor-pointer`}>
+                      📱 {userInfo.number} · Non vérifié ⚠️
+                    </button>
+                  ) : (
+                    <span className={`${pill} bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200`}>📱 {userInfo.number} · Vérifié ✓</span>
+                  )
+                ) : user?.google_id ? (
+                  <button onClick={() => setActivePopup('addNumber')} className={`${pill} bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200 hover:bg-indigo-100 transition-colors cursor-pointer`}>
+                    + Ajouter un numéro
+                  </button>
+                ) : null}
+                <span className={`${pill} bg-slate-100 text-slate-500`}>
+                  📅 Membre depuis {userInfo.joinDate ? new Date(userInfo.joinDate).toLocaleDateString('fr-FR') : '—'}
                 </span>
+              </div>
+            </div>
+            <button onClick={() => setVisible(true)} className="shrink-0 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors shadow-sm">
+              Modifier le profil
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: '🪙', label: 'Points totaux',  value: totalPoints.toLocaleString('fr-FR'), bg: 'bg-violet-50',  iconBg: 'bg-violet-100' },
+              { icon: '📊', label: 'Quiz joués',      value: totalQuizzes,                        bg: 'bg-blue-50',    iconBg: 'bg-blue-100' },
+              { icon: '🔥', label: 'Série actuelle',  value: streak,                              bg: 'bg-orange-50',  iconBg: 'bg-orange-100' },
+              { icon: '⭐', label: `Niveau ${level}`, value: `${progressPct}%`, bar: true,        bg: 'bg-emerald-50', iconBg: 'bg-emerald-100' },
+            ].map(({ icon, label, value, bg, iconBg, bar }) => (
+              <div key={label} className={`rounded-2xl border border-slate-200 ${bg} p-4 shadow-sm`}>
+                <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg mb-3`}>{icon}</div>
+                <div className="text-2xl font-bold text-slate-800">{value}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+                {bar && <div className="mt-2 h-1.5 rounded-full bg-slate-200"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${progressPct}%` }} /></div>}
               </div>
             ))}
           </div>
 
-          <div className="profile-tip-box mt-4">
-            <div className="tip-title">🎯 Prochain objectif</div>
-            <div className="tip-content">{nextObjective}</div>
+          {/* XP bar */}
+          <div className={`${card} p-4 flex items-center gap-4`}>
+            <span className="text-2xl">⚡</span>
+            <div className="flex-1">
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-slate-700 font-medium">XP — Niveau {level}</span>
+                <span className="text-slate-400">{xpInLevel} / {levelSpan}</span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500" style={{ width: `${progressPct}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Recent activity */}
+          <div className={`${card} overflow-hidden`}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <span className="font-semibold text-slate-800">Activité récente</span>
+              <button onClick={() => setActiveTab('history')} className="text-xs text-indigo-600 hover:text-indigo-500 transition-colors">Voir tout →</button>
+            </div>
+            {quizHistory.length === 0
+              ? <p className="text-slate-400 text-sm px-5 py-6">Aucune activité récente.</p>
+              : <div className="divide-y divide-slate-100">
+                  {quizHistory.slice(0, 3).map((s, i) => (
+                    <div key={s.session_id ?? s.id ?? i} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-sm">📝</div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-800">Session #{s.session_id ?? s.id}</div>
+                          <div className="text-xs text-slate-400">{s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—'}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <ScoreBadge score={s.current_score ?? s.score ?? 0} />
+                        <StatusBadge completed={isCompleted(s)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+
+          {/* Tip */}
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 flex gap-3 items-start shadow-sm">
+            <span className="text-lg shrink-0">💡</span>
+            <div>
+              <div className="text-sm font-semibold text-indigo-700 mb-0.5">Conseil</div>
+              <div className="text-sm text-indigo-600/80">{hint}</div>
+            </div>
           </div>
         </div>
       );
     }
-  
+
+    /* QUIZZES */
+    if (activeTab === 'quizzes') {
+      const items = quizHistory
+        .filter(s => { const c = isCompleted(s); return quizFilter === 'en_cours' ? !c : quizFilter === 'termine' ? c : true; })
+        .filter(s => `${s.session_id ?? s.id ?? ''} ${s.last_activity ?? ''}`.toLowerCase().includes(quizQuery.trim().toLowerCase()))
+        .slice(0, 20);
+
+      return (
+        <div className="space-y-5">
+          <h2 className="text-xl font-bold text-slate-900">Mes Quiz</h2>
+          <div className="flex flex-wrap gap-3">
+            <div className="flex rounded-xl border border-slate-200 bg-white p-0.5 gap-0.5 shadow-sm">
+              {[['all','Tous'],['en_cours','En cours'],['termine','Terminés']].map(([v,l]) => (
+                <button key={v} onClick={() => setQuizFilter(v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${quizFilter === v ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <input className="flex-1 min-w-[180px] bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+              placeholder="Rechercher..." value={quizQuery} onChange={e => setQuizQuery(e.target.value)} />
+          </div>
+          <div className={`${card} overflow-hidden`}>
+            {items.length === 0
+              ? <p className="text-slate-400 text-sm px-5 py-8 text-center">Aucun résultat.</p>
+              : <div className="divide-y divide-slate-100">
+                  {items.map((s, i) => (
+                    <div key={s.session_id ?? s.id ?? i} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-sm">📝</div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-800">Session #{s.session_id ?? s.id}</div>
+                          <div className="text-xs text-slate-400">{s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—'}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <ScoreBadge score={s.current_score ?? s.score ?? 0} />
+                        <StatusBadge completed={isCompleted(s)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        </div>
+      );
+    }
+
+    /* ACHIEVEMENTS */
+    if (activeTab === 'achievements') {
+      const badges = [
+        { key: 'level5',     emoji: '🛡️', name: 'Pilote',    desc: 'Atteindre le niveau 5',  unlocked: level >= 5 },
+        { key: 'quizzes10',  emoji: '📚', name: 'Assidu',    desc: '10 quiz joués',           unlocked: totalQuizzes >= 10 },
+        { key: 'streak5',    emoji: '🔥', name: 'En série',  desc: 'Série de 5 jours',        unlocked: streak >= 5 },
+        { key: 'correct100', emoji: '🎓', name: 'Érudit',    desc: '100 réponses correctes',  unlocked: correctAnswers >= 100 },
+      ];
+      return (
+        <div className="space-y-5">
+          <h2 className="text-xl font-bold text-slate-900">Succès</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {badges.map(b => (
+              <div key={b.key} className={`rounded-2xl border p-4 flex items-center gap-4 shadow-sm transition-all ${b.unlocked ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-slate-50 opacity-60 grayscale'}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${b.unlocked ? 'bg-white shadow-sm' : 'bg-slate-100'}`}>{b.emoji}</div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-800">{b.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{b.desc}</div>
+                  <span className={`mt-1.5 inline-block text-xs font-medium ${b.unlocked ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {b.unlocked ? '✓ Débloqué' : 'Verrouillé'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 flex gap-3 items-start shadow-sm">
+            <span className="text-lg">🎯</span>
+            <div>
+              <div className="text-sm font-semibold text-indigo-700 mb-0.5">Prochain objectif</div>
+              <div className="text-sm text-indigo-600/80">{badges.find(b => !b.unlocked)?.desc || 'Tous les objectifs atteints !'}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* HISTORY */
+    if (activeTab === 'history') {
+      return (
+        <div className="space-y-5">
+          <h2 className="text-xl font-bold text-slate-900">Historique</h2>
+          <div className={`${card} overflow-hidden`}>
+            {historyLoading
+              ? <div className="px-5 py-10 text-center text-slate-400 text-sm">Chargement...</div>
+              : quizHistory.length === 0
+              ? <div className="px-5 py-10 text-center text-slate-400 text-sm">Aucun historique pour le moment.</div>
+              : <div className="divide-y divide-slate-100">
+                  {quizHistory.slice(0, 15).map((s, i) => {
+                    const completed = isCompleted(s);
+                    const sid       = s.session_id ?? s.id;
+                    const isLoading = resumingId === sid;
+                    return (
+                      <div key={sid ?? i} onClick={!completed ? () => handleResumeSession(s) : undefined}
+                        className={`flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors ${!completed ? 'cursor-pointer' : ''}`}>
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-sm shrink-0">📝</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-slate-800 truncate">
+                            {s.thematic_title || `Session #${sid}`}
+                            {s.sub_thematic_title && <span className="text-slate-400"> · {s.sub_thematic_title}</span>}
+                          </div>
+                          <div className="text-xs text-slate-400">{s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—'}</div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                          <span className={`${pill} bg-slate-100 text-slate-500`}>✓ {s.correct_answers_count ?? 0}</span>
+                          <ScoreBadge score={s.current_score ?? s.score ?? 0} />
+                          <StatusBadge completed={completed} />
+                          {!completed && (
+                            <button onClick={e => { e.stopPropagation(); handleResumeSession(s); }} disabled={isLoading}
+                              className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                              {isLoading ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : '▶ Reprendre'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+            }
+          </div>
+        </div>
+      );
+    }
+
+    /* SETTINGS */
     if (activeTab === 'settings') {
       return (
-        <div className="profile-tab-pane fade-in">
-          <h4 className="profile-section-title">Paramètres</h4>
+        <div className="space-y-5">
+          <h2 className="text-xl font-bold text-slate-900">Paramètres</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
 
-          <div className="profile-settings-grid">
-            <div className="profile-settings-card">
-              <div className="settings-header">Apparence</div>
-              <label className="profile-label">Thème</label>
-              <select
-                className="profile-select"
-                value={prefs.theme}
-                onChange={(e) => handlePrefChange('theme', e.target.value)}
-              >
-                <option value="system">Système</option>
-                <option value="light">Clair</option>
-                <option value="dark">Sombre</option>
-              </select>
-              <label className="profile-label mt-3">Couleur d’accent</label>
-              <select
-                className="profile-select"
-                value={prefs.accent}
-                onChange={(e) => handlePrefChange('accent', e.target.value)}
-              >
-                <option value="blue">Bleu</option>
-                <option value="purple">Violet</option>
-                <option value="green">Vert</option>
-                <option value="orange">Orange</option>
-              </select>
-            </div>
-
-            <div className="profile-settings-card">
-              <div className="settings-header">Jeu</div>
-              <label className="profile-label">Difficulté par défaut</label>
-              <select
-                className="profile-select"
-                value={prefs.gameplay.defaultDifficulty}
-                onChange={(e) => handlePrefChange('gameplay.defaultDifficulty', e.target.value)}
-              >
-                <option value="easy">Facile</option>
-                <option value="normal">Normal</option>
-                <option value="hard">Difficile</option>
-              </select>
-              <div className="profile-switch-row">
-                <label className="profile-switch-label" htmlFor="timer">Minuteur</label>
-                <input
-                  className="profile-switch-input"
-                  type="checkbox"
-                  id="timer"
-                  checked={prefs.gameplay.timer}
-                  onChange={(e) => handlePrefChange('gameplay.timer', e.target.checked)}
-                />
+            <div className={`${card} p-5 space-y-4`}>
+              <div className="text-sm font-semibold text-slate-800">Apparence</div>
+              <div><label className={labelCls}>Thème</label>
+                <select className={selectCls} value={prefs.theme} onChange={e => handlePrefChange('theme', e.target.value)}>
+                  <option value="system">Système</option><option value="light">Clair</option><option value="dark">Sombre</option>
+                </select>
               </div>
-              <div className="profile-switch-row">
-                <label className="profile-switch-label" htmlFor="hints">Aides</label>
-                <input
-                  className="profile-switch-input"
-                  type="checkbox"
-                  id="hints"
-                  checked={prefs.gameplay.hints}
-                  onChange={(e) => handlePrefChange('gameplay.hints', e.target.checked)}
-                />
+              <div><label className={labelCls}>Couleur d&apos;accent</label>
+                <select className={selectCls} value={prefs.accent} onChange={e => handlePrefChange('accent', e.target.value)}>
+                  <option value="blue">Bleu</option><option value="purple">Violet</option><option value="green">Vert</option><option value="orange">Orange</option>
+                </select>
               </div>
             </div>
 
-            <div className="profile-settings-card">
-              <div className="settings-header">Confidentialité</div>
-              <label className="profile-label">Visibilité du profil</label>
-              <div className="profile-btn-group mb-2">
-                {['public', 'friends', 'private'].map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    className={`profile-filter-btn ${prefs.privacy.visibility === opt ? 'active' : ''}`}
-                    onClick={() => handlePrefChange('privacy.visibility', opt)}
-                  >
-                    {opt === 'public' ? 'Public' : opt === 'friends' ? 'Amis' : 'Privé'}
-                  </button>
-                ))}
+            <div className={`${card} p-5 space-y-4`}>
+              <div className="text-sm font-semibold text-slate-800">Jeu</div>
+              <div><label className={labelCls}>Difficulté</label>
+                <select className={selectCls} value={prefs.gameplay.defaultDifficulty} onChange={e => handlePrefChange('gameplay.defaultDifficulty', e.target.value)}>
+                  <option value="easy">Facile</option><option value="normal">Normal</option><option value="hard">Difficile</option>
+                </select>
               </div>
-              <div className="profile-switch-row">
-                <label className="profile-switch-label" htmlFor="leaderboardOptIn">Participer aux classements</label>
-                <input
-                  className="profile-switch-input"
-                  type="checkbox"
-                  id="leaderboardOptIn"
-                  checked={prefs.privacy.leaderboardOptIn}
-                  onChange={(e) => handlePrefChange('privacy.leaderboardOptIn', e.target.checked)}
-                />
-              </div>
-              <div className="profile-switch-row">
-                <label className="profile-switch-label" htmlFor="hideUsername">Masquer le pseudo</label>
-                <input
-                  className="profile-switch-input"
-                  type="checkbox"
-                  id="hideUsername"
-                  checked={prefs.privacy.hideUsername}
-                  onChange={(e) => handlePrefChange('privacy.hideUsername', e.target.checked)}
-                />
-              </div>
+              {[['timer','Minuteur'],['hints','Aides']].map(([k,l]) => (
+                <div key={k} className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700">{l}</span>
+                  <Toggle checked={prefs.gameplay[k]} onChange={v => handlePrefChange(`gameplay.${k}`, v)} />
+                </div>
+              ))}
             </div>
 
-            <div className="profile-settings-card full-width">
-              <div className="settings-header">Accessibilité</div>
-              <label className="profile-label">Taille du texte</label>
-              <select
-                className="profile-select"
-                value={String(prefs.accessibility.fontScale)}
-                onChange={(e) => handlePrefChange('accessibility.fontScale', Number(e.target.value))}
-              >
-                {['0.9','1.0','1.1','1.2','1.3','1.4'].map(v => (
-                  <option key={v} value={v}>{v}x</option>
-                ))}
-              </select>
-              <div className="profile-switch-row">
-                <label className="profile-switch-label" htmlFor="reduceMotion">Réduire les animations</label>
-                <input
-                  className="profile-switch-input"
-                  type="checkbox"
-                  id="reduceMotion"
-                  checked={prefs.accessibility.reduceMotion}
-                  onChange={(e) => handlePrefChange('accessibility.reduceMotion', e.target.checked)}
-                />
+            <div className={`${card} p-5 space-y-4`}>
+              <div className="text-sm font-semibold text-slate-800">Confidentialité</div>
+              <div>
+                <label className={labelCls}>Visibilité</label>
+                <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 gap-0.5">
+                  {[['public','Public'],['friends','Amis'],['private','Privé']].map(([v,l]) => (
+                    <button key={v} type="button" onClick={() => handlePrefChange('privacy.visibility', v)}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${prefs.privacy.visibility === v ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {[['leaderboardOptIn','Classements'],['hideUsername','Masquer pseudo']].map(([k,l]) => (
+                <div key={k} className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700">{l}</span>
+                  <Toggle checked={prefs.privacy[k]} onChange={v => handlePrefChange(`privacy.${k}`, v)} />
+                </div>
+              ))}
+            </div>
+
+            <div className={`${card} p-5 space-y-4 sm:col-span-2 xl:col-span-3`}>
+              <div className="text-sm font-semibold text-slate-800">Accessibilité</div>
+              <div className="flex flex-wrap gap-6 items-center">
+                <div className="flex-1 min-w-[160px]">
+                  <label className={labelCls}>Taille du texte</label>
+                  <select className={selectCls} value={String(prefs.accessibility.fontScale)} onChange={e => handlePrefChange('accessibility.fontScale', Number(e.target.value))}>
+                    {['0.9','1.0','1.1','1.2','1.3','1.4'].map(v => <option key={v} value={v}>{v}x</option>)}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[160px] flex items-center justify-between">
+                  <span className="text-sm text-slate-700">Réduire animations</span>
+                  <Toggle checked={prefs.accessibility.reduceMotion} onChange={v => handlePrefChange('accessibility.reduceMotion', v)} />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="profile-settings-actions">
-            <div className="profile-settings-meta">
-              {prefsUiMessage ? (
-                <span className="profile-settings-message">{prefsUiMessage}</span>
-              ) : prefsSavedAt ? (
-                <span className="profile-settings-message">
-                  Dernière sauvegarde : {new Date(prefsSavedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              ) : (
-                <span className="profile-settings-message"> </span>
-              )}
-            </div>
-            <div className="profile-settings-buttons">
-              <button type="button" className="profile-btn-cancel" onClick={resetPrefs}>
-                Réinitialiser les paramètres
-              </button>
-            </div>
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs text-slate-400">
+              {prefsUiMessage || (prefsSavedAt ? `Sauvegardé à ${new Date(prefsSavedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ' ')}
+            </span>
+            <button onClick={resetPrefs} className="text-xs text-slate-500 hover:text-slate-800 underline transition-colors">Réinitialiser</button>
           </div>
 
-          <div className="profile-danger-zone mt-4">
-            <h5 className="danger-title"><CgDanger className="danger-icon" /> Zone de danger</h5>
-            <p className="danger-text">La suppression est définitive. Vous perdrez tout votre historique et vos points.</p>
+          {/* Danger zone */}
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 text-red-600">
+              <CgDanger size={18} />
+              <span className="font-semibold text-sm">Zone de danger</span>
+            </div>
+            <p className="text-sm text-slate-600">La suppression est définitive. Vous perdrez tout votre historique et vos points.</p>
             {!isDelete ? (
-              <button type="button" className="profile-btn-danger" onClick={() => setDelete(true)}>
+              <button onClick={() => setDelete(true)}
+                className="px-4 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-600 text-sm font-medium border border-red-200 transition-colors">
                 Supprimer mon compte
               </button>
             ) : (
-              <div className="danger-confirm-box">
-                <label className="profile-label danger">Raison du départ</label>
-                <select
-                  className="profile-select danger"
-                  value={deleteReason}
-                  onChange={(e) => setDeleteReason(e.target.value)}
-                >
-                  <option value="">-- Choisir une raison --</option>
-                  <option value="boring">Je m&apos;ennuie</option>
-                  <option value="reset">Je veux recommencer à zéro</option>
-                  <option value="privacy">Confidentialité</option>
-                  <option value="other">Autre</option>
-                </select>
-                
-                <input
-                  className="profile-input danger mt-2"
-                  placeholder="Commentaire (optionnel)"
-                  value={deleteComment}
-                  onChange={(e) => setDeleteComment(e.target.value)}
-                />
-
-                <p className="danger-warning mt-3">
-                  Tapez <strong>SUPPRIMER</strong> pour confirmer.
-                </p>
-                <input
-                  className="profile-input danger"
-                  placeholder="SUPPRIMER"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                />
-
-                <div className="danger-actions mt-3">
-                  <button type="button" className="profile-btn-cancel" onClick={() => setDelete(false)}>Annuler</button>
-                  <button
-                    type="button"
-                    className="profile-btn-danger"
-                    disabled={confirmText !== 'SUPPRIMER' || !deleteReason || deleting}
-                    onClick={handleDeleteAccount}
-                  >
-                    {deleting ? 'Suppression...' : 'Confirmer suppression'}
+              <div className="space-y-3">
+                <div>
+                  <label className={labelCls}>Raison</label>
+                  <select className={`${selectCls} focus:ring-red-400`} value={deleteReason} onChange={e => setDeleteReason(e.target.value)}>
+                    <option value="">-- Choisir --</option>
+                    <option value="boring">Je m&apos;ennuie</option>
+                    <option value="reset">Recommencer à zéro</option>
+                    <option value="privacy">Confidentialité</option>
+                    <option value="other">Autre</option>
+                  </select>
+                </div>
+                <input className={`${inputCls} focus:ring-red-400`} placeholder="Commentaire (optionnel)" value={deleteComment} onChange={e => setDeleteComment(e.target.value)} />
+                <p className="text-sm text-slate-600">Tapez <strong className="text-red-600">SUPPRIMER</strong> pour confirmer.</p>
+                <input className={`${inputCls} border-red-200 focus:ring-red-400`} placeholder="SUPPRIMER" value={confirmText} onChange={e => setConfirmText(e.target.value)} />
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => setDelete(false)} className="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm hover:border-slate-300 hover:text-slate-800 transition-colors">Annuler</button>
+                  <button onClick={handleDeleteAccount} disabled={confirmText !== 'SUPPRIMER' || !deleteReason || deleting}
+                    className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors shadow-sm">
+                    {deleting ? 'Suppression...' : 'Confirmer'}
                   </button>
                 </div>
               </div>
@@ -819,391 +614,218 @@ function ProfilePage() {
         </div>
       );
     }
-  
-    if (activeTab === 'history') {
-      return (
-        <div className="profile-tab-pane fade-in">
-          <h4 className="profile-section-title">Historique</h4>
-          {historyLoading ? (
-            <p className="profile-empty-text">Chargement...</p>
-          ) : quizHistory.length === 0 ? (
-            <p className="profile-empty-text">Aucun historique pour le moment.</p>
-          ) : (
-            <div className="profile-activity-list">
-              {quizHistory.slice(0, 15).map((s, idx) => {
-                const dateStr = s.last_activity ? new Date(s.last_activity).toLocaleString('fr-FR') : '—';
-                const score = s.current_score ?? s.score ?? 0;
-                const correct = s.correct_answers_count ?? 0;
-                const completed = isSessionCompleted(s);
-                const statusText = completed ? 'Terminé' : 'En cours';
-                return (
-                  <div key={s.session_id ?? s.id ?? idx} className="profile-activity-item">
-                    <div className="activity-info">
-                      <strong className="activity-title">Session #{s.session_id ?? s.id}</strong>
-                      <small className="activity-date">{dateStr}</small>
-                    </div>
-                    <div className="activity-badges">
-                      <span className={`profile-badge ${completed ? 'success' : 'pending'}`}>{statusText}</span>
-                      <span className="profile-badge">Score: {score}</span>
-                      <span className="profile-badge">Correctes: {correct}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      );
-    }
-  
     return null;
   };
 
-  // --- loaders / guards ---
-  if (loading) return <div>Chargement...</div>;
-  if (!user) return <div>Utilisateur non connecté</div>;
+  /* ─── loading / unauth ─── */
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+    </div>
+  );
+  if (!user) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 text-sm">Utilisateur non connecté</div>
+  );
 
+  /* ─── render ─── */
   return (
-    <div className="profile-page">
-      <div className="profile-container">
-        <div className="profile-card">
-          <div className="profile-header d-flex flex-column flex-md-row align-items-md-center justify-content-md-center gap-4">
-            <div className="d-flex flex-column align-items-center position-relative">
-              <img
-                className="avatar mb-3"
-                src={userInfo.avatar || userIcon}
-                alt={userInfo.username || 'Avatar'}
-                style={{ objectFit: 'cover' }}
-              />
-              {['moderator', 'admin'].includes(user?.role) && (
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  style={{ top: '10px', right: '50px', backgroundColor: '#000' }}
-                  className="text-light shadow rounded-circle p-2 border-0 position-absolute z-3"
-                >
-                  <GiFireDash color='#ff7300' className='bg-none' size={24} />
-                </button>
-              )}
-              {/* file input caché */}
-              <input
-                type="file"
-                accept="image/webp"
-                style={{ display: 'none' }}
-                ref={fileInputRef}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  setSelectedFile(file || null);
-                  setPreviewUrl(file ? URL.createObjectURL(file) : null);
-                }}
-              />
-              <div className="d-flex gap-2">
-                <button
-                  onClick={() => {
-                    setVisible(true);
-                    setIsEditing((prev) => !prev);
-                  }}
-                  className={`edit-btn ${isEditing ? 'save' : ''}`}
-                >
-                  Modifier
-                </button>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
 
-                <button
-                  onClick={async () => {
-                    await logout();
-                    window.location.href = '/login';
-                  }}
-                  className="btn btn-outline-secondary ms-2"
-                >
-                  Se déconnecter
-                </button>
-              </div>
-            </div>
-
-            <div className="user-info">
-              <div className="user-info-header mb-3">
-                <h1 className="mb-2 text-capitalize">
-                  {prefs.privacy.hideUsername ? 'Utilisateur' : `${userInfo.username} ${userInfo.firstname}`}
-                </h1>
-              </div>
-              <div className="user-details d-flex flex-column gap-2">
-                <p className="d-flex align-items-center gap-2">
-                  <FcAddressBook /> {userInfo.email}
-                </p>
-                {/* Téléphone / Ajout pour comptes Google */}
-                {!userInfo.number && user?.google_id ? (
-                  <p className="d-flex align-items-center gap-2">
-                    <FcAddressBook />
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => setActivePopup('addNumber')}
-                    >
-                      Ajouter un numéro
-                    </button>
-                  </p>
-                ) : (
-                  <p className="d-flex align-items-center gap-2">
-                    {userInfo.is_verify === 0 ? (
-                      <button
-                        onClick={() => setActiveOtp(true)}
-                        className="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
-                      >
-                        <FcAddressBook />
-                        +{userInfo.number}{' '}
-                        <CgDanger color="red" title="Non vérifié" size={18} />
-                      </button>
-                    ) : (
-                      <>
-                        <FcAddressBook />+{userInfo.number}{' '}
-                        <FaCheckCircle color="green" title="Vérifié" size={16} />
-                      </>
-                    )}
-                  </p>
-                )}
-                <p className="d-flex align-items-center gap-2">
-                  <FcPlanner /> Membre depuis{' '}
-                  {userInfo.joinDate ? new Date(userInfo.joinDate).toLocaleDateString('fr-FR') : '—'}
-                </p>
-              </div>
-            </div>
-
-            <div className="level-box d-flex flex-column align-items-center">
-              <div className="level-icon mb-2" style={{ width: '100px' }}>
-                <img src={Price} className="w-100 h-100" alt="Level icon" />
-              </div>
-              <div className="level-title mb-1">Niv {userStats.level}</div>
-              <div className="level-xp mb-2">
-                {userStats.xpInLevel} / {userStats.levelSpan} XP
-              </div>
-              <div className="progress-bar" aria-hidden="true">
-                <div className="progress-fill" style={{ width: `${progressPercentage}%` }} />
-              </div>
-            </div>
-          </div>
-
-          <div className="stats-grid">
-            <div className="stat-card purple">
-              🪙 {totalPoints.toLocaleString('fr-FR')} <span>Points</span>
-            </div>
-            <div className="stat-card blue">
-              📊 {userStats.totalQuizzes} <span>Quiz Terminés</span>
-            </div>
-            <div className="stat-card orange">
-              🔥 {quizHistory.length}
-              <span>Historique</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="tabs">
-          {[
-            { id: 'overview', label: "Vue d'ensemble", icon: '📈' },
-            { id: 'quizzes', label: 'Mes Quiz', icon: '📝' },
-            { id: 'achievements', label: 'Succès', icon: '🏆' },
-            { id: 'history', label: 'Historique', icon: '🕘' },
-            { id: 'settings', label: 'Paramètres', icon: '⚙️' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-              type="button"
-            >
-              <span>{tab.icon}</span> {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="tab-content">{renderTabContent()}</div>
-
-        {/* Modal OTP */}
-        {activeOtp && (
-          <div
-            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-            style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.5)' }}
-          >
-            {alert0 && (
-              <div className="shadow-lg p-4 rounded-4 bg-white text-center" style={{ maxWidth: 400 }}>
-                <h3 className="mb-3 text-dark">Vérification requise</h3>
-                <p className="mb-4 text-dark">
-                  Vous devez vérifier votre numéro pour accéder à certaines fonctionnalités de notre
-                  application.
-                </p>
-                <div className="d-flex justify-content-center gap-3">
-                  <button
-                    onClick={() => {
-                      setActiveOtp(false);
-                      setAlert0(true);
-                      setShowOtpPopup(false);
-                    }}
-                    className="btn btn-outline-secondary"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAlert0(false);
-                      setShowOtpPopup(true);
-                    }}
-                    className="btn btn-primary"
-                  >
-                    Vérifier
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {showOtpPopup && (
-              <div className="shadow-lg p-4 text-dark rounded-4 bg-white text-center" style={{ maxWidth: 400 }}>
-                <h2 className="mb-3">Vérification du numéro</h2>
-                <p className="mb-3">
-                  Un code de vérification a été envoyé à votre numéro <strong>{userInfo.number}</strong>. Veuillez entrer le code ci-dessous :
-                </p>
-                <input
-                  type="text"
-                  placeholder="Entrez le code OTP"
-                  className="form-control-custom mb-3 text-center"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  maxLength={6}
-                />
-                <div className="d-flex justify-content-center gap-3">
-                  <button
-                    onClick={() => {
-                      setActiveOtp(false);
-                      setShowOtpPopup(false);
-                      setAlert0(true);
-                      setOtpCode('');
-                      setStatus('');
-                    }}
-                    className="btn btn-outline-secondary"
-                  >
-                    Annuler
-                  </button>
-                  <button onClick={handleVerify} className="btn btn-primary" disabled={status === 'pending'}>
-                    {status === 'pending' ? 'Vérification...' : 'Vérifier'}
-                  </button>
-                </div>
-                {status === 'sent' && <p className="text-success mt-2">Code envoyé !</p>}
-                {status === 'pending' && <p className="text-info mt-2">Vérification en cours...</p>}
-                {status === 'error' && <p className="text-danger mt-2">Erreur, réessayez !</p>}
-              </div>
-            )}
-          </div>
-        )}
+      {/* Mobile top-bar */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white shadow-sm">
+        <span className="font-bold text-sm text-slate-900">FUNQUIZ</span>
+        <button onClick={() => setSidebarOpen(o => !o)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+          {sidebarOpen ? '✕' : '☰'}
+        </button>
       </div>
 
-      {successMsg && <div className="alert alert-success text-center">{successMsg}</div>}
-      {errorMsg && <div className="alert alert-danger text-center">{errorMsg}</div>}
+      <div className="flex min-h-[calc(100vh-49px)] lg:min-h-screen">
 
-      {/* Modal Modifier profil */}
+        {/* SIDEBAR */}
+        <aside className={`
+          fixed lg:static inset-y-0 left-0 z-40 w-64 shrink-0 flex flex-col
+          bg-white border-r border-slate-200 shadow-sm
+          transition-transform duration-300
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
+        `}>
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <img src={userInfo.avatar || userIcon} alt="avatar"
+                className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-100 shrink-0"
+                onError={e => { e.target.onerror = null; e.target.src = userIcon; }} />
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-slate-900 truncate">{displayName}</div>
+                <div className="text-xs text-slate-400 truncate">{userInfo.email}</div>
+              </div>
+            </div>
+          </div>
+
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            {NAV.map(n => (
+              <button key={n.id} onClick={() => { setActiveTab(n.id); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left
+                  ${activeTab === n.id ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}>
+                <span>{n.icon}</span>{n.label}
+              </button>
+            ))}
+            <div className="pt-3 mt-3 border-t border-slate-100 space-y-1">
+              <button onClick={() => { setVisible(true); setSidebarOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-left">
+                <span>✏️</span> Modifier le profil
+              </button>
+              {userInfo.is_verify === 0 && userInfo.number && (
+                <button onClick={() => { setActiveOtp(true); setSidebarOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-amber-600 hover:bg-amber-50 transition-colors text-left">
+                  <span>📱</span> Vérifier le numéro
+                </button>
+              )}
+            </div>
+          </nav>
+
+          <div className="p-3 border-t border-slate-100 space-y-1">
+            {['moderator','admin'].includes(user?.role) && (
+              <button onClick={() => navigate('/dashboard')}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-orange-500 hover:bg-orange-50 transition-colors text-left">
+                <GiFireDash size={14} /> Dashboard
+              </button>
+            )}
+            <button onClick={async () => { await logout(); window.location.href = '/login'; }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors text-left">
+              <span>→</span> Déconnexion
+            </button>
+          </div>
+        </aside>
+
+        {sidebarOpen && <div className="fixed inset-0 z-30 bg-slate-900/30 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+        <main className="flex-1 overflow-y-auto p-5 lg:p-8 max-w-5xl">
+          {renderTabContent()}
+        </main>
+      </div>
+
+      {/* TOASTS */}
+      {(successMsg || errorMsg) && (
+        <div className="fixed bottom-5 right-5 z-50 space-y-2">
+          {successMsg && <div className="px-4 py-3 rounded-xl bg-emerald-600 text-white text-sm font-medium shadow-xl">✓ {successMsg}</div>}
+          {errorMsg   && <div className="px-4 py-3 rounded-xl bg-red-600    text-white text-sm font-medium shadow-xl">✕ {errorMsg}</div>}
+        </div>
+      )}
+
+      {/* OTP MODAL */}
+      {activeOtp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          {alert0 && (
+            <div className={`w-full max-w-sm ${card} p-6`}>
+              <h2 className="text-lg font-bold text-slate-900 mb-2">Vérification requise</h2>
+              <p className="text-sm text-slate-500 mb-6">Vous devez vérifier votre numéro pour accéder à certaines fonctionnalités.</p>
+              <div className="flex gap-3">
+                <button onClick={() => { setActiveOtp(false); setAlert0(true); setShowOtpPopup(false); }}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-500 text-sm hover:text-slate-800 hover:border-slate-300 transition-colors">
+                  Annuler
+                </button>
+                <button onClick={() => { setAlert0(false); setShowOtpPopup(true); }}
+                  className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors shadow-sm">
+                  Vérifier
+                </button>
+              </div>
+            </div>
+          )}
+          {showOtpPopup && (
+            <div className={`w-full max-w-sm ${card} p-6`}>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">Code de vérification</h2>
+              <p className="text-sm text-slate-500 mb-5">Code envoyé au <span className="text-indigo-600 font-medium">+{userInfo.number}</span></p>
+              <input type="text" maxLength={6}
+                className="w-full text-center text-2xl tracking-[0.5em] font-mono bg-slate-50 border border-slate-200 rounded-xl py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-5"
+                placeholder="••••••" value={otpCode} onChange={e => setOtpCode(e.target.value)} />
+              {status === 'sent'    && <p className="text-xs text-emerald-600 text-center mb-3">Code envoyé !</p>}
+              {status === 'error'   && <p className="text-xs text-red-600 text-center mb-3">Erreur, réessayez.</p>}
+              {status === 'pending' && <p className="text-xs text-indigo-600 text-center mb-3">Vérification...</p>}
+              <div className="flex gap-3">
+                <button onClick={() => { setActiveOtp(false); setShowOtpPopup(false); setAlert0(true); setOtpCode(''); setStatus(''); }}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-500 text-sm hover:text-slate-800 hover:border-slate-300 transition-colors">
+                  Annuler
+                </button>
+                <button onClick={handleVerify} disabled={status === 'pending'}
+                  className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium transition-colors shadow-sm">
+                  {status === 'pending' ? 'Vérification...' : 'Vérifier'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* EDIT PROFILE MODAL */}
       {isVisible && (
-        <div className="position-fixed w-100 h-100 top-0 bottom-0 start-0 end-0 z-1 bg-black bg-opacity-50 d-flex align-items-center justify-content-center">
-          <div style={{ maxWidth: 700 }} className="position-relative bg-dark rounded-3 p-4 w-100">
-            <button
-              className="position-absolute top-0 bg-danger end-0 m-2 btn btn-close"
-              onClick={() => setVisible(false)}
-            />
-            <h3 className="mb-4 text-light">Modifier mon profil</h3>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setUploading(true);
-                try {
-                  if (selectedFile) {
-                    await uploadAvatar(user.user_id, selectedFile);
-                  }
-                  await authService.putUserById(user.user_id, editData);
-                  setUploading(false);
-                  setVisible(false);
-                  setSelectedFile(null);
-                  setPreviewUrl(null);
-                  setSuccessMsg('Profil mis à jour avec succès !');
-                  setErrorMsg('');
-                  if (refreshUser) await refreshUser();
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 800);
-                } catch (err) {
-                  console.error('Erreur sauvegarde profil:', err);
-                  setUploading(false);
-                  setErrorMsg('Erreur lors de la sauvegarde du profil');
-                  setSuccessMsg('');
-                }
-              }}
-            >
-              <div className="d-flex gap-4">
-                <div className="mb-3 w-100">
-                  <label className="form-label">Nom</label>
-                  <input type="text" className="form-control" value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
-                </div>
-                <div className="mb-3 w-100">
-                  <label className="form-label">Prénom(s)</label>
-                  <input type="text" className="form-control" value={editData.first_name} onChange={(e) => setEditData({ ...editData, first_name: e.target.value })} />
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-lg ${card} overflow-y-auto max-h-[90vh]`}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div>
+                <h2 className="font-bold text-slate-900">Modifier le profil</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Mettez à jour vos informations personnelles.</p>
+              </div>
+              <button onClick={() => setVisible(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-lg transition-colors">
+                ×
+              </button>
+            </div>
+            <form onSubmit={async e => {
+              e.preventDefault(); setUploading(true);
+              try {
+                if (selectedFile) await uploadAvatar(user.user_id, selectedFile);
+                await authService.putUserById(user.user_id, editData);
+                setUploading(false); setVisible(false); setSelectedFile(null); setPreviewUrl(null);
+                setSuccessMsg('Profil mis à jour !'); setErrorMsg('');
+                if (refreshUser) await refreshUser();
+                setTimeout(() => window.location.reload(), 800);
+              } catch { setUploading(false); setErrorMsg('Erreur lors de la sauvegarde.'); setSuccessMsg(''); }
+            }} className="p-6 space-y-5">
+
+              <div className="grid grid-cols-2 gap-4">
+                {[['Nom','name','text'],['Prénom(s)','first_name','text'],['Email','email','email'],['Téléphone','number','text']].map(([label, key, type]) => (
+                  <div key={key}>
+                    <label className={labelCls}>{label}</label>
+                    <input type={type} className={inputCls} value={editData[key]} onChange={e => setEditData({ ...editData, [key]: e.target.value })} />
+                  </div>
+                ))}
               </div>
 
-              <div className="d-flex gap-4">
-                <div className="mb-3 w-100">
-                  <label className="form-label">Email</label>
-                  <input type="email" className="form-control" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} />
-                </div>
-                <div className="mb-3 w-100">
-                  <label className="form-label">Téléphone</label>
-                  <input type="text" className="form-control" value={editData.number} onChange={(e) => setEditData({ ...editData, number: e.target.value })} />
-                </div>
-              </div>
-
-              <div className="mb-3 avatar-field">
-                <label className="form-label">Photo de profil (.webp)</label>
-
-                {/* Input caché et label cliquable */}
-                <input
-                  id="profileWebp"
-                  type="file"
-                  accept="image/webp"
-                  className="visually-hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    setSelectedFile(file || null);
-                    setPreviewUrl(file ? URL.createObjectURL(file) : null);
-                  }}
-                />
-                {!previewUrl && (
-                  <label htmlFor="profileWebp" className="avatar-picker">
-                    <span className="picker-icon">＋</span>
-                    <span className="picker-text">
-                      <strong>Choisir une image</strong>
-                      <small>Format WebP recommandé</small>
-                    </span>
+              <div>
+                <label className={labelCls}>Photo de profil (.webp)</label>
+                <input id="profileWebp" type="file" accept="image/webp" className="sr-only"
+                  onChange={e => { const f = e.target.files?.[0]; setSelectedFile(f || null); setPreviewUrl(f ? URL.createObjectURL(f) : null); }} />
+                {!previewUrl ? (
+                  <label htmlFor="profileWebp"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-colors">
+                    <span className="text-2xl">📷</span>
+                    <div>
+                      <div className="text-sm text-slate-700">Choisir une image</div>
+                      <div className="text-xs text-slate-400">Format WebP recommandé</div>
+                    </div>
                   </label>
-                )}
-
-                {/* Aperçu + action supprimer */}
-                {previewUrl && (
-                  <div className="avatar-preview">
-                    <img src={previewUrl} alt="Preview" className="avatar-img" />
-                    <div className="avatar-actions">
-                      <label htmlFor="profileWebp" className="btn btn-soft">Changer</label>
-                      <button
-                        type="button"
-                        className="btn btn-soft-danger"
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setPreviewUrl(null);
-                        }}
-                      >
-                        Supprimer
-                      </button>
+                ) : (
+                  <div className="flex items-center gap-4 p-3 rounded-xl border border-slate-200 bg-slate-50">
+                    <img src={previewUrl} alt="Preview" className="w-14 h-14 rounded-xl object-cover" />
+                    <div className="flex gap-2">
+                      <label htmlFor="profileWebp" className="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs cursor-pointer transition-colors">Changer</label>
+                      <button type="button" onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
+                        className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 text-xs transition-colors">Supprimer</button>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="d-flex align-items-center justify-content-between">
-                <Link className="hover-link" to="/reset">Mot de passe oublié ?</Link>
-                <div className="d-flex justify-content-end gap-2">
-                  <button type="button" className="btn btn-secondary" onClick={() => setVisible(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-success" disabled={uploading}>{uploading ? 'Sauvegarde...' : 'Sauvegarder'}</button>
+              <div className="flex items-center justify-between pt-2">
+                <Link to="/reset" className="text-xs text-indigo-600 hover:text-indigo-500 underline transition-colors">Mot de passe oublié ?</Link>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setVisible(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm hover:border-slate-300 hover:text-slate-800 transition-colors">
+                    Annuler
+                  </button>
+                  <button type="submit" disabled={uploading}
+                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium transition-colors shadow-sm">
+                    {uploading ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </button>
                 </div>
               </div>
             </form>

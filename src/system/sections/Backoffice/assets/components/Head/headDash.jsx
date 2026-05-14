@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import './headDash.css';
 import { PiBellRingingDuotone } from 'react-icons/pi';
 import { MdOutlineMessage } from 'react-icons/md';
 import { FiMenu } from 'react-icons/fi';
@@ -12,16 +11,11 @@ const HeadDash = ({ onOpenSidebar }) => {
   const location = useLocation();
   const [messagesCount, setMessagesCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState([]);
-  const [notifCount, setNotifCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const lastSeenKey = 'dashNotifLastSeen';
   const [lastSeenAt, setLastSeenAt] = useState(() => Number(localStorage.getItem(lastSeenKey) || 0));
-  // ➕ suivi des messages vus et état d’ouverture du popup messages
   const msgLastSeenKey = 'dashMsgLastSeen';
   const [lastMsgSeenAt, setLastMsgSeenAt] = useState(() => Number(localStorage.getItem(msgLastSeenKey) || 0));
-  const [isMessageOpen, setIsMessageOpen] = useState(false);
-
-  // ➕ état d’ouverture du menu notifications + ref pour clic extérieur
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifDropdownRef = useRef(null);
 
@@ -59,12 +53,10 @@ const HeadDash = ({ onOpenSidebar }) => {
         const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
         if (!ignore) {
           setRecentActivity(items);
-          setNotifCount(items.length);
         }
       } catch {
         if (!ignore) {
           setRecentActivity([]);
-          setNotifCount(0);
         }
       }
     };
@@ -115,108 +107,133 @@ const HeadDash = ({ onOpenSidebar }) => {
   };
 
   return (
-    <header className="head-dash d-flex align-items-center justify-content-between gap-3">
-      <div className="d-flex align-items-center gap-2 min-w-0">
+    <div className="w-full flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4 min-w-0">
         <button
           type="button"
-          className="head-dash-burger"
-          aria-label="Ouvrir le menu"
-          onClick={() => onOpenSidebar && onOpenSidebar()}
+          className="md:hidden p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+          onClick={onOpenSidebar}
         >
-          <FiMenu />
+          <FiMenu size={20} />
         </button>
-        <div className="head-dash-title-wrap min-w-0">
-          <div className="head-dash-title text-truncate">{getTitle(location.pathname)}</div>
-          <div className="head-dash-subtitle text-truncate">Admin Console</div>
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold text-gray-900 truncate">{getTitle(location.pathname)}</h1>
+          <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Console d'administration</p>
         </div>
       </div>
 
-      <div className="header-menu d-flex align-items-center gap-3">
-          {/* Bouton Messages */}
+      <div className="flex items-center gap-2">
+        {/* Bouton Messages */}
+        <button
+          className="relative p-2.5 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-all border border-gray-100"
+          aria-label="Messages"
+          onClick={() => {
+            const now = Date.now();
+            localStorage.setItem(msgLastSeenKey, String(now));
+            setLastMsgSeenAt(now);
+            setMessagesCount(0);
+            navigate('/dashboard/message');
+          }}
+        >
+          <MdOutlineMessage size={20} />
+          {messagesCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-blue-600 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm">
+              {messagesCount}
+            </span>
+          )}
+        </button>
+
+        {/* Notifications */}
+        <div className="relative" ref={notifDropdownRef}>
           <button
-            className="btn-icon"
-            aria-label="Messages"
+            className={`p-2.5 rounded-xl transition-all border ${
+              isNotifOpen 
+                ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100 hover:text-blue-600'
+            }`}
             onClick={() => {
-              const now = Date.now();
-              localStorage.setItem(msgLastSeenKey, String(now));
-              setLastMsgSeenAt(now);
-              setIsMessageOpen(true);
-              setMessagesCount(0);
-              navigate('/dashboard/message');
+              setIsNotifOpen((v) => {
+                if (!v) {
+                  const now = Date.now();
+                  localStorage.setItem(lastSeenKey, String(now));
+                  setLastSeenAt(now);
+                  setUnreadCount(0);
+                }
+                return !v;
+              });
             }}
           >
-            <MdOutlineMessage className="fs-4" />
-            {messagesCount > 0 && <span className="icon-badge">{messagesCount}</span>}
+            <PiBellRingingDuotone size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
-          {/* Notifications (cloche) */}
-          <div className="dropdown position-relative " ref={notifDropdownRef}>
-            <button
-              className="btn-icon"
-              type="button"
-              aria-expanded={isNotifOpen}
-              aria-label="Notifications"
-              onClick={() => {
-                setIsNotifOpen((opened) => {
-                  const next = !opened;
-                  if (!opened && next) {
-                    const now = Date.now();
-                    localStorage.setItem(lastSeenKey, String(now));
-                    setLastSeenAt(now);
-                    setUnreadCount(0);
-                  }
-                  return next;
-                });
-              }}
-            >
-              <PiBellRingingDuotone className="fs-4" />
-              {unreadCount > 0 && <span className="icon-badge bg-danger">{unreadCount}</span>}
-            </button>
-            <ul
-              className={`dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 ${isNotifOpen ? 'show' : ''}`}
-              style={{ display: isNotifOpen ? 'block' : undefined }}
-            >
-              <li>
-                <p className="dropdown-header text-dark">Mes Notifications</p>
-              </li>
-
-              {recentActivity.length === 0 ? (
-                <li className="px-3 py-2 text-dark">Aucune notification récente</li>
-              ) : (
-                
-                recentActivity.map((a) => {
-                  const dateStr = a.played_at ? new Date(a.played_at).toLocaleString('fr-FR') : '—';
-                  const rate = a.success_rate !== undefined ? `${a.success_rate}%` : '';
-                  const text = a.full_name && a.quiz_title
-                    ? `🎯 ${a.full_name} a joué "${a.quiz_title}" (${a.thematic_title}) • ${rate}`
-                    : `🎯 Activité récente • ${rate}`;
-                  return (
-                    <li key={a.history_id || `${a.user_id}-${dateStr}`}>
-                      <button
-                        type="button"
-                        className="dropdown-item text-dark"
-                        onClick={() => {
-                          setIsNotifOpen(false);
-                          navigate('/dashboard/quiz');
-                        }}
-                      >
-                        {text}
-                        <br />
-                        <small className="text-muted">{dateStr}</small>
-                      </button>
-                    </li>
-                  );
-                })
-              )}
-
-              <li>
-                <hr className="dropdown-divider" />
-              </li>
-              
-            </ul>
-          </div>
+          {isNotifOpen && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
+              <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
+                <h3 className="text-sm font-bold text-gray-900">Notifications récentes</h3>
+              </div>
+              <div className="max-h-[400px] overflow-y-auto">
+                {recentActivity.length === 0 ? (
+                  <div className="px-4 py-8 text-center">
+                    <p className="text-sm text-gray-500">Aucune notification pour le moment</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-50">
+                    {recentActivity.map((a) => {
+                      const dateStr = a.played_at ? new Date(a.played_at).toLocaleString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '—';
+                      return (
+                        <button
+                          key={a.history_id || `${a.user_id}-${a.played_at}`}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors group"
+                          onClick={() => {
+                            setIsNotifOpen(false);
+                            navigate('/dashboard/quiz');
+                          }}
+                        >
+                          <div className="flex gap-3">
+                            <div className="shrink-0 w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                              Q
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-900 line-clamp-2">
+                                <span className="font-bold">{a.full_name || 'Un utilisateur'}</span> a joué <span className="text-blue-600 font-medium">{a.quiz_title}</span>
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-gray-400 font-medium">{dateStr}</span>
+                                {a.success_rate !== undefined && (
+                                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 rounded">
+                                    {a.success_rate}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="p-2 bg-gray-50 border-t border-gray-100">
+                <button
+                  onClick={() => { setIsNotifOpen(false); navigate('/dashboard/quiz'); }}
+                  className="w-full py-2 text-xs font-bold text-blue-600 hover:bg-white rounded-lg transition-colors"
+                >
+                  Voir toute l'activité
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-    </header>
+      </div>
+    </div>
   );
 };
 

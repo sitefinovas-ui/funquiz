@@ -1,5 +1,4 @@
 // back.jsx
-import './back.css';
 import { Routes, Route } from 'react-router-dom';
 import { PopupProvider } from './../../configurations/Context/PopupContext.jsx';
 import LayoutDash from './assets/components/LayoutDash/LayoutDash.jsx';
