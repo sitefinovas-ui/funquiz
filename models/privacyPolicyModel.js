@@ -1,8 +1,13 @@
 import db from "../config/db.js";
 
 export const getAllPrivacy = async () => {
-  const [rows] = await db.query("SELECT * FROM privacy_policy ORDER BY date_created DESC");
-  return rows;
+  try {
+    const [rows] = await db.query("SELECT * FROM privacy_policy ORDER BY date_created DESC");
+    return rows;
+  } catch (error) {
+    console.error("❌ getAllPrivacy Model Error:", error);
+    throw error;
+  }
 };
 export const getPrivacyById = async (id) => {
   const [rows] = await db.query("SELECT * FROM privacy_policy WHERE id = ?", [id]);

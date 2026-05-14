@@ -3,10 +3,10 @@ import { listContacts, contactById, addContact, editContact, removeContact } fro
 import { authenticateToken, authorizeRole } from "../middleware/authentification.js";
 
 const router = express.Router();
-router.get("/legal/contact", listContacts);
-router.get("/legal/contact/:id", authenticateToken, authorizeRole(["admin","moderator"]), contactById);
-router.post("/legal/contact", addContact); // formulaire public
-router.put("/legal/contact/:id", authenticateToken, authorizeRole(["admin","moderator"]), editContact);
-router.delete("/legal/contact/:id", authenticateToken, authorizeRole(["admin"]), removeContact);
+router.get("/", listContacts);
+router.get("/:id", authenticateToken, authorizeRole(["admin","moderator"]), contactById);
+router.post("/", addContact); // formulaire public
+router.put("/:id", authenticateToken, authorizeRole(["admin","moderator"]), editContact);
+router.delete("/:id", authenticateToken, authorizeRole(["admin"]), removeContact);
 
 export default router;

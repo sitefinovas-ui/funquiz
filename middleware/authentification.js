@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { getUserById } from "../models/authModel.js";
+import { getPermissionsByRole } from "../models/permissionModel.js";
 import db from "../config/db.js";
 
 dotenv.config();
@@ -80,4 +81,24 @@ export const authorizeRole = (roles = []) => (req, res, next) => {
     return res.status(403).json({ error: "Accès refusé" });
   }
   next();
+};
+
+/**
+ * ✅ Middleware de vérification des permissions granulaires
+ * @param {string} permission - Ex: 'users_edit'
+ */
+export const hasPermission = (permission) => async (req, res, next) => {
+  try {
+    const { role } = req.user;
+    if (role === 'admin') return next(); // L'admin a toujours tous les droits
+
+    const permissions = await getPermissionsByRole(role);
+    if (!permissions || !permissions[permission]) {
+      return res.status(403).json({ error: `Permission refusée : ${permission}` });
+    }
+    next();
+  } catch (error) {
+    console.error("❌ [Permission] Erreur:", error.message);
+    res.status(500).json({ error: "Erreur lors de la vérification des permissions" });
+  }
 };

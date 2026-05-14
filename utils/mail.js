@@ -1,7 +1,32 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import db from "../config/db.js";
 
 dotenv.config();
+
+// Cache pour les réglages de la BDD
+let cachedSettings = null;
+let lastCacheUpdate = 0;
+const CACHE_TTL = 60000; // 1 minute
+
+const getSettingsFromDB = async () => {
+  const now = Date.now();
+  if (cachedSettings && now - lastCacheUpdate < CACHE_TTL) {
+    return cachedSettings;
+  }
+  try {
+    const [rows] = await db.query("SELECT * FROM funquiz_settings");
+    cachedSettings = rows.reduce((acc, row) => {
+      acc[row.setting_key] = row.setting_value;
+      return acc;
+    }, {});
+    lastCacheUpdate = now;
+    return cachedSettings;
+  } catch (e) {
+    console.error("Erreur lecture settings DB:", e);
+    return {};
+  }
+};
 
 const stripWrappingQuotes = (value) => {
   const s = String(value || "").trim();
@@ -15,152 +40,6 @@ const stripWrappingQuotes = (value) => {
   return s;
 };
 
-const smtpUserSource = process.env.SMTP_USER
-  ? "SMTP_USER"
-  : process.env.EMAIL_USER
-    ? "EMAIL_USER"
-    : process.env.EMAIL
-      ? "EMAIL"
-      : "";
-const smtpUser = stripWrappingQuotes(
-  process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL || ""
-);
-// Gmail "App Password" est souvent affiché avec des espaces: "xxxx xxxx xxxx xxxx"
-// Nodemailer attend la valeur sans espaces.
-const smtpPassSource = process.env.SMTP_PASS
-  ? "SMTP_PASS"
-  : process.env.EMAIL_PASS
-    ? "EMAIL_PASS"
-    : process.env.EMAIL_PASSWORD
-      ? "EMAIL_PASSWORD"
-      : process.env.PASSWORD
-        ? "PASSWORD"
-        : "";
-const smtpPass = stripWrappingQuotes(
-  process.env.SMTP_PASS ||
-    process.env.EMAIL_PASS ||
-    process.env.EMAIL_PASSWORD ||
-    process.env.PASSWORD ||
-    ""
-).replace(/\s+/g, "");
-
-const smtpService = stripWrappingQuotes(process.env.SMTP_SERVICE || "gmail");
-const smtpHost = stripWrappingQuotes(process.env.SMTP_HOST || "");
-const smtpPortRaw = stripWrappingQuotes(process.env.SMTP_PORT || "");
-const smtpPort = smtpPortRaw ? Number(smtpPortRaw) : undefined;
-const smtpSecureEnv = stripWrappingQuotes(process.env.SMTP_SECURE || "").toLowerCase();
-const smtpSecure = smtpSecureEnv === "true";
-const smtpPoolEnv = stripWrappingQuotes(process.env.SMTP_POOL || "").toLowerCase();
-const smtpPool = smtpPoolEnv ? smtpPoolEnv === "true" : false;
-const smtpConnectionTimeoutMs =
-  Number(stripWrappingQuotes(process.env.SMTP_CONNECTION_TIMEOUT_MS || process.env.SMTP_CONNECTION_TIMEOUT || "")) ||
-  20000;
-const smtpGreetingTimeoutMs =
-  Number(stripWrappingQuotes(process.env.SMTP_GREETING_TIMEOUT_MS || process.env.SMTP_GREETING_TIMEOUT || "")) ||
-  20000;
-const smtpSocketTimeoutMs =
-  Number(stripWrappingQuotes(process.env.SMTP_SOCKET_TIMEOUT_MS || process.env.SMTP_SOCKET_TIMEOUT || "")) ||
-  30000;
-
-const mailProvider = stripWrappingQuotes(process.env.MAIL_PROVIDER || "").toLowerCase();
-const resendApiKey = stripWrappingQuotes(process.env.RESEND_API_KEY || "");
-
-const mailFrom = stripWrappingQuotes(process.env.MAIL_FROM || "");
-const mailFromEmail = stripWrappingQuotes(process.env.MAIL_FROM_EMAIL || "");
-
-const maskEmail = (value) => {
-  const email = String(value || "").trim();
-  if (!email) return "";
-  const at = email.indexOf("@");
-  if (at <= 1) return "***";
-  const user = email.slice(0, at);
-  const domain = email.slice(at + 1);
-  return `${user.slice(0, 2)}***@${domain}`;
-};
-
-const buildFrom = (displayName = "FunQuiz") => {
-  // Permet de forcer le from globalement (ex: '"FunQuiz" <noreply@domaine.com>')
-  if (mailFrom) {
-    if (mailFrom.includes("<") && mailFrom.includes(">")) return mailFrom;
-    return `"${displayName}" <${mailFrom}>`;
-  }
-
-  // Sinon, on garde le nom (emoji OK) et on injecte une adresse valide/configurée
-  const address = mailFromEmail || smtpUser;
-  if (address) return `"${displayName}" <${address}>`;
-
-  // Fallback ultime (évite d'exploser le code si l'env est vide)
-  return `"${displayName}" <no-reply@funquiz.com>`;
-};
-
-const extractDisplayName = (fromValue) => {
-  const raw = String(fromValue || "").trim();
-  if (!raw) return "FunQuiz";
-  const m = raw.match(/^\s*"?([^"<]*)"?\s*<[^>]+>\s*$/);
-  const name = String(m?.[1] || "").trim();
-  return name || "FunQuiz";
-};
-
-const patchFrom = (fromValue) => {
-  const raw = String(fromValue || "").trim();
-  // Si un from "réel" est fourni (pas le no-reply hardcodé), on le respecte.
-  if (raw && !/no-reply@funquiz\.com/i.test(raw)) return raw;
-  return buildFrom(extractDisplayName(raw));
-};
-
-let transporter;
-const getTransporter = () => {
-  if (transporter) return transporter;
-
-  if (smtpHost) {
-    const port = Number.isFinite(smtpPort) && smtpPort > 0 ? smtpPort : 587;
-    const secure = smtpSecureEnv ? smtpSecure : port === 465;
-    transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port,
-      secure,
-      auth: { user: smtpUser, pass: smtpPass },
-      pool: smtpPool,
-      connectionTimeout: smtpConnectionTimeoutMs,
-      greetingTimeout: smtpGreetingTimeoutMs,
-      socketTimeout: smtpSocketTimeoutMs,
-    });
-    return transporter;
-  }
-
-  const serviceOverrides = {
-    ...(Number.isFinite(smtpPort) && smtpPort > 0 ? { port: smtpPort } : {}),
-    ...(smtpSecureEnv ? { secure: smtpSecure } : {}),
-  };
-
-  transporter = nodemailer.createTransport({
-    service: smtpService || "gmail",
-    auth: { user: smtpUser, pass: smtpPass },
-    pool: smtpPool,
-    connectionTimeout: smtpConnectionTimeoutMs,
-    greetingTimeout: smtpGreetingTimeoutMs,
-    socketTimeout: smtpSocketTimeoutMs,
-    ...serviceOverrides,
-  });
-  return transporter;
-};
-
-let warnedMissingMailConfig = false;
-const ensureMailConfigured = (context) => {
-  const configured = Boolean(smtpUser) && Boolean(smtpPass);
-  if (configured) return true;
-
-  if (!warnedMissingMailConfig) {
-    warnedMissingMailConfig = true;
-    console.warn(
-      `[mail] SMTP non configuré: définis SMTP_USER/SMTP_PASS (ou EMAIL/EMAIL_PASSWORD). user=${maskEmail(
-        smtpUser
-      )} context=${context}`
-    );
-  }
-  return false;
-};
-
 const sendMailSafe = async (emailContent, context) => {
   const ctx = String(context || emailContent?.subject || emailContent?.to || "mail");
   if (process.env.DISABLE_EMAILS === "true") {
@@ -169,6 +48,48 @@ const sendMailSafe = async (emailContent, context) => {
     throw err;
   }
 
+  // Fusionner les réglages de la BDD avec ceux de l'ENV (BDD prioritaire si renseigné)
+  const dbSettings = await getSettingsFromDB();
+  
+  const getCfg = (key, envVal) => {
+    const dbVal = dbSettings[key];
+    if (dbVal && dbVal.trim() !== "") return stripWrappingQuotes(dbVal);
+    return stripWrappingQuotes(envVal || "");
+  };
+
+  const mailProvider = getCfg("MAIL_PROVIDER", process.env.MAIL_PROVIDER || "smtp").toLowerCase();
+  const resendApiKey = getCfg("RESEND_API_KEY", process.env.RESEND_API_KEY);
+  
+  const smtpHost = getCfg("SMTP_HOST", process.env.SMTP_HOST);
+  const smtpPort = Number(getCfg("SMTP_PORT", process.env.SMTP_PORT)) || 587;
+  const smtpUser = getCfg("SMTP_USER", process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL);
+  const smtpPass = getCfg("SMTP_PASS", process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD || process.env.PASSWORD)?.replace(/\s+/g, "");
+  const smtpSecure = getCfg("SMTP_SECURE", process.env.SMTP_SECURE) === "true";
+  const mailFrom = getCfg("MAIL_FROM", process.env.MAIL_FROM || process.env.MAIL_FROM_EMAIL);
+
+  const buildFrom = (displayName = "FunQuiz") => {
+    if (mailFrom) {
+      if (mailFrom.includes("<") && mailFrom.includes(">")) return mailFrom;
+      return `"${displayName}" <${mailFrom}>`;
+    }
+    const address = smtpUser;
+    if (address) return `"${displayName}" <${address}>`;
+    return `"${displayName}" <no-reply@funquiz.com>`;
+  };
+
+  const extractDisplayName = (fromValue) => {
+    const raw = String(fromValue || "").trim();
+    if (!raw) return "FunQuiz";
+    const m = raw.match(/^\s*"?([^"<]*)"?\s*<[^>]+>\s*$/);
+    return String(m?.[1] || "").trim() || "FunQuiz";
+  };
+
+  const patchFrom = (fromValue) => {
+    const raw = String(fromValue || "").trim();
+    if (raw && !/no-reply@funquiz\.com/i.test(raw)) return raw;
+    return buildFrom(extractDisplayName(raw));
+  };
+
   const patchedEmailContent = {
     ...emailContent,
     from: patchFrom(emailContent?.from),
@@ -176,9 +97,7 @@ const sendMailSafe = async (emailContent, context) => {
 
   if (mailProvider === "resend") {
     if (!resendApiKey) {
-      const err = new Error("RESEND_API_KEY manquant (MAIL_PROVIDER=resend)");
-      err.code = "RESEND_NOT_CONFIGURED";
-      throw err;
+      throw new Error("RESEND_API_KEY manquant");
     }
 
     const from = String(patchedEmailContent?.from || "").trim();
@@ -194,60 +113,32 @@ const sendMailSafe = async (emailContent, context) => {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from,
-        to,
-        subject,
-        html,
-      }),
+      body: JSON.stringify({ from, to, subject, html }),
     });
 
-    const data = await resp.json().catch(() => null);
     if (!resp.ok) {
-      const msg = data?.message || `Resend error (${resp.status})`;
-      const err = new Error(msg);
-      err.code = "RESEND_SEND_FAILED";
-      err.details = data;
-      throw err;
+      const body = await resp.text();
+      throw new Error(`Resend error: ${resp.status} - ${body}`);
+    }
+    return await resp.json();
+  } else {
+    // SMTP
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      throw new Error("SMTP non configuré");
     }
 
-    return data;
-  }
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: { user: smtpUser, pass: smtpPass },
+    });
 
-  if (!ensureMailConfigured(ctx)) {
-    const err = new Error("Service email non configuré (identifiants SMTP manquants)");
-    err.code = "MAIL_NOT_CONFIGURED";
-    throw err;
+    return await transporter.sendMail(patchedEmailContent);
   }
-
-  const transport = getTransporter();
-  return transport.sendMail(patchedEmailContent);
 };
 
-if (process.env.NODE_ENV === "production") {
-  const kind = mailProvider === "resend" ? "resend" : smtpHost ? "smtp" : `service:${smtpService || "gmail"}`;
-  const configured =
-    mailProvider === "resend"
-      ? Boolean(resendApiKey)
-      : Boolean(smtpUser) && Boolean(smtpPass);
-  const fromAddr = (() => {
-    if (mailFrom) {
-      const m = mailFrom.match(/<([^>]+)>/);
-      return String((m ? m[1] : mailFrom) || "").trim();
-    }
-    return String(mailFromEmail || smtpUser || "").trim();
-  })();
-
-  console.log(
-    `[mail] provider=${kind} configured=${configured ? "yes" : "no"} user=${maskEmail(smtpUser)} from=${maskEmail(fromAddr)} userSource=${smtpUserSource || "n/a"} passSource=${smtpPassSource || "n/a"}`
-  );
-
-  if (smtpPassSource === "PASSWORD") {
-    console.warn(
-      "[mail] Astuce: en production, évite la variable PASSWORD (souvent utilisée par des addons). Préfère SMTP_PASS ou EMAIL_PASS."
-    );
-  }
-}
+export default sendMailSafe;
 
 // -----------------------------
 // 1️⃣ Email d'inscription

@@ -97,6 +97,110 @@ export const connectDB = async () => {
     } catch (e) {
       // ignore si déjà présent ou si données invalides
     }
+
+    // 🛠️ Migrations robustes pour les tables existantes
+    const tablesToFix = [
+      { name: "about", id: "id" },
+      { name: "cgu", id: "id" },
+      { name: "contact", id: "id" },
+      { name: "cookies_policy", id: "id" },
+      { name: "privacy_policy", id: "id" },
+      { name: "countries", id: "id" },
+      { name: "funquiz_faq", id: "faq_id" },
+      { name: "funquiz_comments", id: "comment_id" },
+      { name: "funquiz_users", id: "user_id" },
+      { name: "quiz_thematics", id: "thematic_id" },
+      { name: "quiz_sub_thematics", id: "sub_thematic_id" },
+      { name: "quiz_questions", id: "question_id" },
+      { name: "quiz_answers", id: "answer_id" }
+    ];
+
+    for (const table of tablesToFix) {
+      try {
+        // 1. Assurer la PK
+        await pool.query(`ALTER TABLE ${table.name} ADD PRIMARY KEY (${table.id})`);
+      } catch (e) { /* ignore si déjà PK */ }
+      
+      try {
+        // 2. Assurer l'AUTO_INCREMENT
+        await pool.query(`ALTER TABLE ${table.name} MODIFY COLUMN ${table.id} INT(11) NOT NULL AUTO_INCREMENT`);
+      } catch (e) { /* ignore */ }
+    }
+
+    // Migration spécifique pour 'about' : ajout de la colonne 'status'
+    try {
+      await pool.query(`ALTER TABLE about ADD COLUMN status ENUM('draft', 'published') DEFAULT 'published' AFTER contact_email`);
+    } catch (e) {
+      // ignore si déjà présent
+    }
+
+    // Migration pour la table 'funquiz_users' : ajout de la colonne 'preferences'
+    try {
+      await pool.query(`ALTER TABLE funquiz_users ADD COLUMN preferences JSON DEFAULT NULL AFTER role`);
+    } catch (e) {
+      // ignore si déjà présent
+    }
+
+    // Migration pour la table 'funquiz_role_permissions'
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS funquiz_role_permissions (
+          role ENUM('admin', 'moderator', 'user') PRIMARY KEY,
+          permissions JSON NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      // Valeurs par défaut
+      await pool.query(`INSERT IGNORE INTO funquiz_role_permissions (role, permissions) VALUES 
+        ('admin', '{"users_view": true, "users_edit": true, "users_delete": true, "comments_view": true, "comments_approve": true, "comments_delete": true, "quiz_view": true, "quiz_edit": true, "quiz_delete": true, "settings_view": true, "settings_edit": true, "about_edit": true, "logs_view": true}'),
+        ('moderator', '{"users_view": true, "users_edit": false, "users_delete": false, "comments_view": true, "comments_approve": true, "comments_delete": true, "quiz_view": true, "quiz_edit": true, "quiz_delete": false, "settings_view": false, "settings_edit": false, "about_edit": false, "logs_view": false}'),
+        ('user', '{"users_view": false, "users_edit": false, "users_delete": false, "comments_view": false, "comments_approve": false, "comments_delete": false, "quiz_view": false, "quiz_edit": false, "quiz_delete": false, "settings_view": false, "settings_edit": false, "about_edit": false, "logs_view": false}')
+      `);
+    } catch (e) {
+      console.error("Erreur migration role_permissions:", e);
+    }
+
+    // Migration pour la table 'moderator_actions'
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS moderator_actions (
+          action_id INT AUTO_INCREMENT PRIMARY KEY,
+          moderator_id INT NOT NULL,
+          action_type VARCHAR(50) NOT NULL,
+          target_type VARCHAR(50) NOT NULL,
+          target_id VARCHAR(255) DEFAULT NULL,
+          details TEXT DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX (moderator_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+    } catch (e) {
+      console.error("Erreur migration moderator_actions:", e);
+    }
+
+    // Migration pour la table 'funquiz_settings'
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS funquiz_settings (
+          setting_key VARCHAR(255) PRIMARY KEY,
+          setting_value TEXT DEFAULT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      // Valeurs par défaut
+      await pool.query(`INSERT IGNORE INTO funquiz_settings (setting_key, setting_value) VALUES 
+        ('MAIL_PROVIDER', 'smtp'),
+        ('RESEND_API_KEY', ''),
+        ('SMTP_HOST', ''),
+        ('SMTP_PORT', '587'),
+        ('SMTP_USER', ''),
+        ('SMTP_PASS', ''),
+        ('SMTP_SECURE', 'false'),
+        ('MAIL_FROM', 'FunQuiz <no-reply@funquiz.com>')
+      `);
+    } catch (e) {
+      console.error("Erreur migration settings:", e);
+    }
     try {
       await pool.query(`ALTER TABLE funquiz_messages MODIFY message_id INT NOT NULL AUTO_INCREMENT`);
     } catch (e) {

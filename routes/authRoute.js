@@ -12,6 +12,7 @@ import {
   resetUserPassword,
   updateUserProfile,
   updateUserAdmin,
+  changePassword,
   deleteUserWithFeedback,
   uploadUserFile,
   deleteUserFile,
@@ -23,6 +24,7 @@ import {
 import {
   authenticateToken,
   authorizeRole,
+  hasPermission,
 } from "../middleware/authentification.js";
 // Ce bloc est dans le module Express router de authRoute.js
 // Express router: ajoute le lien PNG direct (si pas déjà présent)
@@ -44,15 +46,16 @@ router.get("/auth/me", authenticateToken, me); // Récupérer l'utilisateur cour
 // =============================
 // Gestion Utilisateurs/Admin
 // =============================
-router.get("/auth/all", allUsers); // Tous les utilisateurs
+router.get("/auth/all", authenticateToken, hasPermission("users_view"), allUsers); // Tous les utilisateurs
 router.put("/auth/update/profil", authenticateToken, updateUserProfile); // Modifier profil utilisateur
+router.put("/auth/update/password", authenticateToken, changePassword);
 router.put(
   "/auth/update/admin",
   authenticateToken,
-  authorizeRole(["admin"]),
+  hasPermission("users_edit"),
   updateUserAdmin,
 ); // Modifier profil admin
-router.post("/auth/delete", authenticateToken, deleteUserWithFeedback);
+router.post("/auth/delete", authenticateToken, hasPermission("users_delete"), deleteUserWithFeedback);
 router.delete("/auth/hard-delete", authenticateToken, authorizeRole(["admin"]), hardDeleteUser);
 // =============================
 // Mot de passe

@@ -9,6 +9,7 @@ import {
 import {
   authenticateToken,
   authorizeRole,
+  hasPermission,
 } from "../middleware/authentification.js";
 
 const router = express.Router();
@@ -19,20 +20,20 @@ router.get("/faq/:faq_id", faqById); // Récupérer une FAQ par ID
 router.post(
   "/faq",
   authenticateToken,
-  authorizeRole(["admin", "moderator"]),
+  hasPermission("about_edit"),
   addFaq,
-); // Ajouter une nouvelle FAQ (admin uniquement)
+); // Ajouter une nouvelle FAQ
 router.put(
   "/faq/:faq_id",
   authenticateToken,
-  authorizeRole(["admin"]),
+  hasPermission("about_edit"),
   editFaq,
-); // Mettre à jour une FAQ (admin uniquement)
+); // Mettre à jour une FAQ
 router.delete(
   "/faq/:faq_id",
   authenticateToken,
-  authorizeRole(["admin"]),
+  hasPermission("about_edit"),
   removeFaq,
-); // Supprimer une FAQ (admin uniquement)
+); // Supprimer une FAQ
 
 export default router;

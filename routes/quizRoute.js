@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import upload from "../config/multer.js";
 import {
   allQuizData,
@@ -14,19 +15,24 @@ import {
   updateThematic,
   deleteThematic,
   purgeThematics,
+  importThematics,
   createQuestion,
   updateQuestion,
   updateQuestionAnswers,
   deleteQuestion,
+  importQuestions,
   getAllSubThematics,
   getSubThematicById,
   createSubThematic,
   updateSubThematic,
   deleteSubThematic,
 } from "../controllers/quizController.js";
-import { authenticateToken, authorizeRole } from "../middleware/authentification.js";
+import { authenticateToken, authorizeRole, hasPermission } from "../middleware/authentification.js";
 
 const router = express.Router();
+
+// Configuration Multer spécifique pour l'importation (en mémoire)
+const importUpload = multer({ storage: multer.memoryStorage() });
 
 // Quiz data routes
 router.get("/quiz/allquiz", allQuizData);
@@ -53,6 +59,13 @@ router.delete(
   purgeThematics
 );
 router.delete("/param/thematics/:id", deleteThematic);
+router.post(
+  "/param/thematics/import",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  importUpload.single("file"),
+  importThematics
+);
 
 // Sub-thematic CRUD
 router.get("/param/subthematics", getAllSubThematics);
@@ -60,19 +73,19 @@ router.get("/param/subthematics/:id", getSubThematicById);
 router.post(
   "/param/subthematics",
   authenticateToken,
-  authorizeRole(["admin", "moderator"]),
+  hasPermission("quiz_edit"),
   createSubThematic
 );
 router.put(
   "/param/subthematics/:id",
   authenticateToken,
-  authorizeRole(["admin", "moderator"]),
+  hasPermission("quiz_edit"),
   updateSubThematic
 );
 router.delete(
   "/param/subthematics/:id",
   authenticateToken,
-  authorizeRole(["admin"]),
+  hasPermission("quiz_delete"),
   deleteSubThematic
 );
 
@@ -80,26 +93,41 @@ router.delete(
 router.post(
   "/param/questions",
   authenticateToken,
-  authorizeRole(["admin", "moderator"]),
+  hasPermission("quiz_edit"),
+  upload.single("media"),
   createQuestion
+);
+router.post(
+  "/param/questions/answers",
+  authenticateToken,
+  hasPermission("quiz_edit"),
+  updateQuestionAnswers
 );
 router.put(
   "/param/questions/:question_id",
   authenticateToken,
-  authorizeRole(["admin", "moderator"]),
+  hasPermission("quiz_edit"),
+  upload.single("media"),
   updateQuestion
 );
 router.put(
   "/param/questions/:question_id/answers",
   authenticateToken,
-  authorizeRole(["admin", "moderator"]),
+  hasPermission("quiz_edit"),
   updateQuestionAnswers
 );
 router.delete(
   "/param/questions/:question_id",
   authenticateToken,
-  authorizeRole(["admin"]),
+  hasPermission("quiz_delete"),
   deleteQuestion
+);
+router.post(
+  "/param/questions/import",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  importUpload.single("file"),
+  importQuestions
 );
 
 export default router;

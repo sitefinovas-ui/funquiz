@@ -21,20 +21,57 @@ SET time_zone = "+00:00";
 -- Base de données : `funquiz`
 --
 
--- --------------------------------------------------------
+CREATE TABLE `funquiz_role_permissions` (
+  `role` enum('admin','moderator','user') NOT NULL,
+  `permissions` json NOT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`role`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Structure de la table `about`
---
+INSERT INTO `funquiz_role_permissions` (`role`, `permissions`) VALUES
+('admin', '{"users_view": true, "users_edit": true, "users_delete": true, "comments_view": true, "comments_approve": true, "comments_delete": true, "quiz_view": true, "quiz_edit": true, "quiz_delete": true, "settings_view": true, "settings_edit": true, "about_edit": true, "logs_view": true}'),
+('moderator', '{"users_view": true, "users_edit": false, "users_delete": false, "comments_view": true, "comments_approve": true, "comments_delete": true, "quiz_view": true, "quiz_edit": true, "quiz_delete": false, "settings_view": false, "settings_edit": false, "about_edit": false, "logs_view": false}'),
+('user', '{"users_view": false, "users_edit": false, "users_delete": false, "comments_view": false, "comments_approve": false, "comments_delete": false, "quiz_view": false, "quiz_edit": false, "quiz_delete": false, "settings_view": false, "settings_edit": false, "about_edit": false, "logs_view": false}');
+
+CREATE TABLE `moderator_actions` (
+  `action_id` int(11) NOT NULL AUTO_INCREMENT,
+  `moderator_id` int(11) NOT NULL,
+  `action_type` varchar(50) NOT NULL,
+  `target_type` varchar(50) NOT NULL,
+  `target_id` varchar(255) DEFAULT NULL,
+  `details` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`action_id`),
+  KEY `moderator_id` (`moderator_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `funquiz_settings` (
+  `setting_key` varchar(255) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `funquiz_settings` (`setting_key`, `setting_value`) VALUES
+('MAIL_PROVIDER', 'smtp'),
+('RESEND_API_KEY', ''),
+('SMTP_HOST', ''),
+('SMTP_PORT', '587'),
+('SMTP_USER', ''),
+('SMTP_PASS', ''),
+('SMTP_SECURE', 'false'),
+('MAIL_FROM', 'FunQuiz <no-reply@funquiz.com>');
+
 
 CREATE TABLE `about` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `subtitle` varchar(255) DEFAULT NULL,
   `description` text NOT NULL,
   `mission` text,
   `vision` text,
   `contact_email` varchar(255) DEFAULT NULL,
+  `status` enum('draft','published') DEFAULT 'published',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -43,9 +80,9 @@ CREATE TABLE `about` (
 -- Déchargement des données de la table `about`
 --
 
-INSERT INTO `about` (`id`, `title`, `subtitle`, `description`, `mission`, `vision`, `contact_email`, `created_at`, `updated_at`) VALUES
-(1, 'À propos de notre plateforme', 'D', 'N', 'O', 'D', 'app@funquiz.fr', '2025-10-09 14:14:47', '2025-10-10 01:38:51'),
-(2, 'Pour nous', 'sub pour nous', 'desc pour nous', 'mission pour nous', 'vision pour nous', 'pournous@gmail.com', '2025-10-10 00:47:49', NULL);
+INSERT INTO `about` (`id`, `title`, `subtitle`, `description`, `mission`, `vision`, `contact_email`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'À propos de notre plateforme', 'D', 'N', 'O', 'D', 'app@funquiz.fr', 'published', '2025-10-09 14:14:47', '2025-10-10 01:38:51'),
+(2, 'Pour nous', 'sub pour nous', 'desc pour nous', 'mission pour nous', 'vision pour nous', 'pournous@gmail.com', 'published', '2025-10-10 00:47:49', NULL);
 
 -- --------------------------------------------------------
 
@@ -308,6 +345,7 @@ CREATE TABLE `funquiz_users` (
   `is_active` tinyint(1) DEFAULT '1',
   `status` enum('active','suspended','deleted') DEFAULT 'active',
   `role` enum('user','admin','moderator') DEFAULT 'user',
+  `preferences` json DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `date_cx` datetime DEFAULT NULL

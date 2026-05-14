@@ -20,6 +20,7 @@ export const getAllQuizData = async () => {
     t.description AS thematic_description,
     t.icon_url,
     t.color_code,
+    t.country_code,
     t.is_active AS view,
     t.updated_at AS date_of_creation,
 
@@ -71,6 +72,7 @@ GROUP BY
   t.description,
   t.icon_url,
   t.color_code,
+  t.country_code,
   t.is_active,
   t.updated_at;
   `;
@@ -416,6 +418,12 @@ export const createQuestionWithAnswers = async ({
     );
     const newQuestionId = qres.insertId || nextId;
 
+    // Sanitize correct_option to avoid NaN error
+    let sanitizedCorrectOption = Number(correct_option);
+    if (isNaN(sanitizedCorrectOption)) {
+      sanitizedCorrectOption = 1; // Default to first option
+    }
+
     await conn.query(
       `INSERT INTO quiz_answers
        (answer_id, question_id, answer_option1, answer_option2, answer_option3, correct_option, answer_type, media_url, points_value)
@@ -423,13 +431,13 @@ export const createQuestionWithAnswers = async ({
       [
         nextAnswerId,
         newQuestionId,
-        answer_option1,
-        answer_option2,
-        answer_option3,
-        Number(correct_option),
-        answer_type,
+        answer_option1 || "",
+        answer_option2 || "",
+        answer_option3 || "",
+        sanitizedCorrectOption,
+        answer_type || "text",
         answer_media_url || null,
-        points_value,
+        points_value || 1,
       ],
     );
 
@@ -494,17 +502,65 @@ export const updateAnswersForQuestion = async (
        SET answer_option1 = ?, answer_option2 = ?, answer_option3 = ?, correct_option = ?, answer_type = ?, media_url = ?, points_value = ?
        WHERE question_id = ?`,
       [
-        answer_option1,
-        answer_option2,
-        answer_option3,
-        Number(correct_option),
-        answer_type,
+        answer_option1 || "",
+        answer_option2 || "",
+        answer_option3 || "",
+        Number(correct_option) || 1,
+        answer_type || "text",
         media_url ?? null,
-        points_value,
+        points_value || 1,
         question_id,
       ],
     );
     return res;
+};
+
+export const updateQuestionWithAnswers = async (question_id, data) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    await conn.query(
+      `UPDATE quiz_questions 
+       SET content = ?, explanation = ?, difficulty_level = ?, question_type = ?, points = ?, time_limit = ?, allow_multiple_correct = ?, is_active = ?, media_url = ?
+       WHERE question_id = ?`,
+      [
+        data.content,
+        data.explanation || null,
+        sanitizeDifficultyLevel(data.difficulty_level),
+        data.question_type,
+        data.points,
+        data.time_limit,
+        data.allow_multiple_correct ? 1 : 0,
+        data.is_active ? 1 : 0,
+        data.media_url || null,
+        question_id,
+      ],
+    );
+
+    await conn.query(
+      `UPDATE quiz_answers
+       SET answer_option1 = ?, answer_option2 = ?, answer_option3 = ?, correct_option = ?, answer_type = ?, media_url = ?, points_value = ?
+       WHERE question_id = ?`,
+      [
+        data.answer_option1 || "",
+        data.answer_option2 || "",
+        data.answer_option3 || "",
+        Number(data.correct_option) || 1,
+        data.answer_type || "text",
+        data.answer_media_url || null,
+        data.points_value || 1,
+        question_id,
+      ],
+    );
+
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 };
 
 export const deleteQuestionById = async (question_id) => {
@@ -520,6 +576,12 @@ export const deleteQuestionById = async (question_id) => {
 // =============================================================================
 
 const quizModel = {
+  createQuestionWithAnswers,
+  updateQuestionById,
+  updateAnswersForQuestion,
+  updateQuestionWithAnswers,
+  deleteQuestionById,
+
   // Sous-thématiques
   getSubThematicsByThematic: async (thematic_id) => {
     const [rows] = await db.query(
@@ -537,7 +599,10 @@ const quizModel = {
   // ➕ Liste complète des sous-thématiques (sans filtre)
   getAllSubThematics: async () => {
     const [rows] = await db.query(
-      `SELECT * FROM quiz_sub_thematics ORDER BY display_order, sub_thematic_id`
+      `SELECT st.*, t.title as thematic_title 
+       FROM quiz_sub_thematics st
+       LEFT JOIN quiz_thematics t ON st.thematic_id = t.thematic_id
+       ORDER BY st.display_order, st.sub_thematic_id`
     );
     return rows;
   },
@@ -666,6 +731,7 @@ const quizModel = {
     description,
     icon_url,
     color_code,
+    country_code,
     display_order,
   }) => {
     let nextId = thematic_id ? Number(thematic_id) : null;
@@ -677,27 +743,27 @@ const quizModel = {
     }
     const [result] = await db.query(
       `
-      INSERT INTO quiz_thematics (thematic_id, title, description, icon_url, color_code, display_order)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO quiz_thematics (thematic_id, title, description, icon_url, color_code, country_code, display_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
-      [nextId, title, description, icon_url, color_code, display_order],
+      [nextId, title, description, icon_url, color_code, country_code, display_order],
     );
     return result.insertId || nextId;
   },
 
   updateThematic: async (
     id,
-    { title, description, icon_url, color_code, display_order, is_active },
+    { title, description, icon_url, color_code, country_code, display_order, is_active },
   ) => {
     const sql = `
       UPDATE quiz_thematics
-      SET title = ?, description = ?, color_code = ?, display_order = ?, is_active = ?
+      SET title = ?, description = ?, color_code = ?, country_code = ?, display_order = ?, is_active = ?
       ${icon_url ? ", icon_url = ?" : ""}
       WHERE thematic_id = ?
     `;
     const params = icon_url
-      ? [title, description, color_code, display_order, is_active, icon_url, id]
-      : [title, description, color_code, display_order, is_active, id];
+      ? [title, description, color_code, country_code, display_order, is_active, icon_url, id]
+      : [title, description, color_code, country_code, display_order, is_active, id];
 
     const [result] = await db.query(sql, params);
     return result;

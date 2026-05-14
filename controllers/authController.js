@@ -20,6 +20,8 @@ import {
   insertUserBasic,
   deleteUserHard,
 } from "../models/authModel.js";
+import { logModeratorAction } from "../models/moderatorActionModel.js";
+import bcrypt from "bcrypt";
 import pkg from "whatsapp-web.js";
 import xlsx from "xlsx";
 
@@ -134,6 +136,16 @@ export const hardDeleteUser = async (req, res) => {
 
     // Suppression définitive
     await deleteUserHard(user_id);
+
+    // Log l'action
+    await logModeratorAction({
+      moderator_id: req.user.user_id,
+      action_type: "hard_delete_user",
+      target_type: "user",
+      target_id: user_id,
+      details: "Suppression définitive de la base"
+    });
+
 
     // Supprimer aussi l'avatar s'il existe (optionnel mais propre)
     // On ne le fait pas ici pour faire simple et "temporaire"
@@ -395,8 +407,19 @@ export const updateUserProfile = async (req, res) => {
       "email",
       "number",
       "avatar_url",
+      "preferences",
     ];
     const updatedUser = await updateUserFields(user_id, fields, allowedFields);
+
+    // Log l'action du modérateur/admin
+    await logModeratorAction({
+      moderator_id: req.user.user_id,
+      action_type: "update_user",
+      target_type: "user",
+      target_id: user_id,
+      details: `Champs modifiés: ${Object.keys(fields).join(", ")}`
+    });
+
 
     try {
       await mailUpdateProfile(updatedUser.email, updatedUser.first_name);
@@ -443,6 +466,7 @@ export const updateUserAdmin = async (req, res) => {
       "role",
       "status",
       "is_active",
+      "preferences",
     ];
     const invalidFields = Object.keys(fields).filter(
       (field) => !allowedFields.includes(field),
@@ -528,6 +552,16 @@ export const deleteUserWithFeedback = async (req, res) => {
     // 2️⃣ Supprimer l'utilisateur (soft delete)
     await deleteUserSoft(user_id);
 
+    // Log l'action
+    await logModeratorAction({
+      moderator_id: req.user.user_id,
+      action_type: "soft_delete_user",
+      target_type: "user",
+      target_id: user_id,
+      details: `Raison: ${safeReason}`
+    });
+
+
     res
       .status(200)
       .json({
@@ -535,6 +569,51 @@ export const deleteUserWithFeedback = async (req, res) => {
       });
   } catch (error) {
     console.error("❌ deleteUserWithFeedback:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// -----------------------------
+// Changer le mot de passe (connecté)
+// -----------------------------
+export const changePassword = async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: "Ancien et nouveau mot de passe requis" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Le nouveau mot de passe doit faire au moins 6 caractères" });
+    }
+
+    // 1. Récupérer l'user pour comparer le hash
+    const [user] = await getUserById(user_id);
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    // Si l'utilisateur s'est inscrit via Google et n'a pas de password_hash
+    if (!user.password_hash) {
+      // On autorise la création d'un premier mot de passe
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(newPassword, salt);
+      await updateUserFields(user_id, { password_hash: hash }, ["password_hash"]);
+      return res.json({ message: "Mot de passe créé avec succès" });
+    }
+
+    // 2. Comparer l'ancien
+    const isMatch = await bcrypt.compare(oldPassword, user.password_hash);
+    if (!isMatch) return res.status(401).json({ error: "Ancien mot de passe incorrect" });
+
+    // 3. Hasher le nouveau et update
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+    await updateUserFields(user_id, { password_hash: hash }, ["password_hash"]);
+
+    res.json({ message: "Mot de passe modifié avec succès" });
+  } catch (error) {
+    console.error("❌ changePassword:", error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -22,11 +22,15 @@ import logsRoutes from "./routes/logsRoute.js";
 import publiciteRoutes from "./routes/publiciteRoute.js";
 import privateMessageRoutes from "./routes/privateMessageRoute.js";
 import adminRoutes from "./routes/adminRoute.js";
+import countryRoutes from "./routes/countryRoute.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import { listPublicites } from "./controllers/publiciteController.js";
 import { createPrivateMessage, markThreadRead } from "./models/privateMessageModel.js";
 import db from "./config/db.js";
+import settingsRoute from "./routes/settingsRoute.js";
+import moderatorActionRoute from "./routes/moderatorActionRoute.js";
+import permissionRoute from "./routes/permissionRoute.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5100;
@@ -99,28 +103,6 @@ const __dirname = path.dirname(__filename);
 
 // Compression Brotli (mieux que gzip)
 app.use(compression());
-
-// Caching statique long terme + immutable
-app.use(
-  "/public",
-  express.static(path.join(__dirname, "public"), {
-    maxAge: "365d",
-    etag: true,
-    immutable: true,
-  })
-);
-
-// Préchargement de ressources critiques
-app.use((req, res, next) => {
-  res.setHeader(
-    "Link",
-    [
-      '</public/main.js>; rel=preload; as=script',
-      '</public/styles.css>; rel=preload; as=style',
-    ].join(", ")
-  );
-  next();
-});
 
 // -----------------------------
 // Middleware JSON et sécurité
@@ -218,26 +200,36 @@ app.use((req, res, next) => {
 // -----------------------------
 // Routes principales
 // -----------------------------
-app.use(
-  "/api",
-  authRoutes,
-  quizRoutes,
-  faqRoutes,
-  commentRoutes,
-  newsletterRoutes,
-  messageRoutes,
-  privateMessageRoutes,
-  quizStatsRoutes,
-  quizUserSessionRoutes,
-  logsRoutes,
-  publiciteRoutes,
-  adminRoutes,
-  (await import("./routes/legalCguRoute.js")).default,
-  (await import("./routes/legalPrivacyRoute.js")).default,
-  (await import("./routes/legalCookiesRoute.js")).default,
-  (await import("./routes/legalAboutRoute.js")).default,
-  (await import("./routes/legalContactRoute.js")).default
-);
+const apiRouter = express.Router();
+
+// Routes administratives
+apiRouter.use("/settings", settingsRoute);
+apiRouter.use("/moderator-actions", moderatorActionRoute);
+apiRouter.use("/permissions", permissionRoute);
+
+// Routes légales
+apiRouter.use("/legal/privacy", (await import("./routes/legalPrivacyRoute.js")).default);
+apiRouter.use("/legal/cgu", (await import("./routes/legalCguRoute.js")).default);
+apiRouter.use("/legal/cookies", (await import("./routes/legalCookiesRoute.js")).default);
+apiRouter.use("/legal/about", (await import("./routes/legalAboutRoute.js")).default);
+apiRouter.use("/legal/contact", (await import("./routes/legalContactRoute.js")).default);
+
+// Autres routes
+apiRouter.use(authRoutes);
+apiRouter.use(quizRoutes);
+apiRouter.use(faqRoutes);
+apiRouter.use(commentRoutes);
+apiRouter.use(newsletterRoutes);
+apiRouter.use(messageRoutes);
+apiRouter.use(privateMessageRoutes);
+apiRouter.use(quizStatsRoutes);
+apiRouter.use(quizUserSessionRoutes);
+apiRouter.use(logsRoutes);
+apiRouter.use(publiciteRoutes);
+apiRouter.use(adminRoutes);
+apiRouter.use(countryRoutes);
+
+app.use("/api", apiRouter);
 
 // Alias de compatibilité pour /publicites (sans /api)
 app.get("/publicites", listPublicites);

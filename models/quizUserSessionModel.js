@@ -80,10 +80,18 @@ export const completeQuizSession = async (sessionId) => {
 /** 🔹 Récupérer les sessions d’un utilisateur */
 export const getUserQuizSessions = async (userId) => {
   try {
-    const [rows] = await db.query(
-      "SELECT * FROM quiz_user_sessions WHERE user_id = ? ORDER BY last_activity DESC",
-      [userId],
-    );
+    const sql = `
+      SELECT 
+        s.*, 
+        t.title AS thematic_title, 
+        st.title AS sub_thematic_title
+      FROM quiz_user_sessions s
+      LEFT JOIN quiz_thematics t ON s.thematic_id = t.thematic_id
+      LEFT JOIN quiz_sub_thematics st ON s.sub_thematic_id = st.sub_thematic_id
+      WHERE s.user_id = ? 
+      ORDER BY s.last_activity DESC
+    `;
+    const [rows] = await db.query(sql, [userId]);
     return rows;
   } catch (error) {
     console.error("❌ getUserQuizSessions:", error);

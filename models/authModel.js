@@ -306,7 +306,12 @@ export const updateUserFields = async (user_id, fields, allowedFields) => {
     Object.keys(fields).forEach((key) => {
       if (allowedFields.includes(key)) {
         updates.push(`${key} = ?`);
-        values.push(fields[key]);
+        let val = fields[key];
+        // Si c'est un objet (pour preferences), on le stringify pour MySQL
+        if (key === 'preferences' && typeof val === 'object' && val !== null) {
+          val = JSON.stringify(val);
+        }
+        values.push(val);
       }
     });
 

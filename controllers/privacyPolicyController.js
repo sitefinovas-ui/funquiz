@@ -1,6 +1,14 @@
 import { getAllPrivacy, getPrivacyById, createPrivacy, updatePrivacy, deletePrivacy } from "../models/privacyPolicyModel.js";
 
-export const listPrivacy = async (req, res) => res.json(await getAllPrivacy());
+export const listPrivacy = async (req, res) => {
+  try {
+    const privacy = await getAllPrivacy();
+    res.json(privacy);
+  } catch (error) {
+    console.error("❌ listPrivacy Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 export const privacyById = async (req, res) => {
   const row = await getPrivacyById(req.params.id);
   if (!row) return res.status(404).json({ error: "Politique de confidentialité non trouvée" });
