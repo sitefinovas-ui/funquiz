@@ -45,30 +45,42 @@ export const registerUser = async (data) => {
       role,
     } = data;
 
-    // 🧂 Hash du mot de passe
-    const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    // 🔐 Validation minimale (évite les users bancals)
+    if (!email || !name || !first_name) {
+      throw new Error("Champs obligatoires manquants");
+    }
 
-    // 🕓 Date actuelle (inscription et première connexion)
+    // 🧂 Hash du mot de passe (si fourni)
+    let password_hash = null;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      password_hash = await bcrypt.hash(password, salt);
+    }
+
+    // 🕓 Date actuelle
     const now = new Date();
 
-    // 🧮 Génère un user_id si la colonne n'est pas AUTO_INCREMENT
-    const [nextRows] = await db.query(
-      "SELECT COALESCE(MAX(user_id), 0) + 1 AS next_id FROM funquiz_users"
-    );
-    const next_id = Number(nextRows?.[0]?.next_id) || 1;
-
-    // 💾 Insertion dans la base avec user_id explicite et date_cx
+    // 💾 INSERT (AUTO_INCREMENT uniquement)
     const [result] = await db.query(
       `INSERT INTO funquiz_users 
-      (user_id, name, first_name, email, number, password_hash, google_id, avatar_url, role, is_active, date_cx)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        next_id,
+      (
         name,
         first_name,
         email,
         number,
+        password_hash,
+        google_id,
+        avatar_url,
+        role,
+        is_active,
+        date_cx
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        first_name,
+        email,
+        number || null,
         password_hash,
         google_id || null,
         avatar_url || null,
@@ -78,9 +90,16 @@ export const registerUser = async (data) => {
       ],
     );
 
-    // 🧾 Retour de l'utilisateur créé
+    // 🧾 ID fiable MySQL
+    const user_id = result.insertId;
+
+    if (!user_id) {
+      throw new Error("Impossible de récupérer l'user_id (insertId vide)");
+    }
+
+    // 📦 retour propre
     return {
-      user_id: result.insertId,
+      user_id,
       name,
       first_name,
       email,
@@ -88,11 +107,13 @@ export const registerUser = async (data) => {
       google_id,
       avatar_url,
       role: role || "user",
+      is_active: 1,
       date_cx: now,
     };
+
   } catch (error) {
     console.error("❌ registerUser:", error);
-    throw new Error("Erreur lors de l’inscription.");
+    throw new Error(error.message || "Erreur lors de l’inscription.");
   }
 };
 // -----------------------------

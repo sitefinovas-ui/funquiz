@@ -119,14 +119,14 @@ export const getUserRankings = async (limit = 10) => {
       SELECT 
         u.user_id,
         CONCAT(u.first_name, ' ', u.name) as full_name,
-        u.profile_picture,
+        u.avatar_url,
         COALESCE(SUM(s.current_score), 0) as total_points,
         COUNT(s.session_id) as games_played,
         COALESCE(ROUND(AVG((s.correct_answers_count / NULLIF(s.total_questions, 0)) * 100), 2), 0) as avg_completion
       FROM funquiz_users u
       LEFT JOIN quiz_user_sessions s ON u.user_id = s.user_id AND s.is_completed = 1
       WHERE u.is_active = 1
-      GROUP BY u.user_id
+      GROUP BY u.user_id, u.first_name, u.name, u.avatar_url
       ORDER BY total_points DESC
       LIMIT ?
     `, [limit]);
@@ -139,7 +139,7 @@ export const getUserRankings = async (limit = 10) => {
         SELECT 
           u.user_id,
           CONCAT(u.first_name, ' ', u.name) as full_name,
-          u.profile_picture,
+          u.avatar_url,
           0 as total_points,
           0 as games_played,
           0 as avg_completion
