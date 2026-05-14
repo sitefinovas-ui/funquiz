@@ -11,12 +11,16 @@ const LayoutDash = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const savedBg = localStorage.getItem("public.site.bg");
-    const savedAccent = localStorage.getItem("public.site.accent");
+    try {
+      const savedBg = localStorage.getItem("public.site.bg");
+      const savedAccent = localStorage.getItem("public.site.accent");
 
-    if (savedBg) document.documentElement.style.setProperty("--site-bg", savedBg);
-    if (savedAccent) {
-      document.documentElement.style.setProperty("--site-accent", savedAccent);
+      if (savedBg) document.documentElement.style.setProperty("--site-bg", savedBg);
+      if (savedAccent) {
+        document.documentElement.style.setProperty("--site-accent", savedAccent);
+      }
+    } catch (e) {
+      console.warn("Could not load site theme from localStorage", e);
     }
   }, []);
 

@@ -116,21 +116,52 @@ function ProfilePage() {
   useEffect(() => () => { if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current); }, []);
 
   useEffect(() => {
-    try { const r = localStorage.getItem(PREFS_KEY); if (r) setPrefs(mergePrefs(DEFAULT_PREFS, JSON.parse(r))); }
-    catch {} finally { setPrefsReady(true); }
-  }, []);
+    try {
+      // 1. D'abord charger depuis l'utilisateur s'il a des préférences en BDD
+      if (user?.preferences) {
+        const userPrefs = typeof user.preferences === 'string' ? JSON.parse(user.preferences) : user.preferences;
+        setPrefs(mergePrefs(DEFAULT_PREFS, userPrefs));
+      } else {
+        // 2. Sinon fallback sur localStorage
+        const r = localStorage.getItem(PREFS_KEY);
+        if (r) setPrefs(mergePrefs(DEFAULT_PREFS, JSON.parse(r)));
+      }
+    } catch (e) {
+      console.error("Erreur chargement prefs:", e);
+    } finally {
+      setPrefsReady(true);
+    }
+  }, [user]);
 
   useEffect(() => {
-    if (!prefsReady) return;
+    if (!prefsReady || !user?.user_id) return;
     try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); setPrefsSavedAt(Date.now());
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      setPrefsSavedAt(Date.now());
+      
       if (prefsTouchedRef.current) {
-        setPrefsUiMessage('Paramètres sauvegardés.');
+        setPrefsUiMessage('Sauvegardé...');
+        
+        // On synchronise avec le backend (debounced simple via timeout si on veut éviter trop d'appels, 
+        // mais ici on va le faire directement pour la simplicité ou on peut ajouter un debounce)
+        const syncBackend = async () => {
+          try {
+            await authService.putUserById(user.user_id, { preferences: prefs });
+            setPrefsUiMessage('Paramètres sauvegardés.');
+          } catch (e) {
+            console.error("Erreur sync backend prefs:", e);
+            setPrefsUiMessage('Erreur synchro.');
+          }
+        };
+
         if (prefsMsgTimerRef.current) window.clearTimeout(prefsMsgTimerRef.current);
-        prefsMsgTimerRef.current = window.setTimeout(() => setPrefsUiMessage(''), 2500);
+        prefsMsgTimerRef.current = window.setTimeout(() => {
+          syncBackend();
+          setTimeout(() => setPrefsUiMessage(''), 2500);
+        }, 1000); // Debounce de 1s
       }
     } catch {}
-  }, [prefs, prefsReady]);
+  }, [prefs, prefsReady, user?.user_id]);
 
   useEffect(() => {
     document.title = 'FUNQUIZ | Mon profil';

@@ -231,15 +231,15 @@ const Legal = () => {
               {(modal.type === 'cgu' || modal.type === 'privacy' || modal.type === 'cookies') && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Titre</label>
-                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Titre</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Contenu</label>
-                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[200px] resize-none" value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Contenu</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 min-h-[200px] resize-none" value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Statut</label>
                     <div className="flex gap-2">
                       {['draft', 'published'].map(s => (
                         <button key={s} onClick={() => setFormData({...formData, status: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${formData.status === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
@@ -255,15 +255,15 @@ const Legal = () => {
               {modal.type === 'faq' && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Question</label>
-                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.question || ''} onChange={e => setFormData({...formData, question: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Question</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.question || ''} onChange={e => setFormData({...formData, question: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Réponse</label>
-                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[160px] resize-none" value={formData.answer || ''} onChange={e => setFormData({...formData, answer: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Réponse</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 min-h-[160px] resize-none" value={formData.answer || ''} onChange={e => setFormData({...formData, answer: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Statut</label>
                     <div className="flex gap-2">
                       {[1, 0].map(s => (
                         <button key={s} onClick={() => setFormData({...formData, is_active: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${Number(formData.is_active) === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
@@ -279,19 +279,19 @@ const Legal = () => {
               {modal.type === 'contacts' && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Service</label>
-                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.service || ''} onChange={e => setFormData({...formData, service: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Service</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.service || ''} onChange={e => setFormData({...formData, service: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Email</label>
-                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Email</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Description</label>
-                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[120px] resize-none" value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Description</label>
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 min-h-[120px] resize-none" value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <label className="text-[10px] text-slate-900 font-bold uppercase tracking-widest ml-1">Statut</label>
                     <div className="flex gap-2">
                       {['operationnel', 'cacher'].map(s => (
                         <button key={s} onClick={() => setFormData({...formData, status: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${formData.status === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
@@ -308,19 +308,37 @@ const Legal = () => {
                 <>
                   <div className="space-y-2">
                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Titre</label>
-                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Sous-titre</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Description</label>
-                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[120px] resize-none" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 min-h-[120px] resize-none" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Mission</label>
-                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[100px] resize-none" value={formData.mission || ''} onChange={e => setFormData({...formData, mission: e.target.value})} />
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 min-h-[100px] resize-none" value={formData.mission || ''} onChange={e => setFormData({...formData, mission: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Vision</label>
-                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium min-h-[100px] resize-none" value={formData.vision || ''} onChange={e => setFormData({...formData, vision: e.target.value})} />
+                    <textarea className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 min-h-[100px] resize-none" value={formData.vision || ''} onChange={e => setFormData({...formData, vision: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Email Contact</label>
+                    <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900" value={formData.contact_email || ''} onChange={e => setFormData({...formData, contact_email: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
+                    <div className="flex gap-2">
+                      {['draft', 'published'].map(s => (
+                        <button key={s} onClick={() => setFormData({...formData, status: s})} className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${formData.status === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          {s === 'draft' ? 'Brouillon' : 'Publié'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </>
               )}

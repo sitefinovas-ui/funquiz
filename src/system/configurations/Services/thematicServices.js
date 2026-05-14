@@ -70,6 +70,18 @@ const thematicService = {
       throw error;
     }
   },
+
+  // Importer des thématiques en masse
+  importThematics: async (formData) => {
+    try {
+      const response = await api.post('/param/thematics/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default thematicService;

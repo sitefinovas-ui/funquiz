@@ -2,23 +2,29 @@ import './listThematic.css';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import thematicService from '../../configurations/Services/thematicServices.js';
+import countryServices from '../../configurations/Services/countryServices.js';
 
 function Thematic({ closePopup, highlightThematicId }) {
   const [thematics, setThematics] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [isClosing, setIsClosing] = useState(false);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchThematics = async () => {
+    const fetchData = async () => {
       try {
-        const data = await thematicService.getAllThematics();
-        setThematics(data);
+        const [thematicData, countryData] = await Promise.all([
+          thematicService.getAllThematics(),
+          countryServices.getAll()
+        ]);
+        setThematics(thematicData);
+        setCountries(countryData);
       } catch (error) {
-        console.error('Erreur lors de la récupération des thématiques :', error);
+        console.error('Erreur lors de la récupération des données :', error);
       }
     };
-    fetchThematics();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -42,10 +48,18 @@ function Thematic({ closePopup, highlightThematicId }) {
     });
   };
 
-  const filtered = thematics.filter((t) =>
-    t.thematic_title.toLowerCase().includes(search.toLowerCase()) ||
-    (t.sub_thematics || []).some((s) => s.title.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Filter only active countries
+  const activeCountryCodes = countries.filter(c => c.is_active).map(c => c.code);
+
+  const filtered = thematics.filter((t) => {
+    const isFromActiveCountry = activeCountryCodes.includes(t.country_code || 'CI');
+    if (!isFromActiveCountry) return false;
+
+    const matchesSearch = t.thematic_title.toLowerCase().includes(search.toLowerCase()) ||
+      (t.sub_thematics || []).some((s) => s.title.toLowerCase().includes(search.toLowerCase()));
+    
+    return matchesSearch;
+  });
 
   return (
     <div className={`th-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleClose}>

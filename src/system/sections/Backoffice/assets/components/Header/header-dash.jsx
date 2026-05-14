@@ -14,6 +14,10 @@ import {
   FaEnvelopeOpen,
   FaStar,
   FaHome,
+  FaGlobeAfrica,
+  FaInfoCircle,
+  FaUserShield,
+  FaShieldAlt,
 } from 'react-icons/fa';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
@@ -30,9 +34,15 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
     { id: 'messages', icon: FaEnvelope, label: 'Messages utilisateurs', link: '/dashboard/message' },
     { id: 'newsletter', icon: FaEnvelopeOpen, label: 'Newsletter', link: '/dashboard/newsletter' },
     { id: 'quiz', icon: FaQuestionCircle, label: 'Quiz', link: '/dashboard/quiz' },
+    { id: 'countries', icon: FaGlobeAfrica, label: 'Gestion des pays', link: '/dashboard/countries' },
+    { id: 'about', icon: FaInfoCircle, label: 'Page À propos', link: '/dashboard/about' },
     { id: 'legal', icon: FaStar, label: 'Légal', link: '/dashboard/legal' },
+    { id: 'moderation', icon: FaUserShield, label: 'Actions Modérateurs', link: '/dashboard/moderation', adminOnly: true },
+    { id: 'permissions', icon: FaShieldAlt, label: 'Permissions Rôles', link: '/dashboard/permissions', adminOnly: true },
     { id: 'settings', icon: FaCog, label: 'Réglage du système', link: '/dashboard/settings' },
+    { id: 'global-settings', icon: FaEnvelope, label: 'Configuration Services', link: '/dashboard/global-settings', adminOnly: true },
   ];
+
 
   useEffect(() => {
     setIsOpen(false);
@@ -92,7 +102,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
         )}
 
         <div className="space-y-1">
-          {menuItems.map((item) => {
+          {menuItems.filter(item => !item.adminOnly || user?.role === 'admin').map((item) => {
             const IconComponent = item.icon;
             const isActive = location.pathname === item.link || (item.link === '/dashboard/' && location.pathname === '/dashboard');
             

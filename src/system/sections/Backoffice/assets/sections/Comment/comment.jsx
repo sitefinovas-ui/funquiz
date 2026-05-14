@@ -513,7 +513,7 @@ export default function Comment() {
               <div className="space-y-2">
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Contenu du message</label>
                 <textarea
-                  className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600/20 min-h-[120px] resize-none"
+                  className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-600/20 min-h-[120px] resize-none"
                   placeholder="Écrivez le commentaire ici..."
                   value={formData.content}
                   onChange={(e) => setFormData((d) => ({ ...d, content: e.target.value }))}

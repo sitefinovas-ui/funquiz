@@ -10,7 +10,8 @@ function About() {
     document.title = 'FUNQUIZ | À propos';
     aboutServices.getAll()
       .then(list => {
-        const sorted = (Array.isArray(list) ? list : []).sort((a, b) =>
+        const publishedOnly = (Array.isArray(list) ? list : []).filter(item => item.status === 'published');
+        const sorted = publishedOnly.sort((a, b) =>
           new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
         );
         setAboutList(sorted);

@@ -6,8 +6,9 @@ import { usePopup } from '../../configurations/Context/PopupContext.jsx';
 import google from '../../../assets/icons/google.png';
 import { MdNavigateNext } from 'react-icons/md';
 
-import thematicService   from '../../configurations/Services/thematicServices';
-import pointService      from '../../configurations/Services/pointService';
+import thematicService   from '../../configurations/Services/thematicServices.js';
+import countryServices    from '../../configurations/Services/countryServices.js';
+import pointService      from '../../configurations/Services/pointService.js';
 import faqService        from '../../configurations/Services/faqService.js';
 import commentService    from '../../configurations/Services/commentServices.js';
 import newsletterService from '../../configurations/Services/newsletterServices.js';
@@ -33,12 +34,28 @@ const Home = () => {
   const [comments,  setComments]  = useState([]);
   const [email,     setEmail]     = useState('');
   const [pub,       setPub]       = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState('CI');
+  const [africanCountries, setAfricanCountries] = useState([]);
 
   const toggleFAQ = (i) => setActiveIndex(activeIndex === i ? null : i);
 
   /* ── Data fetching ── */
   useEffect(() => {
     let mounted = true;
+
+    // Fetch countries from DB
+    countryServices.getAll()
+      .then(data => {
+        if (mounted) {
+          const activeCountries = data.filter(c => c.is_active);
+          setAfricanCountries(activeCountries);
+          if (activeCountries.length > 0 && !activeCountries.find(c => c.code === selectedCountry)) {
+            setSelectedCountry(activeCountries[0].code);
+          }
+        }
+      })
+      .catch(err => console.error("Erreur pays:", err));
+
     thematicService.getAllThematics()
       .then(data => { if (mounted) setThematics(Array.isArray(data) ? data : []); })
       .catch(() => { if (mounted) setThematics([]); });
@@ -96,10 +113,17 @@ const Home = () => {
       )
     : [];
 
+  // 1. Filter thematics by active countries first (Security filter)
+  const activeCountryCodes = africanCountries.map(c => c.code);
+  const globalActiveThematics = thematics.filter(t => activeCountryCodes.includes(t.country_code || 'CI'));
+
+  // 2. Filter for the selected country among active ones
+  const filteredThematics = globalActiveThematics.filter(t => (t.country_code || 'CI') === selectedCountry);
+
   /* ── Ranking tab data ── */
   const RANK_TABS = ['Top quiz', 'Populaires', 'Joueurs'];
 
-  const thematicItems = [...thematics]
+  const thematicItems = [...globalActiveThematics]
     .sort((a, b) => (b.sub_thematics?.length || 0) - (a.sub_thematics?.length || 0))
     .slice(0, 9)
     .map(t => ({
@@ -112,7 +136,7 @@ const Home = () => {
       onClick:  () => openPopup('thematic', { highlightThematicId: t.thematic_id }),
     }));
 
-  const popularItems = [...thematics]
+  const popularItems = [...globalActiveThematics]
     .slice(0, 9)
     .map(t => ({
       id:       t.thematic_id,
@@ -142,14 +166,126 @@ const Home = () => {
       {/* ══ FEATURED CAROUSEL ══ */}
       <section className='ps-8'>
         <div className="flex gap-3 px-4 md:px-6 pt-5 pb-4 overflow-x-auto scroll-hide snap-x snap-mandatory">
-          {thematics.map((thematic, i) => (
-            <div key={thematic.thematic_id} className="fc-entrance" style={{ animationDelay: `${i * 0.07}s` }}>
-              <FeaturedCard
-                thematic={thematic}
-                onClick={() => openPopup('thematic', { highlightThematicId: thematic.thematic_id })}
-              />
+          {filteredThematics.length > 0 ? (
+            filteredThematics.map((thematic, i) => (
+              <div key={thematic.thematic_id} className="fc-entrance" style={{ animationDelay: `${i * 0.07}s` }}>
+                <FeaturedCard
+                  thematic={thematic}
+                  onClick={() => openPopup('thematic', { highlightThematicId: thematic.thematic_id })}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="w-full py-10 text-center">
+              <p className="text-gray-400 font-medium italic">Aucun quiz disponible pour ce pays pour le moment.</p>
             </div>
+          )}
+        </div>
+      </section>
+
+      {/* ══ DÉCOUVRIR PAR PAYS (Inspired by Google Play Categories) ══ */}
+      <section className="py-6 border-t border-gray-100">
+        <div className="flex items-center justify-between px-4 md:px-6 mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Explorer par pays</h2>
+          <button className="text-sm font-semibold text-violet-600">Tout voir</button>
+        </div>
+        <div className="flex gap-4 py-4 px-4 md:px-6 overflow-x-auto scroll-hide pb-2">
+          {africanCountries.map((country, i) => (
+            <button
+              key={country.code}
+              onClick={() => setSelectedCountry(country.code)}
+              className={`group flex flex-col items-center gap-2 shrink-0 transition-all ${selectedCountry === country.code ? 'scale-105' : 'opacity-70'}`}
+            >
+              <div 
+                className={`w-16 h-16 md:w-20 md:h-20 rounded-[22px] flex items-center justify-center text-3xl md:text-4xl shadow-sm border transition-all group-hover:scale-110 group-hover:shadow-md group-active:scale-95 ${selectedCountry === country.code ? 'border-violet-500 ring-2 ring-violet-500/20 shadow-violet-100' : 'border-gray-100'}`}
+                style={{ backgroundColor: `${country.color}15` }}
+              >
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden border border-white/20">
+                  <img src={country.flag_url} className="w-full h-full object-cover" alt={country.name} />
+                </div>
+              </div>
+              <span className={`text-[11px] md:text-xs font-bold transition-colors ${selectedCountry === country.code ? 'text-violet-600' : 'text-gray-600 group-hover:text-violet-600'}`}>
+                {country.name}
+              </span>
+            </button>
           ))}
+        </div>
+      </section>
+
+      {/* ══ RECOMMANDÉ POUR VOUS (Inspired by Google Play App Cards) ══ */}
+      <section className="py-6 border-t border-gray-100">
+        <div className="flex items-center justify-between px-4 md:px-6 mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Recommandé pour vous ({africanCountries.find(c => c.code === selectedCountry)?.name})</h2>
+          <MdNavigateNext size={24} className="text-gray-400 cursor-pointer" />
+        </div>
+        <div className="flex gap-5 px-4 md:px-6 overflow-x-auto scroll-hide pb-4 snap-x">
+          {filteredThematics.length > 0 ? (
+            filteredThematics.slice().reverse().map((thematic, i) => (
+              <div 
+                key={thematic.thematic_id}
+                onClick={() => openPopup('thematic', { highlightThematicId: thematic.thematic_id })}
+                className="snap-start shrink-0 w-[120px] md:w-[150px] cursor-pointer group"
+              >
+                <div className="relative aspect-square rounded-[24%] overflow-hidden bg-gray-50 border border-gray-100 mb-2 shadow-sm transition-transform group-hover:scale-[1.03]">
+                  <img 
+                    src={thematic.icon_url} 
+                    alt={thematic.thematic_title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                </div>
+                <p className="text-xs md:text-sm font-semibold text-gray-900 line-clamp-1 group-hover:text-violet-600">
+                  {thematic.thematic_title}
+                </p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[10px] md:text-xs text-gray-500 font-medium">
+                    {thematic.sub_thematics?.length || 0} quiz
+                  </span>
+                  <span className="text-[10px] text-gray-300">•</span>
+                  <div className="flex items-center gap-0.5">
+                    <span className="text-amber-400 text-[10px]">★</span>
+                    <span className="text-[10px] md:text-xs text-gray-500">4.9</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="w-full py-6 text-center">
+              <p className="text-gray-400 text-sm">Contenu bientôt disponible...</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ══ CHOIX DE L'ÉQUIPE (Inspired by Play Store Editors' Choice) ══ */}
+      <section className="py-6 border-t border-gray-100">
+        <div className="px-4 md:px-6">
+          <div className="relative h-48 md:h-64 rounded-[28px] overflow-hidden bg-gradient-to-br from-violet-600 to-indigo-800 shadow-xl group cursor-pointer">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
+            <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-12 z-10">
+              <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/20 mb-3 w-fit">
+                ✨ Sélection du moment
+              </span>
+              <h3 className="text-2xl md:text-4xl font-black text-white mb-2 leading-tight">
+                Défiez vos amis sur les <br className="hidden md:block" /> Quiz de la semaine !
+              </h3>
+              <p className="text-white/80 text-sm md:text-base font-medium mb-6 max-w-sm">
+                Découvrez les nouvelles thématiques sur la culture et l'histoire africaine.
+              </p>
+              <button className="bg-white text-violet-700 text-sm font-bold px-6 py-2.5 rounded-full w-fit hover:bg-violet-50 transition-colors shadow-lg">
+                Explorer maintenant
+              </button>
+            </div>
+            {/* Decorative icons */}
+            <div className="absolute -right-8 -bottom-8 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden md:flex gap-4">
+              {thematics.slice(0, 3).map((t, i) => (
+                <div key={i} className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center animate-bounce" style={{ animationDelay: `${i * 0.2}s` }}>
+                  <img src={t.icon_url} alt="" className="w-12 h-12 object-contain" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -413,16 +549,16 @@ const FeaturedCard = ({ thematic, onClick }) => {
       {/* Mouse-follow shimmer */}
       <div className="fc-shimmer absolute inset-0 z-10 pointer-events-none rounded-2xl" style={{ transition: 'background 0.1s' }} />
 
-      {/* Big faded bg icon — spins subtly on hover */}
+      {/* Big background image */}
       <img
         src={thematic.icon_url}
         alt=""
         aria-hidden="true"
-        className="fc-bg-icon absolute right-2 bottom-2 w-28 h-28 md:w-36 md:h-36 object-contain"
+        className="fc-bg-icon absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Bottom gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+      {/* Bottom gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
       {/* Sweep shine on hover */}
       <div className="fc-sweep absolute inset-0 pointer-events-none" />
@@ -451,17 +587,14 @@ const FeaturedCard = ({ thematic, onClick }) => {
         </h3>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 shrink-0 rounded-lg overflow-hidden bg-white/20 flex items-center justify-center">
-              <img src={thematic.icon_url} alt="" className="w-6 h-6 object-contain" />
-            </div>
             <div className="min-w-0">
               <p className="text-white text-xs font-semibold leading-none truncate">{thematic.thematic_title}</p>
-              <p className="text-white/60 text-[11px] mt-0.5">
+              <p className="text-white/80 text-[11px] mt-1 font-medium">
                 {thematic.sub_thematics?.length || 0} quiz · FunQuiz
               </p>
             </div>
           </div>
-          <button className="fc-play-btn shrink-0 bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/30">
+          <button className="fc-play-btn shrink-0 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full border border-white/30 hover:bg-white hover:text-violet-700 transition-colors">
             Jouer
           </button>
         </div>

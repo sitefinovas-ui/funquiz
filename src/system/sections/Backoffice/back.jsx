@@ -10,9 +10,14 @@ import NewsDash from './assets/sections/Newsletter/newsletter.jsx';
 import QuizDash from './assets/sections/Quiz/quiz.jsx';
 import LegalDash from './assets/sections/Legal/legal.jsx';
 import LogsPage from './assets/sections/Temp/temp.jsx';
+import CountryManagement from './assets/sections/Countries/CountryManagement.jsx';
+import AboutManagement from './assets/sections/About/AboutManagement.jsx';
+import Settings from './assets/sections/Settings/Settings.jsx';
+import ModeratorActions from './assets/sections/Moderation/ModeratorActions.jsx';
+import RolePermissions from './assets/sections/Moderation/RolePermissions.jsx';
 import ThemeSwitcherAdminPage from './../../components/ThemeSwitcher/theme-switcher.jsx';
 
-function Dashboard() {
+function BackofficeMain() {
   return (
     // Backoffice
     <PopupProvider>
@@ -24,13 +29,18 @@ function Dashboard() {
           <Route path="comment" element={<Comment />} />
           <Route path="newsletter" element={<NewsDash />} />
           <Route path="quiz" element={<QuizDash />} />
+          <Route path="countries" element={<CountryManagement />} />
+          <Route path="about" element={<AboutManagement />} />
           <Route path="legal" element={<LegalDash />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="settings" element={<ThemeSwitcherAdminPage />} />
+          <Route path="global-settings" element={<Settings />} />
+          <Route path="moderation" element={<ModeratorActions />} />
+          <Route path="permissions" element={<RolePermissions />} />
         </Route>
       </Routes>
     </PopupProvider>
   );
 }
 
-export default Dashboard;
+export default BackofficeMain;

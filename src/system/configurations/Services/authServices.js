@@ -87,6 +87,18 @@ const authService = {
     }
   },
 
+  changePassword: async (oldPassword, newPassword) => {
+    try {
+      const response = await api.put('/auth/update/password', {
+        oldPassword,
+        newPassword,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   deleteUserSoft: async ({ user_id, reason, comment }) => {
     try {
       const response = await api.post('/auth/delete', {

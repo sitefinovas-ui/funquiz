@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   FaUserShield,
   FaTrophy,
@@ -8,6 +8,8 @@ import {
   FaBolt,
   FaArrowUp,
   FaArrowDown,
+  FaExclamationTriangle,
+  FaSync,
 } from 'react-icons/fa';
 import { AiTwotoneMessage } from 'react-icons/ai';
 import { TfiCommentsSmiley } from 'react-icons/tfi';
@@ -56,20 +58,16 @@ const HomeDash = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [monthlyGrowth, setMonthlyGrowth] = useState([]);
 
-  useEffect(() => {
-    document.title = 'FUNQUIZ Pro | Tableau de bord';
-    fetchDashboardData();
-  }, []);
-
   const calculatePercentageChange = (current, previous) => {
     if (previous === 0) return current > 0 ? '+100%' : '0%';
     const change = ((current - previous) / previous) * 100;
     return `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
   };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const [allUsers, usersData, messagesData, commentsData, thematicsData] = await Promise.all([
         usersServices.getAllUsers(),
@@ -88,11 +86,11 @@ const HomeDash = () => {
       yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
       const todayStats = {
-        inscriptions: allUsers.filter((u) => new Date(u.created_at) >= todayStart).length,
-        messages: messagesData.filter((m) => new Date(m.created_at) >= todayStart).length,
-        commentaires: commentsData.filter((c) => new Date(c.created_at) >= todayStart).length,
+        inscriptions: allUsers.filter((u) => u.created_at && new Date(u.created_at) >= todayStart).length,
+        messages: messagesData.filter((m) => m.created_at && new Date(m.created_at) >= todayStart).length,
+        commentaires: commentsData.filter((c) => c.created_at && new Date(c.created_at) >= todayStart).length,
         partages: users.filter(
-          (u) => u.total_games_played > 0 && new Date(u.last_activity) >= todayStart
+          (u) => u.total_games_played > 0 && u.last_activity && new Date(u.last_activity) >= todayStart
         ).length,
         totalUsers: allUsers.length,
         activeUsers: allUsers.filter((u) => {
@@ -104,18 +102,22 @@ const HomeDash = () => {
 
       const yesterdayStats = {
         inscriptions: allUsers.filter((u) => {
+          if (!u.created_at) return false;
           const date = new Date(u.created_at);
           return date >= yesterdayStart && date < todayStart;
         }).length,
         messages: messagesData.filter((m) => {
+          if (!m.created_at) return false;
           const date = new Date(m.created_at);
           return date >= yesterdayStart && date < todayStart;
         }).length,
         commentaires: commentsData.filter((c) => {
+          if (!c.created_at) return false;
           const date = new Date(c.created_at);
           return date >= yesterdayStart && date < todayStart;
         }).length,
         partages: users.filter((u) => {
+          if (!u.last_activity) return false;
           const date = new Date(u.last_activity);
           return u.total_games_played > 0 && date >= yesterdayStart && date < todayStart;
         }).length,
@@ -148,14 +150,17 @@ const HomeDash = () => {
         weeklyStats.push({
           jour: weekDays[dayDate.getDay()],
           inscriptions: allUsers.filter((u) => {
+            if (!u.created_at) return false;
             const date = new Date(u.created_at);
             return date >= dayDate && date < nextDay;
           }).length,
           messages: messagesData.filter((m) => {
+            if (!m.created_at) return false;
             const date = new Date(m.created_at);
             return date >= dayDate && date < nextDay;
           }).length,
           commentaires: commentsData.filter((c) => {
+            if (!c.created_at) return false;
             const date = new Date(c.created_at);
             return date >= dayDate && date < nextDay;
           }).length,
@@ -193,7 +198,7 @@ const HomeDash = () => {
             (acc, u) => acc + (parseInt(u.total_games_played) || 0),
             0
           );
-          const avgCompletion =
+          const avgCompletion = 
             thematicUsers.length > 0
               ? thematicUsers.reduce((acc, u) => acc + (parseFloat(u.average_completion) || 0), 0) /
                 thematicUsers.length
@@ -225,7 +230,17 @@ const HomeDash = () => {
 
       setTopQuizzes(quizStats);
 
+      const formatTimeAgoLocal = (date) => {
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / (1000 * 60));
+        if (diffMinutes < 1) return 'maintenant';
+        if (diffMinutes < 60) return `${diffMinutes}m`;
+        if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h`;
+        return `${Math.floor(diffMinutes / 1440)}j`;
+      };
+
       const recentActivities = [...messagesData, ...commentsData]
+        .filter(activity => activity.created_at)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 8)
         .map((activity) => {
@@ -235,7 +250,7 @@ const HomeDash = () => {
             avatar: activity.first_name ? activity.first_name.charAt(0).toUpperCase() : 'U',
             action: activity.content ? 'a commenté' : 'a envoyé un message',
             quiz: thematic ? thematic.thematic_title : 'Quiz général',
-            time: formatTimeAgo(new Date(activity.created_at)),
+            time: formatTimeAgoLocal(new Date(activity.created_at)),
           };
         });
 
@@ -253,6 +268,7 @@ const HomeDash = () => {
         monthlyStats.push({
           mois: months[monthIndex],
           utilisateurs: allUsers.filter((u) => {
+            if (!u.created_at) return false;
             const date = new Date(u.created_at);
             return date.getMonth() === monthIndex && date.getFullYear() === year;
           }).length,
@@ -263,19 +279,15 @@ const HomeDash = () => {
       setLoading(false);
     } catch (error) {
       console.error('Erreur:', error);
-      setError('Erreur de chargement');
+      setError('Impossible de charger les données du tableau de bord. Veuillez vérifier votre connexion ou réessayer plus tard.');
       setLoading(false);
     }
-  };
+  }, []);
 
-  const formatTimeAgo = (date) => {
-    const now = new Date();
-    const diffMinutes = Math.floor((now - date) / (1000 * 60));
-    if (diffMinutes < 1) return 'maintenant';
-    if (diffMinutes < 60) return `${diffMinutes}m`;
-    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h`;
-    return `${Math.floor(diffMinutes / 1440)}j`;
-  };
+  useEffect(() => {
+    document.title = 'FUNQUIZ Pro | Tableau de bord';
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const KpiCard = ({ title, value, change, icon: Icon, color }) => {
     const isPositive = change.includes('+');
@@ -303,6 +315,25 @@ const HomeDash = () => {
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
         <p className="text-slate-500 font-medium animate-pulse">Analyse des données en cours...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+          <FaExclamationTriangle size={40} />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Oups ! Une erreur est survenue</h2>
+        <p className="text-slate-500 max-w-md mb-8">{error}</p>
+        <button
+          onClick={fetchDashboardData}
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+        >
+          <FaSync size={16} />
+          Réessayer
+        </button>
       </div>
     );
   }

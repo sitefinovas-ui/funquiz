@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react';
-import { FaChartBar, FaList, FaPlus } from 'react-icons/fa';
+import { FaChartBar, FaList, FaPlus, FaCloudUploadAlt, FaLayerGroup, FaQuestionCircle } from 'react-icons/fa';
 import QuizStats from './QuizStats';
 import QuizList from './QuizList';
 import QuizCreate from './QuizCreate';
+import QuestionImport from './QuestionImport';
+import QuestionManagement from './QuestionManagement';
+import ThematicImport from './ThematicImport';
+import ThematicManagement from './ThematicManagement';
 
 const Quiz = () => {
   const [selectedMenu, setSelectedMenu] = useState('stats');
@@ -20,9 +24,29 @@ const Quiz = () => {
         label: 'Liste des quiz',
       },
       {
+        key: 'questions',
+        icon: <FaQuestionCircle />,
+        label: 'Gestion Questions',
+      },
+      {
+        key: 'thematics',
+        icon: <FaLayerGroup />,
+        label: 'Gestion Thématiques',
+      },
+      {
         key: 'create',
         icon: <FaPlus />,
         label: 'Créer un quiz',
+      },
+      {
+        key: 'import',
+        icon: <FaCloudUploadAlt />,
+        label: 'Importation Quiz',
+      },
+      {
+        key: 'import-thematic',
+        icon: <FaCloudUploadAlt />,
+        label: 'Importation Thématiques',
       },
     ],
     []
@@ -34,8 +58,16 @@ const Quiz = () => {
         return <QuizStats />;
       case 'list':
         return <QuizList />;
+      case 'questions':
+        return <QuestionManagement />;
+      case 'thematics':
+        return <ThematicManagement />;
       case 'create':
         return <QuizCreate />;
+      case 'import':
+        return <QuestionImport />;
+      case 'import-thematic':
+        return <ThematicImport />;
       default:
         return <QuizStats />;
     }

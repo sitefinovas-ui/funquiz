@@ -13,6 +13,8 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaTimes,
+  FaSyncAlt,
+  FaSpinner,
 } from 'react-icons/fa';
 
 const Messages = () => {

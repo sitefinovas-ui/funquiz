@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import thematicService from '../../../../../configurations/Services/thematicServices.js';
+import countryServices from '../../../../../configurations/Services/countryServices.js';
 import subThematicServices from '../../../../../configurations/Services/subThematicServices.js';
 import questionServices from '../../../../../configurations/Services/questionServices.js';
 import {
@@ -20,13 +21,16 @@ const QuizCreate = () => {
   const [loading, setLoading] = useState(false);
   const [thematics, setThematics] = useState([]);
   const [selectedThematicId, setSelectedThematicId] = useState(null);
+  const [selectedCountry, setSelectedCountry] = useState('CI');
+  const [africanCountries, setAfricanCountries] = useState([]);
   
   // Step 1: Thematic Data
   const [thematicData, setThematicData] = useState({
     title: '',
     description: '',
     color_code: '#3b82f6',
-    is_active: 1
+    is_active: 1,
+    country_code: 'CI'
   });
 
   // Step 2: Sub-thematic Data
@@ -58,6 +62,12 @@ const QuizCreate = () => {
   ]);
 
   useEffect(() => {
+    countryServices.getAll().then(data => {
+      const activeCountries = data.filter(c => c.is_active);
+      setAfricanCountries(activeCountries);
+      if (activeCountries.length > 0) setSelectedCountry(activeCountries[0].code);
+    }).catch(console.error);
+
     thematicService.getAllThematics().then(setThematics).catch(console.error);
   }, []);
 
@@ -108,6 +118,7 @@ const QuizCreate = () => {
         fd.append('description', thematicData.description);
         fd.append('color_code', thematicData.color_code);
         fd.append('is_active', thematicData.is_active);
+        fd.append('country_code', selectedCountry);
         const res = await thematicService.createThematic(fd);
         tId = res.thematic_id || res.id;
       }
@@ -175,20 +186,43 @@ const QuizCreate = () => {
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="space-y-2">
                 <h2 className="text-2xl font-black text-slate-900">Configuration de la thématique</h2>
-                <p className="text-slate-500 font-medium">Choisissez une thématique existante ou créez-en une nouvelle.</p>
+                <p className="text-slate-500 font-medium">Choisissez un pays et une thématique associée.</p>
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Sélectionner</label>
-                  <select 
-                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-600/20"
-                    value={selectedThematicId || ''}
-                    onChange={(e) => setSelectedThematicId(e.target.value || null)}
-                  >
-                    <option value="">+ Créer une nouvelle thématique</option>
-                    {thematics.map(t => <option key={t.thematic_id} value={t.thematic_id}>{t.title || t.thematic_title}</option>)}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">1. Pays d'origine</label>
+                    <select 
+                      className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-600/20"
+                      value={selectedCountry}
+                      onChange={(e) => {
+                        setSelectedCountry(e.target.value);
+                        setSelectedThematicId(null); // Reset selection when country changes
+                      }}
+                    >
+                      {africanCountries.map(c => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">2. Thématique</label>
+                    <select 
+                      className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-600/20"
+                      value={selectedThematicId || ''}
+                      onChange={(e) => setSelectedThematicId(e.target.value || null)}
+                    >
+                      <option value="">+ Créer une nouvelle thématique pour ce pays</option>
+                      {thematics
+                        .filter(t => (t.country_code || 'CI') === selectedCountry)
+                        .map(t => (
+                          <option key={t.thematic_id} value={t.thematic_id}>{t.title || t.thematic_title}</option>
+                        ))
+                      }
+                    </select>
+                  </div>
                 </div>
 
                 {!selectedThematicId && (

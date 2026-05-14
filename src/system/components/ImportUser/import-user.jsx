@@ -71,7 +71,7 @@ const ImportUsers = ({ closePopup }) => {
           {/* ✅ Une seule section pour les paramètres par défaut */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
             <div>
-              <label className="block text-sm font-semibold mb-1">Activer les utilisateurs</label>
+              <label className="block text-sm font-semibold mb-1 text-slate-900">Activer les utilisateurs</label>
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -81,16 +81,16 @@ const ImportUsers = ({ closePopup }) => {
                   disabled={uploading}
                   className="w-4 h-4 accent-purple-600"
                 />
-                <label htmlFor="defaultIsActive" className="text-sm">
+                <label htmlFor="defaultIsActive" className="text-sm text-slate-900">
                   {defaultIsActive ? 'Actif' : 'Inactif'}
                 </label>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-1">Statut par défaut</label>
+              <label className="block text-sm font-semibold mb-1 text-slate-900">Statut par défaut</label>
               <select
-                className="block w-full p-2 text-sm border border-gray-300 rounded-lg bg-white"
+                className="block w-full p-2 text-sm border border-gray-300 rounded-lg bg-white text-slate-900"
                 value={defaultStatus}
                 onChange={(e) => setDefaultStatus(e.target.value)}
                 disabled={uploading}

@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import pointService from '../../../../../configurations/Services/pointService.js';
 import authService from '../../../../../configurations/Services/authServices.js';
 import { useLocation } from 'react-router-dom';
 import {
   FaSearch,
   FaUserPlus,
+  FaUsers,
   FaEdit,
   FaTrash,
   FaSkull,
@@ -75,18 +76,19 @@ const UserManagement = () => {
   const { allUsers } = useAuth();
 
   // Autorisation: uniquement si role === 'admin'
-  const isAdmin = useMemo(() => {
+  const currentUserRole = useMemo(() => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return false;
-
+      if (!token) return null;
       const decoded = jwtDecode(token);
-      return decoded?.role === 'admin';
+      return decoded?.role;
     } catch (error) {
       console.error('Erreur de décodage du token :', error);
-      return false;
+      return null;
     }
   }, []);
+
+  const isAdmin = currentUserRole === 'admin';
   const location = useLocation();
 
   // ==================== STATE ====================
@@ -115,7 +117,7 @@ const UserManagement = () => {
   const [deleteReason, setDeleteReason] = useState('admin_remove');
   const [deleteComment, setDeleteComment] = useState('');
 
-  const handleToggleActive = async (user) => {
+  const handleUpdateUserStatus = async (user, updates) => {
     if (!isAdmin) {
       alert('Action réservée aux administrateurs.');
       return;
@@ -123,47 +125,33 @@ const UserManagement = () => {
     const id = user?.user_id || user?.id;
     if (!id) return;
 
-    const isActive = user.is_active === 1;
-    const actionLabel = isActive ? 'Bannir' : 'Activer';
-    const newStatus = isActive ? 'suspended' : 'active';
-    const newActiveState = isActive ? 0 : 1;
-
-    const confirmed = window.confirm(`${actionLabel} ${user.name || 'cet utilisateur'} ?`);
-    if (!confirmed) return;
-
     try {
-      await authService.updateUserAdmin(id, { is_active: newActiveState, status: newStatus });
+      await authService.updateUserAdmin(id, updates);
       setUsers((prev) =>
         prev.map((u) =>
-          (u.user_id || u.id) === id ? { ...u, is_active: newActiveState, status: newStatus } : u
+          (u.user_id || u.id) === id ? { ...u, ...updates } : u
         )
       );
     } catch (err) {
-      console.error('Erreur changement statut:', err);
-      alert(err?.message || 'Erreur lors du changement de statut');
+      console.error('Erreur lors de la mise à jour du statut:', err);
+      alert(err?.message || 'Une erreur est survenue');
     }
   };
 
-  const handleBanSingle = async (user) => {
-    if (!isAdmin) {
-      alert('Action réservée aux administrateurs.');
-      return;
-    }
-    const id = user?.user_id || user?.id;
-    if (!id) return;
-    const confirmed = window.confirm(`Bannir ${user.name || 'cet utilisateur'} ?`);
-    if (!confirmed) return;
-    try {
-      await authService.updateUserAdmin(id, { is_active: 0, status: 'suspended' });
-      setUsers((prev) =>
-        prev.map((u) =>
-          (u.user_id || u.id) === id ? { ...u, is_active: 0, status: 'suspended' } : u
-        )
-      );
-    } catch (err) {
-      console.error('Erreur bannissement:', err);
-      alert(err?.message || 'Erreur lors du bannissement');
-    }
+  const handleToggleActive = (user) => {
+    const isActive = user.is_active === 1;
+    const actionLabel = isActive ? 'Bannir' : 'Activer';
+    if (!window.confirm(`${actionLabel} ${user.name || 'cet utilisateur'} ?`)) return;
+
+    handleUpdateUserStatus(user, {
+      is_active: isActive ? 0 : 1,
+      status: isActive ? 'suspended' : 'active'
+    });
+  };
+
+  const handleBanSingle = (user) => {
+    if (!window.confirm(`Bannir ${user.name || 'cet utilisateur'} ?`)) return;
+    handleUpdateUserStatus(user, { is_active: 0, status: 'suspended' });
   };
 
   const handleBulkBan = async () => {
@@ -217,49 +205,50 @@ const UserManagement = () => {
     }
   }, [showModal]);
 
-  useEffect(() => {
-    const fetchUsersWithPoints = async () => {
-      try {
-        setLoading(true);
-        let fetchedUsers = [];
+  const fetchUsersWithPoints = useCallback(async () => {
+    try {
+      setLoading(true);
+      let fetchedUsers = [];
 
-        if (typeof allUsers === 'function') {
-          const data = await allUsers();
-          fetchedUsers = Array.isArray(data) ? data : [];
-        } else if (Array.isArray(allUsers)) {
-          fetchedUsers = allUsers;
-        } else {
-          fetchedUsers = [];
-        }
-
-        const usersWithPoints = await Promise.all(
-          fetchedUsers.map(async (user) => {
-            try {
-              const pointsData = await pointService.getUserPoints(user.user_id);
-              const totalPoints = Number(pointsData?.total_points) || 0;
-              const totalGamesPlayed = Number(pointsData?.total_games_played) || 0;
-              return { ...user, total_points: totalPoints, quiz_completed: totalGamesPlayed };
-            } catch (error) {
-              return {
-                ...user,
-                total_points: 0,
-                quiz_completed: Number(user?.quiz_completed) || 0,
-              };
-            }
-          })
-        );
-
-        setUsers(usersWithPoints);
-      } catch (error) {
-        console.error('❌ Erreur générale lors du chargement des utilisateurs:', error);
-        setUsers([]);
-      } finally {
-        setLoading(false);
+      if (typeof allUsers === 'function') {
+        const response = await allUsers();
+        // Gérer le cas où la réponse est { data: [...] } ou directement [...]
+        fetchedUsers = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : []);
+      } else if (Array.isArray(allUsers)) {
+        fetchedUsers = allUsers;
       }
-    };
 
+      const usersWithPoints = await Promise.all(
+        fetchedUsers.map(async (user) => {
+          try {
+            const pointsData = await pointService.getUserPoints(user.user_id);
+            return {
+              ...user,
+              total_points: Number(pointsData?.total_points) || 0,
+              quiz_completed: Number(pointsData?.total_games_played) || 0,
+            };
+          } catch (error) {
+            return {
+              ...user,
+              total_points: 0,
+              quiz_completed: Number(user?.quiz_completed) || 0,
+            };
+          }
+        })
+      );
+
+      setUsers(usersWithPoints);
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [allUsers]);
+
+  useEffect(() => {
     fetchUsersWithPoints();
-  }, []);
+  }, [fetchUsersWithPoints]);
 
   // ==================== COMPUTED VALUES ====================
   const safeUsers = Array.isArray(users) ? users : [];
@@ -317,11 +306,11 @@ const UserManagement = () => {
     }
   }, [users]);
 
-  const filteredUserss = users.filter((u) => getYear(getUserDate(u)) === selectedYearValue);
+  const filteredUsersForYear = users.filter((u) => getYear(getUserDate(u)) === selectedYearValue);
 
   const monthlyRegistrations = orderedMonths.map((month) => ({
     month,
-    users: filteredUserss.filter((u) => getMonthName(getUserDate(u)) === month).length,
+    users: filteredUsersForYear.filter((u) => getMonthName(getUserDate(u)) === month).length,
   }));
 
   const orderedDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -512,7 +501,12 @@ const UserManagement = () => {
         const password = Math.random().toString(36).slice(-12);
         const payload = { first_name: formData.firstName, name: formData.name, email: formData.email, role: formData.role, password, number: null };
         const response = await authService.register(payload);
-        setUsers((prev) => [{ ...response.user, status: formData.status }, ...prev]);
+        if (response?.user) {
+          setUsers((prev) => [{ ...response.user, status: formData.status || 'active' }, ...prev]);
+        } else {
+          // Si le backend ne renvoie pas l'utilisateur créé, on rafraîchit la liste
+          fetchUsersWithPoints();
+        }
       } else if (modalType === 'delete') {
         await authService.deleteUserSoft({ user_id: id, reason: deleteReason, comment: deleteComment });
         setUsers((prev) => prev.map((u) => ((u.user_id || u.id) === id ? { ...u, status: 'deleted' } : u)));
@@ -687,8 +681,8 @@ const UserManagement = () => {
 
       {/* Table */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-slate-50/50">
                 <th className="p-6 w-12">
@@ -934,7 +928,7 @@ const UserManagement = () => {
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Prénom</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-600/20"
+                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-600/20"
                         value={formData.firstName}
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       />
@@ -943,7 +937,7 @@ const UserManagement = () => {
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Nom</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-600/20"
+                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-600/20"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
@@ -953,7 +947,7 @@ const UserManagement = () => {
                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Email</label>
                     <input
                       type="email"
-                      className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-600/20"
+                      className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-600/20"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
@@ -962,7 +956,7 @@ const UserManagement = () => {
                     <div className="space-y-2">
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Rôle</label>
                       <select
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-600/20"
+                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-600/20"
                         value={formData.role}
                         onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                       >
@@ -974,12 +968,13 @@ const UserManagement = () => {
                     <div className="space-y-2">
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Statut</label>
                       <select
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-600/20"
+                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-600/20"
                         value={formData.status}
-                        onChange={(e) => setFilterStatus(e.target.value)}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       >
                         <option value="active">Actif</option>
                         <option value="inactive">Inactif</option>
+                        <option value="suspended">Suspendu</option>
                         <option value="deleted">Supprimé</option>
                       </select>
                     </div>

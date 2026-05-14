@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../Services/authServices.js';
 import { loginWithGoogleToken } from '../Services/googleAuthService.js';
@@ -12,7 +12,7 @@ const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
@@ -24,19 +24,19 @@ const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Permet de rafraîchir l'utilisateur à la demande (ex: après upload avatar)
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     setLoading(true);
     await checkAuth();
-  };
+  }, [checkAuth]);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
-  const login = async (credentials) => {
+  const login = useCallback(async (credentials) => {
     try {
       const response = await authService.login(credentials);
       await checkAuth();
@@ -44,9 +44,9 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [checkAuth]);
 
-  const loginWithGoogle = async (googleToken) => {
+  const loginWithGoogle = useCallback(async (googleToken) => {
     try {
       const response = await loginWithGoogleToken(googleToken);
       await checkAuth();
@@ -54,9 +54,9 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [checkAuth]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authService.logout();
     } catch (err) {
@@ -65,9 +65,9 @@ const AuthProvider = ({ children }) => {
       setUser(null);
       navigate('/login', { replace: true });
     }
-  };
+  }, [navigate]);
 
-  const register = async (credentials) => {
+  const register = useCallback(async (credentials) => {
     try {
       const response = await authService.register(credentials);
       await checkAuth();
@@ -75,9 +75,9 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [checkAuth]);
 
-  const putUserById = async (id, userData) => {
+  const putUserById = useCallback(async (id, userData) => {
     try {
       const response = await authService.putUserById(id, userData);
       await checkAuth();
@@ -85,9 +85,9 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [checkAuth]);
 
-  const deleteUserById = async (id) => {
+  const deleteUserById = useCallback(async (id) => {
     try {
       const response = await authService.deleteUserById(id);
       await checkAuth();
@@ -95,9 +95,9 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [checkAuth]);
 
-  const checkUser = async () => {
+  const checkUser = useCallback(async () => {
     try {
       const response = await authService.getCurrentUser();
       await checkAuth();
@@ -105,33 +105,34 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [checkAuth]);
 
-  const allUsers = async () => {
+  const allUsers = useCallback(async () => {
     try {
       const response = await authService.getAllUsers();
-      await checkAuth();
+      // On ne fait pas checkAuth() ici pour éviter des boucles infinies ou des re-renders inutiles
       return response;
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    loading,
+    login,
+    loginWithGoogle,
+    logout,
+    register,
+    putUserById,
+    deleteUserById,
+    checkUser,
+    refreshUser,
+    allUsers,
+  }), [user, loading, login, loginWithGoogle, logout, register, putUserById, deleteUserById, checkUser, refreshUser, allUsers]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        loginWithGoogle,
-        logout,
-        register,
-        putUserById,
-        deleteUserById,
-        checkUser,
-        refreshUser,
-        allUsers,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );
