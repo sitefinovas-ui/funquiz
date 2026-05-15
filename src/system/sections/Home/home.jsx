@@ -34,7 +34,7 @@ const Home = () => {
   const [comments,  setComments]  = useState([]);
   const [email,     setEmail]     = useState('');
   const [pub,       setPub]       = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('CI');
+  const [selectedCountry, setSelectedCountry] = useState(() => localStorage.getItem('fq.selected.country') || 'CI');
   const [africanCountries, setAfricanCountries] = useState([]);
 
   const toggleFAQ = (i) => setActiveIndex(activeIndex === i ? null : i);
@@ -115,10 +115,14 @@ const Home = () => {
 
   // 1. Filter thematics by active countries first (Security filter)
   const activeCountryCodes = africanCountries.map(c => c.code);
-  const globalActiveThematics = thematics.filter(t => activeCountryCodes.includes(t.country_code || 'CI'));
+  const getThematicCodes = (t) =>
+    Array.isArray(t.country_codes) && t.country_codes.filter(Boolean).length
+      ? t.country_codes.filter(Boolean)
+      : [t.country_code || 'CI'];
+  const globalActiveThematics = thematics.filter(t => getThematicCodes(t).some(c => activeCountryCodes.includes(c)));
 
   // 2. Filter for the selected country among active ones
-  const filteredThematics = globalActiveThematics.filter(t => (t.country_code || 'CI') === selectedCountry);
+  const filteredThematics = globalActiveThematics.filter(t => getThematicCodes(t).includes(selectedCountry));
 
   /* ── Ranking tab data ── */
   const RANK_TABS = ['Top quiz', 'Populaires', 'Joueurs'];
@@ -193,7 +197,7 @@ const Home = () => {
           {africanCountries.map((country, i) => (
             <button
               key={country.code}
-              onClick={() => setSelectedCountry(country.code)}
+              onClick={() => { setSelectedCountry(country.code); localStorage.setItem('fq.selected.country', country.code); }}
               className={`group flex flex-col items-center gap-2 shrink-0 transition-all ${selectedCountry === country.code ? 'scale-105' : 'opacity-70'}`}
             >
               <div 
@@ -677,9 +681,20 @@ const PubCard = ({ item, index }) => {
             <div className="pub-progress-fill" style={{ width: `${progress}%` }} />
           </div>
         </div>
-        <button className="pub-cinema-cta">
-          Découvrir maintenant <span className="pub-cta-icon">↗</span>
-        </button>
+        {item.lien_cta ? (
+          <a
+            href={item.lien_cta}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pub-cinema-cta"
+          >
+            Découvrir maintenant <span className="pub-cta-icon">↗</span>
+          </a>
+        ) : (
+          <button className="pub-cinema-cta" disabled style={{ opacity: 0.5, cursor: 'default' }}>
+            Découvrir maintenant <span className="pub-cta-icon">↗</span>
+          </button>
+        )}
       </div>
     </div>
   );

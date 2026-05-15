@@ -18,6 +18,7 @@ import {
   FaInfoCircle,
   FaUserShield,
   FaShieldAlt,
+  FaBullhorn,
 } from 'react-icons/fa';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
@@ -34,6 +35,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
     { id: 'messages', icon: FaEnvelope, label: 'Messages utilisateurs', link: '/dashboard/message' },
     { id: 'newsletter', icon: FaEnvelopeOpen, label: 'Newsletter', link: '/dashboard/newsletter' },
     { id: 'quiz', icon: FaQuestionCircle, label: 'Quiz', link: '/dashboard/quiz' },
+    { id: 'publicites', icon: FaBullhorn, label: 'Offres Spéciales', link: '/dashboard/publicites' },
     { id: 'countries', icon: FaGlobeAfrica, label: 'Gestion des pays', link: '/dashboard/countries' },
     { id: 'about', icon: FaInfoCircle, label: 'Page À propos', link: '/dashboard/about' },
     { id: 'legal', icon: FaStar, label: 'Légal', link: '/dashboard/legal' },

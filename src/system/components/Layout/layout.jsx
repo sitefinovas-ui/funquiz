@@ -11,14 +11,28 @@ import DeleteUser from '../DeleteUser/delete-user.jsx';
 import Opinion from '../Opinion/opinion.jsx';
 import Import from '../ImportUser/import-user.jsx';
 import Result from '../Result/result.jsx';
-import { useEffect } from 'react';
-// Ajout import du popup
+import { useEffect, useState } from 'react';
 import AddNumber from '../AddNumber/add-number.jsx';
+import WelcomePopup, { STORAGE_KEY } from '../WelcomePopup/WelcomePopup.jsx';
+
+const NO_WELCOME_ROUTES = ['/login', '/sign-up', '/reset', '/dashboard'];
 
 export default function Layout() {
   const { activePopup, setActivePopup, closePopup, popupPayload } = usePopup();
   const { user } = useAuth();
   const location = useLocation();
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Afficher le popup de bienvenue pour les nouveaux visiteurs non connectés
+  useEffect(() => {
+    const onRestrictedRoute = NO_WELCOME_ROUTES.some(p => location.pathname.startsWith(p));
+    const alreadySeen = localStorage.getItem(STORAGE_KEY);
+    const token = localStorage.getItem('token');
+    if (!onRestrictedRoute && !alreadySeen && !token) {
+      const timer = setTimeout(() => setShowWelcome(true), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Liste des routes où Header/Footer ne doivent pas s'afficher
   const noHeaderFooterRoutes = ['/login', '/sign-up', '/reset', '/dashboard'];
@@ -165,6 +179,9 @@ export default function Layout() {
 
       {/* Popups dynamiques */}
       {activePopup && popupComponents[activePopup]}
+
+      {/* Popup de bienvenue (nouveaux visiteurs) */}
+      {showWelcome && <WelcomePopup onClose={() => setShowWelcome(false)} />}
 
       {/* Boutons rapides thème (public) */}
       {/* Visible sur toutes les pages publiques, pas chargé dans le backoffice */}

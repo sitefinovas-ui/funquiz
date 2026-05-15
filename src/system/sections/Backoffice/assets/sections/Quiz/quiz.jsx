@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FaChartBar, FaList, FaPlus, FaCloudUploadAlt, FaLayerGroup, FaQuestionCircle } from 'react-icons/fa';
+import { FaChartBar, FaList, FaPlus, FaCloudUploadAlt, FaLayerGroup, FaQuestionCircle, FaSitemap } from 'react-icons/fa';
 import QuizStats from './QuizStats';
 import QuizList from './QuizList';
 import QuizCreate from './QuizCreate';
@@ -7,6 +7,7 @@ import QuestionImport from './QuestionImport';
 import QuestionManagement from './QuestionManagement';
 import ThematicImport from './ThematicImport';
 import ThematicManagement from './ThematicManagement';
+import SubThematicManagement from './SubThematicManagement';
 
 const Quiz = () => {
   const [selectedMenu, setSelectedMenu] = useState('stats');
@@ -32,6 +33,11 @@ const Quiz = () => {
         key: 'thematics',
         icon: <FaLayerGroup />,
         label: 'Gestion Thématiques',
+      },
+      {
+        key: 'subthematics',
+        icon: <FaSitemap />,
+        label: 'Sous-thématiques',
       },
       {
         key: 'create',
@@ -62,6 +68,8 @@ const Quiz = () => {
         return <QuestionManagement />;
       case 'thematics':
         return <ThematicManagement />;
+      case 'subthematics':
+        return <SubThematicManagement />;
       case 'create':
         return <QuizCreate />;
       case 'import':

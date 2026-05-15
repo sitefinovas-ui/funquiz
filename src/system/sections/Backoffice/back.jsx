@@ -16,6 +16,7 @@ import Settings from './assets/sections/Settings/Settings.jsx';
 import ModeratorActions from './assets/sections/Moderation/ModeratorActions.jsx';
 import RolePermissions from './assets/sections/Moderation/RolePermissions.jsx';
 import ThemeSwitcherAdminPage from './../../components/ThemeSwitcher/theme-switcher.jsx';
+import PubliciteManagement from './assets/sections/Publicites/PubliciteManagement.jsx';
 
 function BackofficeMain() {
   return (
@@ -37,6 +38,7 @@ function BackofficeMain() {
           <Route path="global-settings" element={<Settings />} />
           <Route path="moderation" element={<ModeratorActions />} />
           <Route path="permissions" element={<RolePermissions />} />
+          <Route path="publicites" element={<PubliciteManagement />} />
         </Route>
       </Routes>
     </PopupProvider>

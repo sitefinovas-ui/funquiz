@@ -52,7 +52,10 @@ function Thematic({ closePopup, highlightThematicId }) {
   const activeCountryCodes = countries.filter(c => c.is_active).map(c => c.code);
 
   const filtered = thematics.filter((t) => {
-    const isFromActiveCountry = activeCountryCodes.includes(t.country_code || 'CI');
+    const codes = Array.isArray(t.country_codes) && t.country_codes.filter(Boolean).length
+      ? t.country_codes.filter(Boolean)
+      : [t.country_code || 'CI'];
+    const isFromActiveCountry = codes.some(code => activeCountryCodes.includes(code));
     if (!isFromActiveCountry) return false;
 
     const matchesSearch = t.thematic_title.toLowerCase().includes(search.toLowerCase()) ||

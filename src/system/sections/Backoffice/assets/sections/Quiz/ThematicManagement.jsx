@@ -30,7 +30,7 @@ const ThematicManagement = () => {
     title: '',
     description: '',
     color_code: '#6366f1',
-    country_code: 'CI',
+    country_codes: ['CI'],
     display_order: 0,
     is_active: 1
   });
@@ -64,7 +64,7 @@ const ThematicManagement = () => {
       title: '',
       description: '',
       color_code: '#6366f1',
-      country_code: 'CI',
+      country_codes: ['CI'],
       display_order: 0,
       is_active: 1
     });
@@ -75,17 +75,32 @@ const ThematicManagement = () => {
 
   const handleOpenEdit = (thematic) => {
     setEditingThematic(thematic);
+    const codes = Array.isArray(thematic.country_codes) && thematic.country_codes.length
+      ? thematic.country_codes
+      : (thematic.country_code ? [thematic.country_code] : ['CI']);
     setFormData({
       title: thematic.title || '',
       description: thematic.description || '',
       color_code: thematic.color_code || '#6366f1',
-      country_code: thematic.country_code || 'CI',
+      country_codes: codes,
       display_order: thematic.display_order || 0,
       is_active: thematic.is_active ?? 1
     });
     setSelectedFile(null);
     setPreviewUrl(thematic.icon_url || null);
     setShowModal(true);
+  };
+
+  const toggleCountry = (code) => {
+    setFormData(prev => {
+      const current = prev.country_codes || [];
+      return {
+        ...prev,
+        country_codes: current.includes(code)
+          ? current.filter(c => c !== code)
+          : [...current, code]
+      };
+    });
   };
 
   const handleFileChange = (e) => {
@@ -104,7 +119,11 @@ const ThematicManagement = () => {
 
     const data = new FormData();
     Object.keys(formData).forEach(key => {
-      data.append(key, formData[key]);
+      if (key === 'country_codes') {
+        data.append('country_codes', JSON.stringify(formData.country_codes));
+      } else {
+        data.append(key, formData[key]);
+      }
     });
     if (selectedFile) {
       data.append('icon', selectedFile);
@@ -226,9 +245,11 @@ const ThematicManagement = () => {
                   {thematic.description || "Aucune description."}
                 </p>
                 <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 dark:border-gray-700 pt-3">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <FaGlobe className="text-indigo-400" />
-                    <span>{thematic.country_code || 'CI'}</span>
+                    {(thematic.country_codes?.length ? thematic.country_codes : [thematic.country_code || 'CI']).map(code => (
+                      <span key={code} className="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded text-[10px] font-bold">{code}</span>
+                    ))}
                   </div>
                   <div>Ordre: {thematic.display_order}</div>
                 </div>
@@ -263,17 +284,30 @@ const ThematicManagement = () => {
                     className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Pays *</label>
-                  <select 
-                    value={formData.country_code}
-                    onChange={(e) => setFormData({...formData, country_code: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {countries.map(c => (
-                      <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
-                    ))}
-                  </select>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Pays (plusieurs possibles) *</label>
+                  <div className="flex flex-wrap gap-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 max-h-40 overflow-y-auto">
+                    {countries.map(c => {
+                      const selected = (formData.country_codes || []).includes(c.code);
+                      return (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => toggleCountry(c.code)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                            selected
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-indigo-400'
+                          }`}
+                        >
+                          {c.name} <span className="opacity-70">({c.code})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {(formData.country_codes || []).length === 0 && (
+                    <p className="text-xs text-red-500">Sélectionnez au moins un pays.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Couleur (Hex)</label>
