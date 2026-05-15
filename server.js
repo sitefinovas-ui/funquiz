@@ -33,6 +33,7 @@ import db from "./config/db.js";
 import settingsRoute from "./routes/settingsRoute.js";
 import moderatorActionRoute from "./routes/moderatorActionRoute.js";
 import permissionRoute from "./routes/permissionRoute.js";
+import gameConfigRoute from "./routes/gameConfigRoute.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5100;
@@ -208,6 +209,7 @@ const apiRouter = express.Router();
 apiRouter.use("/settings", settingsRoute);
 apiRouter.use("/moderator-actions", moderatorActionRoute);
 apiRouter.use("/permissions", permissionRoute);
+apiRouter.use("/", gameConfigRoute);
 
 // Routes légales
 apiRouter.use("/legal/privacy", (await import("./routes/legalPrivacyRoute.js")).default);
