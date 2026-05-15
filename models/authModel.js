@@ -4,9 +4,11 @@ import bcrypt from "bcrypt";
 // -----------------------------
 // 1️⃣ Recherche
 // -----------------------------
+const SAFE_USER_FIELDS = `user_id, name, first_name, email, number, avatar_url, role, is_active, date_cx, google_id, preferences`;
+
 export const getUserById = async (user_id) => {
   const [rows] = await db.query(
-    "SELECT * FROM funquiz_users WHERE user_id = ?",
+    `SELECT ${SAFE_USER_FIELDS} FROM funquiz_users WHERE user_id = ?`,
     [user_id],
   );
   return rows[0] ? [rows[0]] : [];
@@ -18,7 +20,7 @@ export const getUserById = async (user_id) => {
 export const getAllUsers = async () => {
   try {
     const [rows] = await db.query(`
-      SELECT u.*, 
+      SELECT u.user_id, u.name, u.first_name, u.email, u.number, u.avatar_url, u.role, u.is_active, u.date_cx, u.google_id, u.preferences,
       (SELECT COUNT(*) FROM quiz_game_history h WHERE h.user_id = u.user_id) as quiz_completed
       FROM funquiz_users u
     `);
@@ -84,7 +86,7 @@ export const registerUser = async (data) => {
         password_hash,
         google_id || null,
         avatar_url || null,
-        role || "user",
+        "user",
         1,
         now,
       ],

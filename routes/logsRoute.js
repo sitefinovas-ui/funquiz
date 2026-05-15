@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { authenticateToken, authorizeRole } from '../middleware/authentification.js';
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const LOG_FILE = path.join(__dirname, '../server.log');
 
-router.get('/logs', (req, res) => {
+router.get('/logs', authenticateToken, authorizeRole(['admin']), (req, res) => {
   const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 500, 5000));
   try {
     if (!fs.existsSync(LOG_FILE)) {

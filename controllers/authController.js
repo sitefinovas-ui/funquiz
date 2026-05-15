@@ -38,7 +38,8 @@ import {
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import path from "path";
-import fs from "fs"; // si tu supprimes des fichiers
+import fs from "fs";
+import { randomInt } from "crypto";
 
 import { waClient, ensureWhatsAppReady, ensureWhatsAppConnected } from "../utils/whatsapp.js";
 
@@ -52,11 +53,7 @@ const OTP_TTL_MINUTES = parseInt(process.env.OTP_TTL_MINUTES);
 
 // --- Helpers
 function generateOTP(length = 6) {
-  const digits = "0703562459";
-  return Array.from(
-    { length },
-    () => digits[Math.floor(Math.random() * digits.length)],
-  ).join("");
+  return Array.from({ length }, () => randomInt(0, 10)).join("");
 }
 
 function formatWhatsAppId(number) {
@@ -400,6 +397,9 @@ export const updateUserProfile = async (req, res) => {
   try {
     const { user_id, ...fields } = req.body;
     if (!user_id) throw new Error("user_id requis");
+    if (String(user_id) !== String(req.user.user_id)) {
+      return res.status(403).json({ error: "Accès refusé" });
+    }
 
     const allowedFields = [
       "name",

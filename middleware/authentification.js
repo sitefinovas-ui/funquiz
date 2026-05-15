@@ -13,24 +13,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "votre_clé_secrète";
  */
 export const authenticateToken = async (req, res, next) => {
   try {
-    console.log("🔐 [Auth] Headers reçus:", req.headers);
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-      console.log("❌ [Auth] Token manquant");
       return res.status(401).json({ error: "Token manquant" });
     }
 
-    console.log("🔑 [Auth] Vérification du token...");
-
-    // Vérifie le token JWT
     const decoded = await new Promise((resolve, reject) => {
       jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) {
-          console.error("❌ [Auth] Token invalide:", err.message);
-          return reject(err);
-        }
+        if (err) return reject(err);
         resolve(decoded);
       });
     });
@@ -39,16 +31,10 @@ export const authenticateToken = async (req, res, next) => {
       throw new Error("Token invalide : user_id manquant");
     }
 
-    console.log("✅ [Auth] Token décodé:", decoded);
-
-    // Recherche de l'utilisateur dans la BDD
     const [user] = await getUserById(decoded.user_id);
     if (!user) {
-      console.error("❌ [Auth] Utilisateur non trouvé:", decoded.user_id);
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-
-    console.log("👤 [Auth] Utilisateur trouvé:", user.user_id);
 
     // Récupération des points
     let userPoints = 0;

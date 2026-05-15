@@ -139,8 +139,8 @@ const upload = multer({ storage, fileFilter });
 // -----------------
 // Route upload
 // -----------------
-router.post("/auth/user/upload", upload.single("file"), uploadUserFile);
-router.delete("/auth/user/delete", deleteUserFile);
+router.post("/auth/user/upload", authenticateToken, upload.single("file"), uploadUserFile);
+router.delete("/auth/user/delete", authenticateToken, deleteUserFile);
 
 // Import utilisateurs (CSV/XLSX)
 const importStorage = multer.memoryStorage();

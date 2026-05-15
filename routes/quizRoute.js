@@ -41,7 +41,7 @@ router.get("/quiz/subthematic/:sub_thematic_id/questions", getQuestions);
 router.get("/quiz/question/:question_id/answers", getAnswers);
 
 // Quiz gameplay
-router.post("/quiz/answer/:user_id", validateAnswer);
+router.post("/quiz/answer/:user_id", authenticateToken, validateAnswer);
 
 // Points & Ranking
 router.get("/point/:user_id", getUserPoints);
@@ -50,15 +50,15 @@ router.get("/ranking", getAllUsersPoints);
 // Thematic CRUD
 router.get("/param/thematics", getAllThematics);
 router.get("/param/thematics/:id", getThematicById);
-router.post("/param/thematics", upload.single("icon"), createThematic);
-router.put("/param/thematics/:id", upload.single("icon"), updateThematic);
+router.post("/param/thematics", authenticateToken, hasPermission("quiz_edit"), upload.single("icon"), createThematic);
+router.put("/param/thematics/:id", authenticateToken, hasPermission("quiz_edit"), upload.single("icon"), updateThematic);
 router.delete(
   "/param/thematics/purge",
   authenticateToken,
   authorizeRole(["admin"]),
   purgeThematics
 );
-router.delete("/param/thematics/:id", deleteThematic);
+router.delete("/param/thematics/:id", authenticateToken, hasPermission("quiz_delete"), deleteThematic);
 router.post(
   "/param/thematics/import",
   authenticateToken,

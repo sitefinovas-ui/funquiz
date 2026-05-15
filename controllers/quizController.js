@@ -27,6 +27,9 @@ export const allQuizData = async (req, res) => {
 export const validateAnswer = async (req, res) => {
   try {
     const { user_id } = req.params;
+    if (String(user_id) !== String(req.user.user_id)) {
+      return res.status(403).json({ error: "Accès refusé" });
+    }
     const { question_id, selected_option } = req.body;
 
     const correctData = await getCorrectOptionByQuestion(question_id);
@@ -355,10 +358,19 @@ export const deleteSubThematic = async (req, res) => {
 
 export const createThematic = async (req, res) => {
   try {
-    const { title, description, color_code, country_code, display_order } = req.body;
+    const { title, description, color_code, country_code, country_codes: countryCodesRaw, display_order } = req.body;
     const icon_url = req.file
       ? `/uploads/thematics/${req.file.filename}`
       : null;
+
+    let country_codes;
+    if (countryCodesRaw) {
+      try {
+        country_codes = typeof countryCodesRaw === 'string' ? JSON.parse(countryCodesRaw) : countryCodesRaw;
+      } catch {
+        country_codes = [countryCodesRaw];
+      }
+    }
 
     const insertId = await quizModel.createThematic({
       title,
@@ -366,6 +378,7 @@ export const createThematic = async (req, res) => {
       icon_url,
       color_code,
       country_code,
+      country_codes,
       display_order,
     });
 
@@ -390,17 +403,27 @@ export const createThematic = async (req, res) => {
 
 export const updateThematic = async (req, res) => {
   try {
-    const { title, description, color_code, country_code, display_order, is_active } =
+    const { title, description, color_code, country_code, country_codes: countryCodesRaw, display_order, is_active } =
       req.body;
     const icon_url = req.file
       ? `/uploads/thematics/${req.file.filename}`
       : undefined;
+
+    let country_codes;
+    if (countryCodesRaw) {
+      try {
+        country_codes = typeof countryCodesRaw === 'string' ? JSON.parse(countryCodesRaw) : countryCodesRaw;
+      } catch {
+        country_codes = [countryCodesRaw];
+      }
+    }
 
     await quizModel.updateThematic(req.params.id, {
       title,
       description,
       color_code,
       country_code,
+      country_codes,
       display_order,
       is_active,
       icon_url,
@@ -460,7 +483,8 @@ export const purgeThematics = async (req, res) => {
 
 export const getAllThematics = async (req, res) => {
   try {
-    const thematics = await quizModel.getAllThematics();
+    const { country_code } = req.query;
+    const thematics = await quizModel.getAllThematics(country_code || null);
     res.json(thematics);
   } catch (error) {
     console.error(error);

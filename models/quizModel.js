@@ -1,5 +1,28 @@
 import db from "../config/db.js";
 
+// Auto-create quiz_thematic_countries table and migrate existing data
+(async () => {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS quiz_thematic_countries (
+        thematic_id INT NOT NULL,
+        country_code VARCHAR(10) NOT NULL,
+        PRIMARY KEY (thematic_id, country_code),
+        CONSTRAINT fk_tc_thematic FOREIGN KEY (thematic_id)
+          REFERENCES quiz_thematics (thematic_id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await db.query(`
+      INSERT IGNORE INTO quiz_thematic_countries (thematic_id, country_code)
+      SELECT thematic_id, country_code
+      FROM quiz_thematics
+      WHERE country_code IS NOT NULL AND country_code != ''
+    `);
+  } catch (err) {
+    console.error('quiz_thematic_countries init error:', err.message);
+  }
+})();
+
 // Difficulty level sanitizer: enforce enum 'facile' | 'moyen' | 'difficile'
 const sanitizeDifficultyLevel = (value) => {
   const allowed = new Set(['facile', 'moyen', 'difficile']);
@@ -14,13 +37,14 @@ const sanitizeDifficultyLevel = (value) => {
 
 export const getAllQuizData = async () => {
   const sql = `
-   SELECT 
+   SELECT
     t.thematic_id,
     t.title AS thematic_title,
     t.description AS thematic_description,
     t.icon_url,
     t.color_code,
     t.country_code,
+    (SELECT JSON_ARRAYAGG(tc.country_code) FROM quiz_thematic_countries tc WHERE tc.thematic_id = t.thematic_id) AS country_codes,
     t.is_active AS view,
     t.updated_at AS date_of_creation,
 
@@ -710,11 +734,28 @@ const quizModel = {
   },
 
   // Thématiques - CRUD
-  getAllThematics: async () => {
-    const [rows] = await db.query(
-      "SELECT * FROM quiz_thematics ORDER BY display_order",
-    );
-    return rows;
+  getAllThematics: async (country_code = null) => {
+    let sql = `
+      SELECT t.*,
+        COALESCE(
+          (SELECT JSON_ARRAYAGG(tc.country_code) FROM quiz_thematic_countries tc WHERE tc.thematic_id = t.thematic_id),
+          JSON_ARRAY()
+        ) AS country_codes
+      FROM quiz_thematics t
+    `;
+    const params = [];
+    if (country_code) {
+      sql += ` WHERE EXISTS (SELECT 1 FROM quiz_thematic_countries WHERE thematic_id = t.thematic_id AND country_code = ?)`;
+      params.push(country_code);
+    }
+    sql += ` GROUP BY t.thematic_id ORDER BY t.display_order`;
+    const [rows] = await db.query(sql, params);
+    return rows.map(r => ({
+      ...r,
+      country_codes: Array.isArray(r.country_codes)
+        ? r.country_codes.filter(Boolean)
+        : (typeof r.country_codes === 'string' ? JSON.parse(r.country_codes).filter(Boolean) : [])
+    }));
   },
 
   getThematicById: async (id) => {
@@ -732,6 +773,7 @@ const quizModel = {
     icon_url,
     color_code,
     country_code,
+    country_codes,
     display_order,
   }) => {
     let nextId = thematic_id ? Number(thematic_id) : null;
@@ -741,20 +783,29 @@ const quizModel = {
       );
       nextId = Number(rows?.[0]?.next_id) || 1;
     }
+    const codes = Array.isArray(country_codes) && country_codes.length ? country_codes : (country_code ? [country_code] : []);
+    const primaryCode = codes[0] || country_code || null;
     const [result] = await db.query(
-      `
-      INSERT INTO quiz_thematics (thematic_id, title, description, icon_url, color_code, country_code, display_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `,
-      [nextId, title, description, icon_url, color_code, country_code, display_order],
+      `INSERT INTO quiz_thematics (thematic_id, title, description, icon_url, color_code, country_code, display_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [nextId, title, description, icon_url, color_code, primaryCode, display_order],
     );
-    return result.insertId || nextId;
+    const insertId = result.insertId || nextId;
+    for (const code of codes) {
+      await db.query(
+        `INSERT IGNORE INTO quiz_thematic_countries (thematic_id, country_code) VALUES (?, ?)`,
+        [insertId, code]
+      );
+    }
+    return insertId;
   },
 
   updateThematic: async (
     id,
-    { title, description, icon_url, color_code, country_code, display_order, is_active },
+    { title, description, icon_url, color_code, country_code, country_codes, display_order, is_active },
   ) => {
+    const codes = Array.isArray(country_codes) && country_codes.length ? country_codes : (country_code ? [country_code] : null);
+    const primaryCode = codes?.[0] || country_code || null;
     const sql = `
       UPDATE quiz_thematics
       SET title = ?, description = ?, color_code = ?, country_code = ?, display_order = ?, is_active = ?
@@ -762,10 +813,21 @@ const quizModel = {
       WHERE thematic_id = ?
     `;
     const params = icon_url
-      ? [title, description, color_code, country_code, display_order, is_active, icon_url, id]
-      : [title, description, color_code, country_code, display_order, is_active, id];
+      ? [title, description, color_code, primaryCode, display_order, is_active, icon_url, id]
+      : [title, description, color_code, primaryCode, display_order, is_active, id];
 
     const [result] = await db.query(sql, params);
+
+    if (codes !== null) {
+      await db.query(`DELETE FROM quiz_thematic_countries WHERE thematic_id = ?`, [id]);
+      for (const code of codes) {
+        await db.query(
+          `INSERT IGNORE INTO quiz_thematic_countries (thematic_id, country_code) VALUES (?, ?)`,
+          [id, code]
+        );
+      }
+    }
+
     return result;
   },
 

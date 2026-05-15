@@ -14,11 +14,11 @@ import {
 
 const router = express.Router();
 
-router.get("/messages", allMessageData);
-router.get("/messages/:message_id", MessageById);
 router.post("/messages", addMessage);
-router.put("/messages/:message_id", editMessage);
-router.delete("/messages/:message_id", removeMessage);
+router.get("/messages", authenticateToken, authorizeRole(["admin", "moderator"]), allMessageData);
+router.get("/messages/:message_id", authenticateToken, authorizeRole(["admin", "moderator"]), MessageById);
+router.put("/messages/:message_id", authenticateToken, authorizeRole(["admin", "moderator"]), editMessage);
+router.delete("/messages/:message_id", authenticateToken, authorizeRole(["admin", "moderator"]), removeMessage);
 router.post(
   "/messages/send-email",
   authenticateToken,
