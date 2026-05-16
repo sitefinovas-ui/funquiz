@@ -196,7 +196,8 @@ export const connectDB = async () => {
         ('SMTP_USER', ''),
         ('SMTP_PASS', ''),
         ('SMTP_SECURE', 'false'),
-        ('MAIL_FROM', 'FunQuiz <no-reply@funquiz.com>')
+        ('MAIL_FROM', 'FunQuiz <no-reply@funquiz.com>'),
+        ('MAINTENANCE_MODE', 'false')
       `);
     } catch (e) {
       console.error("Erreur migration settings:", e);

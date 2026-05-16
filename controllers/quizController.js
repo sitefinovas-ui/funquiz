@@ -361,7 +361,7 @@ export const createThematic = async (req, res) => {
     const { title, description, color_code, country_code, country_codes: countryCodesRaw, display_order } = req.body;
     const icon_url = req.file
       ? `/uploads/thematics/${req.file.filename}`
-      : null;
+      : (req.body.icon_url || null);
 
     let country_codes;
     if (countryCodesRaw) {
@@ -407,7 +407,7 @@ export const updateThematic = async (req, res) => {
       req.body;
     const icon_url = req.file
       ? `/uploads/thematics/${req.file.filename}`
-      : undefined;
+      : (req.body.icon_url || undefined);
 
     let country_codes;
     if (countryCodesRaw) {

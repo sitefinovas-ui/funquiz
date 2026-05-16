@@ -13,11 +13,11 @@ import db from "../config/db.js";
     `);
     await db.query(`
       INSERT IGNORE INTO game_config (config_key, config_value, label, description) VALUES
-      ('max_hearts',       '3',  'Nombre de vies',              'Vies dont dispose chaque joueur au démarrage d\'une partie.'),
-      ('timer_seconds',    '30', 'Durée du chronomètre (s)',     'Temps alloué par question en secondes.'),
-      ('max_streak_bonus', '5',  'Bonus de série max',           'Nombre max de points bonus accordés par série de bonnes réponses.'),
-      ('max_replays',      '2',  'Continues après game over',   'Nombre de fois qu\'un joueur peut continuer après avoir épuisé toutes ses vies.'),
-      ('cooldown_minutes', '60', 'Délai avant de rejouer (min)', 'Temps d\'attente en minutes avant qu\'un joueur puisse relancer une partie après game over (0 = pas de délai).')
+      ('max_hearts',       '3',  'Nombre de vies',              'Vies dont dispose chaque joueur au demarrage d''une partie.'),
+      ('timer_seconds',    '30', 'Duree du chronometre (s)',     'Temps alloue par question en secondes.'),
+      ('max_streak_bonus', '5',  'Bonus de serie max',           'Nombre max de points bonus accordes par serie de bonnes reponses.'),
+      ('max_replays',      '2',  'Continues apres game over',    'Nombre de fois qu''un joueur peut continuer apres avoir epuise toutes ses vies.'),
+      ('cooldown_minutes', '60', 'Delai avant de rejouer (min)', 'Temps d''attente en minutes avant qu''un joueur puisse relancer une partie apres game over (0 = pas de delai).')
     `);
   } catch (e) {
     console.error("❌ gameConfig table init:", e.message);
