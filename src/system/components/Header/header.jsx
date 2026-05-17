@@ -4,12 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import useAuth from '../../configurations/Context/useAuth';
 import { usePopup } from '../../configurations/Context/PopupContext';
 import pointService from '../../configurations/Services/pointService';
-import { SiNintendogamecube } from 'react-icons/si';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaHome, FaGamepad, FaInfoCircle, FaEnvelope, FaTrophy, FaTimes, FaCog, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
 import { GrInfo } from 'react-icons/gr';
-import { IoMdMail } from 'react-icons/io';
-import { MdAccountCircle, MdSettings, MdPerson, MdLogout, MdStar, MdCardGiftcard, MdSportsEsports, MdLeaderboard, MdHistory, MdEmojiEvents, MdHeadsetMic } from 'react-icons/md';
-import { SiHomeassistant } from 'react-icons/si';
+import { MdSettings, MdPerson, MdLogout, MdStar, MdCardGiftcard, MdSportsEsports, MdLeaderboard, MdHistory, MdEmojiEvents, MdHeadsetMic } from 'react-icons/md';
 import Logo from '../../../assets/Log.png';
 import piece from '../../../assets/icons/piece.png';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +27,8 @@ const Header = ({ openPopup }) => {
   const { user, logout } = useAuth();
   const isAuthenticated = !!user;
 
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileOpen,  setProfileOpen]  = useState(false);
+  const [mobMenuOpen,  setMobMenuOpen]  = useState(false);
   const profileRef = useRef(null);
 
   useEffect(() => {
@@ -169,6 +167,9 @@ const Header = ({ openPopup }) => {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Close mobile menu on navigation
+  useEffect(() => { setMobMenuOpen(false); }, [location.pathname]);
 
   /* Search (used for mobile /search route) */
   const [search, setSearch]   = useState('');
@@ -506,61 +507,105 @@ const Header = ({ openPopup }) => {
             </div>
           </header>
 
-          {/* ══ Mobile Bottom Nav ══ */}
-          <div className="mobile-bottom-nav-container lg:hidden">
-            <div className="mobile-bottom-nav">
-              <ul className="nav-list">
-                <li
-                  className={`nav-item ${activePopup === 'thematic' ? 'active' : ''}`}
-                  onClick={() => openPopup('thematic')}
-                >
-                  <button className="nav-link-custom">
-                    <span className="icon"><SiNintendogamecube /></span>
-                    <span className="text">{t('header.quiz')}</span>
-                  </button>
-                </li>
-                <li
-                  className={`nav-item ${!activePopup && location.pathname === '/search' ? 'active' : ''}`}
-                  onClick={() => navigate('/search')}
-                >
-                  <button className="nav-link-custom">
-                    <span className="icon"><FaSearch /></span>
-                    <span className="text">Recherche</span>
-                  </button>
-                </li>
-                <li
-                  className={`nav-item ${!activePopup && location.pathname === '/' ? 'active' : ''}`}
-                  onClick={() => navigate('/')}
-                >
-                  <button className="nav-link-custom">
-                    <span className="icon logo-icon">
-                      <img src={Logo} alt="Logo" />
-                    </span>
-                    <span className="text">Accueil</span>
-                  </button>
-                </li>
-                <li
-                  className={`nav-item ${!activePopup && location.pathname === '/contact' ? 'active' : ''}`}
-                  onClick={() => navigate('/contact')}
-                >
-                  <button className="nav-link-custom">
-                    <span className="icon"><IoMdMail /></span>
-                    <span className="text">{t('header.contact')}</span>
-                  </button>
-                </li>
-                <li
-                  className={`nav-item ${!activePopup && (location.pathname === '/profil' || location.pathname === '/login') ? 'active' : ''}`}
-                  onClick={() => navigate(isAuthenticated ? '/profil' : '/login')}
-                >
-                  <button className="nav-link-custom">
-                    <span className="icon"><MdAccountCircle /></span>
-                    <span className="text">{isAuthenticated ? 'Profil' : 'Login'}</span>
-                  </button>
-                </li>
-                <div className="indicator" />
-              </ul>
+          {/* ══ Mobile Top Bar ══ */}
+          <div className="mob-topbar lg:hidden">
+            <button onClick={() => navigate('/')} className="mob-logo-btn">
+              <img src={Logo} className="mob-logo-img" alt="FunQuiz" />
+              <span className="mob-brand">Fun<span>Quiz</span></span>
+            </button>
+            <div className="mob-topbar-right">
+              {isAuthenticated && (
+                <div className="mob-points-pill">
+                  <img src={piece} width={13} alt="pts" />
+                  <span>{points.toLocaleString('fr-FR')}</span>
+                </div>
+              )}
+              <button
+                className="mob-burger"
+                onClick={() => setMobMenuOpen(true)}
+                aria-label="Ouvrir le menu"
+              >
+                <span /><span /><span />
+              </button>
             </div>
           </div>
+
+          {/* ══ Mobile Full-Screen Overlay Menu ══ */}
+          {mobMenuOpen && (
+            <div className="mob-overlay" onClick={() => setMobMenuOpen(false)}>
+              <div className="mob-panel" onClick={e => e.stopPropagation()}>
+
+                {/* Panel header */}
+                <div className="mob-panel-head">
+                  <div className="mob-panel-logo">
+                    <img src={Logo} width={32} alt="FunQuiz" />
+                    <span className="mob-panel-brand">Fun<span>Quiz</span></span>
+                  </div>
+                  <button className="mob-close-btn" onClick={() => setMobMenuOpen(false)}>
+                    <FaTimes size={18} />
+                  </button>
+                </div>
+
+                {/* User info (if logged in) */}
+                {isAuthenticated && (
+                  <div className="mob-user-card" onClick={() => navigate('/profil')}>
+                    <img src={getAvatarSrc()} alt="avatar" className="mob-user-avatar"
+                      onError={e => { e.target.onerror = null; e.target.src = 'https://img.freepik.com/photos-premium/image-photorealiste-hyper-realiste-fond-blanc-ai-generee-par-freepik_643360-530895.jpg?semt=ais_hybrid&w=740&q=80'; }} />
+                    <div className="mob-user-info">
+                      <strong>{`${user?.first_name || ''} ${user?.name || ''}`.trim() || 'Joueur'}</strong>
+                      <span>{user?.email || ''}</span>
+                    </div>
+                    <div className="mob-user-pts">
+                      <img src={piece} width={14} alt="pts" />
+                      <span>{points.toLocaleString('fr-FR')}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Nav items */}
+                <nav className="mob-nav">
+                  {[
+                    { icon: <FaHome />,        label: 'Accueil',     action: () => navigate('/'),         active: !activePopup && location.pathname === '/', delay: 0 },
+                    { icon: <FaGamepad />,      label: t('header.quiz'), action: () => openPopup('thematic'), active: activePopup === 'thematic',           delay: 60 },
+                    { icon: <FaSearch />,       label: 'Recherche',   action: () => navigate('/search'),   active: location.pathname === '/search',          delay: 120 },
+                    { icon: <FaTrophy />,       label: 'Classement',  action: () => navigate('/raking'),   active: location.pathname === '/raking',          delay: 180 },
+                    { icon: <FaInfoCircle />,   label: 'À propos',    action: () => navigate('/about'),    active: location.pathname === '/about',           delay: 240 },
+                    { icon: <FaEnvelope />,     label: t('header.contact'), action: () => navigate('/contact'), active: location.pathname === '/contact',    delay: 300 },
+                  ].map((item, i) => (
+                    <button
+                      key={i}
+                      className={`mob-nav-item${item.active ? ' active' : ''}`}
+                      style={{ animationDelay: `${item.delay}ms` }}
+                      onClick={() => { setMobMenuOpen(false); item.action(); }}
+                    >
+                      <span className="mob-nav-icon">{item.icon}</span>
+                      <span className="mob-nav-label">{item.label}</span>
+                      <span className="mob-nav-arrow">›</span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* Footer actions */}
+                <div className="mob-panel-footer">
+                  {isAuthenticated ? (
+                    <>
+                      <button className="mob-footer-btn" onClick={() => { setMobMenuOpen(false); navigate('/profil?tab=settings'); }}>
+                        <FaCog size={16} /> Paramètres
+                      </button>
+                      <button className="mob-footer-btn danger" onClick={() => { setMobMenuOpen(false); logout(); navigate('/login'); }}>
+                        <FaSignOutAlt size={16} /> Déconnexion
+                      </button>
+                    </>
+                  ) : (
+                    <button className="mob-footer-btn cta" onClick={() => { setMobMenuOpen(false); navigate('/login'); }}>
+                      <FaSignInAlt size={16} /> Se connecter
+                    </button>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
 
         </div>
       )}

@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { PopupProvider } from './system/configurations/Context/PopupContext.jsx';
 import AuthProvider from './system/configurations/Context/AuthProvider.jsx';
+import MaintenanceGuard from './system/configurations/Context/MaintenanceGuard.jsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import RequireAuth from './system/configurations/Auth/RequireAuth.jsx';
@@ -28,8 +29,9 @@ const Search = lazy(() => import('./system/sections/Search/search.jsx'));
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <AuthProvider>
-        <PopupProvider>
+      <MaintenanceGuard>
+        <AuthProvider>
+          <PopupProvider>
           <Suspense fallback={<Loader title="Chargement en cours" subtitle="On prépare votre expérience FunQuiz" />}>
             <Routes>
                
@@ -65,8 +67,9 @@ function App() {
               <Route path="*" element={<Notfound />} />
             </Routes>
           </Suspense>
-        </PopupProvider>
-      </AuthProvider>
+          </PopupProvider>
+        </AuthProvider>
+      </MaintenanceGuard>
     </GoogleOAuthProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../configurations/Context/AuthProvider';
-import publiciteServices from '../../configurations/Services/publiciteServices';
+import publiciteServices from '../../configurations/Services/offresServices';
 import adminServices from '../../configurations/Services/adminServices.js';
 import { 
   FaPalette, 

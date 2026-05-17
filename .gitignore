@@ -13,6 +13,8 @@ lerna-debug.log*
 # Node modules
 # -------------------------
 node_modules/
+.env
+.env.production
 
 # -------------------------
 # Build outputs

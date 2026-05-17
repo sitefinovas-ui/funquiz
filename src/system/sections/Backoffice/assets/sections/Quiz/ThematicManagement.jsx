@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FaPlus, 
-  FaEdit, 
-  FaTrash, 
-  FaImage, 
-  FaSave, 
-  FaTimes, 
-  FaSpinner, 
-  FaCheckCircle, 
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaImage,
+  FaSave,
+  FaTimes,
+  FaSpinner,
+  FaCheckCircle,
   FaExclamationTriangle,
   FaSearch,
-  FaGlobe
+  FaGlobe,
+  FaDatabase,
 } from 'react-icons/fa';
 import thematicService from '../../../../../configurations/Services/thematicServices.js';
 import countryServices from '../../../../../configurations/Services/countryServices.js';
+import { StoragePicker } from '../Storage/StorageManagement.jsx';
 
 const ThematicManagement = () => {
   const [thematics, setThematics] = useState([]);
@@ -34,8 +36,10 @@ const ThematicManagement = () => {
     display_order: 0,
     is_active: 1
   });
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [selectedFile,        setSelectedFile]        = useState(null);
+  const [selectedStoragePath, setSelectedStoragePath] = useState(null);
+  const [previewUrl,          setPreviewUrl]          = useState(null);
+  const [showStoragePicker,   setShowStoragePicker]   = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -69,6 +73,7 @@ const ThematicManagement = () => {
       is_active: 1
     });
     setSelectedFile(null);
+    setSelectedStoragePath(null);
     setPreviewUrl(null);
     setShowModal(true);
   };
@@ -87,6 +92,7 @@ const ThematicManagement = () => {
       is_active: thematic.is_active ?? 1
     });
     setSelectedFile(null);
+    setSelectedStoragePath(null);
     setPreviewUrl(thematic.icon_url || null);
     setShowModal(true);
   };
@@ -107,9 +113,16 @@ const ThematicManagement = () => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setSelectedStoragePath(null);
+      setPreviewUrl(URL.createObjectURL(file));
     }
+  };
+
+  const handleStoragePick = (img) => {
+    setSelectedStoragePath(img.path);
+    setSelectedFile(null);
+    setPreviewUrl(img.icon_url);
+    setShowStoragePicker(false);
   };
 
   const handleSubmit = async (e) => {
@@ -127,6 +140,8 @@ const ThematicManagement = () => {
     });
     if (selectedFile) {
       data.append('icon', selectedFile);
+    } else if (selectedStoragePath) {
+      data.append('icon_url', selectedStoragePath);
     }
 
     try {
@@ -259,6 +274,13 @@ const ThematicManagement = () => {
         </div>
       )}
 
+      {showStoragePicker && (
+        <StoragePicker
+          onSelect={handleStoragePick}
+          onClose={() => setShowStoragePicker(false)}
+        />
+      )}
+
       {/* Modal Form */}
       {showModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -358,20 +380,30 @@ const ThematicManagement = () => {
                     )}
                   </div>
                   <div className="flex-1 space-y-2">
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       accept="image/*"
                       onChange={handleFileChange}
                       id="icon-upload"
                       className="hidden"
                     />
-                    <label 
-                      htmlFor="icon-upload"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors font-medium text-sm"
-                    >
-                      <FaImage />
-                      Choisir une image
-                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <label
+                        htmlFor="icon-upload"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors font-medium text-sm"
+                      >
+                        <FaImage />
+                        Importer
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowStoragePicker(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors font-medium text-sm"
+                      >
+                        <FaDatabase />
+                        Médiathèque
+                      </button>
+                    </div>
                     <p className="text-xs text-gray-500">SVG, PNG ou WEBP recommandés. Taille max 2MB.</p>
                   </div>
                 </div>

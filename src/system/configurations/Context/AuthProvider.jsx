@@ -8,7 +8,7 @@ export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -131,9 +131,11 @@ const AuthProvider = ({ children }) => {
     allUsers,
   }), [user, loading, login, loginWithGoogle, logout, register, putUserById, deleteUserById, checkUser, refreshUser, allUsers]);
 
+  if (loading) return null;
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

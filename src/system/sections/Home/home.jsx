@@ -12,7 +12,7 @@ import pointService      from '../../configurations/Services/pointService.js';
 import faqService        from '../../configurations/Services/faqService.js';
 import commentService    from '../../configurations/Services/commentServices.js';
 import newsletterService from '../../configurations/Services/newsletterServices.js';
-import pubService        from '../../configurations/Services/publiciteServices.js';
+import pubService        from '../../configurations/Services/offresServices.js';
 
 const Home = () => {
   const token = localStorage.getItem('token');

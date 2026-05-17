@@ -7,12 +7,15 @@ import authService from '../../configurations/Services/authServices.js';
 import thematicService from '../../configurations/Services/thematicServices.js';
 import subThematicServices from '../../configurations/Services/subThematicServices.js';
 import quizAnswerService from '../../configurations/Services/quizAnswerService.js';
+import gameConfigService    from '../../configurations/Services/gameConfigService.js';
+import gameCooldownService  from '../../configurations/Services/gameCooldownService.js';
 import { usePopup } from '../../configurations/Context/PopupContext.jsx';
 
-const TIMER_SECS       = 30;
-const LETTERS          = ['A', 'B', 'C', 'D'];
-const MAX_HEARTS       = 3;
-const TIMER_CIRCUMF    = 276.46; // 2π×44
+const DEFAULT_TIMER_SECS   = 30;
+const DEFAULT_MAX_HEARTS   = 3;
+const DEFAULT_MAX_REPLAYS  = 2;
+const LETTERS            = ['A', 'B', 'C', 'D'];
+const TIMER_CIRCUMF      = 276.46; // 2π×44
 
 /* ─── helpers ─── */
 const shuffle = (arr) => {
@@ -41,10 +44,15 @@ const shuffleAnswers = (question) => {
 };
 
 const QuizComponent = () => {
-  const navigate     = useNavigate();
-  const location     = useLocation();
+  const navigate      = useNavigate();
+  const location      = useLocation();
   const { openPopup } = usePopup();
   const { questions = [], subTitle = '', thematicTitle = '' } = location.state || {};
+
+  /* ── refs for config (don't put in timer deps — would reset timer on load) ── */
+  const timerSecsRef  = useRef(DEFAULT_TIMER_SECS);
+  const maxHeartsRef  = useRef(DEFAULT_MAX_HEARTS);
+  const maxReplaysRef = useRef(DEFAULT_MAX_REPLAYS);
 
   /* ── state ── */
   const [quitOpen,        setQuitOpen]        = useState(false);
@@ -56,18 +64,68 @@ const QuizComponent = () => {
   const [sessionId,       setSessionId]       = useState(null);
   const sessionIdRef = useRef(null);
   const [answered,        setAnswered]        = useState([]);
-  const [orderedQuestions,setOrderedQ]        = useState([]);
 
-  const [timeLeft,  setTimeLeft]  = useState(TIMER_SECS);
-  const [streak,    setStreak]    = useState(0);
-  const [hearts,    setHearts]    = useState(MAX_HEARTS);
-  const [gameOver,  setGameOver]  = useState(false);
-  const [xpKey,     setXpKey]     = useState(0);
-  const [showXp,    setShowXp]    = useState(false);
-  const [feedback,  setFeedback]  = useState(null); // null | 'correct' | 'wrong'
+  // ▶ Initialise IMMEDIATEMENT depuis questions pour que le timer démarre tout de suite
+  //   (ne pas attendre l'init de session async)
+  const [orderedQuestions, setOrderedQ] = useState(() =>
+    (questions || []).map(q => shuffleAnswers(q))
+  );
+
+  const [timeLeft,    setTimeLeft]    = useState(DEFAULT_TIMER_SECS);
+  const [maxHeartsUI, setMaxHeartsUI] = useState(DEFAULT_MAX_HEARTS);
+  const [streak,      setStreak]      = useState(0);
+  const [hearts,      setHearts]      = useState(DEFAULT_MAX_HEARTS);
+  const [gameOver,    setGameOver]    = useState(false);
+  const [replaysLeft, setReplaysLeft] = useState(DEFAULT_MAX_REPLAYS);
+
+  // Cooldown serveur
+  const [blockedUntil,  setBlockedUntil]  = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState('');
+  const [xpKey,       setXpKey]       = useState(0);
+  const [showXp,      setShowXp]      = useState(false);
+  const [feedback,    setFeedback]    = useState(null);
   const [correctText, setCorrectText] = useState('');
 
-  const timerRef = useRef(null);
+  const timerRef     = useRef(null);
+  const onTimeoutRef = useRef(null); // pointe toujours vers la dernière version de handleSelectAnswer
+
+  /* ── charge la config jeu (vies + timer) ── */
+  useEffect(() => {
+    gameConfigService.getAll().then(cfg => {
+      // Cherche max_hearts OU vies (les deux clés sont valides)
+      const heartEntry   = cfg.find(c => c.config_key === 'max_hearts')
+                        || cfg.find(c => c.config_key === 'vies');
+      const timerEntry   = cfg.find(c => c.config_key === 'timer_seconds');
+      const replayEntry    = cfg.find(c => c.config_key === 'max_replays');
+
+      const h  = Number(heartEntry?.config_value);
+      const t  = Number(timerEntry?.config_value);
+      const r  = Number(replayEntry?.config_value);
+
+      if (h > 0) {
+        maxHeartsRef.current = h;
+        setMaxHeartsUI(h);
+        setHearts(h);
+      }
+      if (t > 0) {
+        timerSecsRef.current = t;
+        setTimeLeft(prev => (prev === DEFAULT_TIMER_SECS ? t : prev));
+      }
+      if (r >= 0) {
+        maxReplaysRef.current = r;
+        setReplaysLeft(r);
+      }
+    }).catch(() => {});
+  }, []);
+
+  /* ── vérifie le cooldown serveur au montage ── */
+  useEffect(() => {
+    gameCooldownService.check().then(data => {
+      if (data.blocked && data.cooldown_until) {
+        setBlockedUntil(new Date(data.cooldown_until).getTime());
+      }
+    }).catch(() => {});
+  }, []);
 
   /* ── session init ── */
   const resolveIds = useCallback(async () => {
@@ -125,17 +183,26 @@ const QuizComponent = () => {
         if (target) {
           let orderIds = null;
           try {
-            const sd = typeof target.session_data === 'string' ? JSON.parse(target.session_data || '{}') : target.session_data || {};
+            const sd = typeof target.session_data === 'string'
+              ? JSON.parse(target.session_data || '{}')
+              : target.session_data || {};
             if (Array.isArray(sd?.question_order)) orderIds = sd.question_order;
             const savedShuffled = sd?.shuffled_questions || null;
-            const reordered = (orderIds || []).map(id => (questions || []).find(q => q.question_id === id)).filter(Boolean);
+            const reordered = (orderIds || []).map(id =>
+              (questions || []).find(q => q.question_id === id)
+            ).filter(Boolean);
             setOrderedQ(savedShuffled?.length ? savedShuffled : reordered.map(q => shuffleAnswers(q)));
-          } catch { setOrderedQ(questions.map(q => shuffleAnswers(q))); }
+          } catch {
+            setOrderedQ(questions.map(q => shuffleAnswers(q)));
+          }
           setSessionId(target.session_id);
           sessionIdRef.current = target.session_id;
           const prev = (() => { try { return JSON.parse(target.answered_questions || '[]'); } catch { return []; } })();
           setAnswered(prev);
-          setCurrentIndex(Math.min(Math.max(Number(target.current_question_index || 0), 0), Math.max((questions || []).length - 1, 0)));
+          setCurrentIndex(Math.min(
+            Math.max(Number(target.current_question_index || 0), 0),
+            Math.max((questions || []).length - 1, 0)
+          ));
           setScore(Number(target.current_score || 0));
         } else {
           const shuffled = shuffle(questions || []);
@@ -155,20 +222,70 @@ const QuizComponent = () => {
     })();
   }, []);
 
-  /* ── timer ── */
+  /* ── TIMER ──
+     Dépend SEULEMENT de currentIndex et isValidated.
+     - Plus de dépendance sur orderedQuestions (initialisé immédiatement).
+     - Plus de dépendance sur TIMER_SECS state (valeur lue depuis le ref).
+     ──────────────────────────────────────────────────────────────── */
   useEffect(() => {
-    if (isValidated || !orderedQuestions.length) { clearInterval(timerRef.current); return; }
-    setTimeLeft(TIMER_SECS);
+    if (isValidated) {
+      clearInterval(timerRef.current);
+      return;
+    }
+    const secs = timerSecsRef.current;
+    setTimeLeft(secs);
+
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => { if (prev <= 1) { clearInterval(timerRef.current); return 0; } return prev - 1; });
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          // Appelle le handler via ref → toujours la version la plus récente
+          setTimeout(() => onTimeoutRef.current?.(), 0);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
+
     return () => clearInterval(timerRef.current);
-  }, [currentIndex, isValidated, orderedQuestions.length]);
+  }, [currentIndex, isValidated]); // ← uniquement ces deux deps
 
+  /* ── décompte affiché sur l'écran de blocage ── */
   useEffect(() => {
-    if (timeLeft === 0 && !isValidated) handleSelectAnswer(null);
-  }, [timeLeft]);
+    if (!blockedUntil) return;
+    const tick = () => {
+      const diff = blockedUntil - Date.now();
+      if (diff <= 0) {
+        setBlockedUntil(null);
+        setTimeRemaining('');
+        return;
+      }
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setTimeRemaining(h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [blockedUntil]);
 
+  /* ── écran de cooldown ── */
+  if (blockedUntil) return (
+    <div className="gm-wrap gm-cooldown-wrap">
+      <div className="gm-cooldown-card">
+        <div className="gm-cooldown-icon">⏳</div>
+        <h2 className="gm-cooldown-title">Récupération en cours…</h2>
+        <p className="gm-cooldown-sub">Tu as épuisé toutes tes vies.<br />Tu pourras rejouer dans :</p>
+        <div className="gm-cooldown-countdown">{timeRemaining}</div>
+        <button onClick={() => navigate('/')} className="gm-quit-confirm" style={{ maxWidth: 260 }}>
+          Retour à l'accueil
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── garde du rendu anticipé ── */
   if (!questions || questions.length === 0) return (
     <div className="gm-wrap gm-empty">
       <h2>Aucune question disponible.</h2>
@@ -179,32 +296,32 @@ const QuizComponent = () => {
   const currentQuestion = orderedQuestions[currentIndex] || questions[currentIndex];
   const totalQuestions  = orderedQuestions.length || questions.length;
   const progressPct     = totalQuestions > 0 ? (currentIndex / totalQuestions) * 100 : 0;
-  const timerArc        = (timeLeft / TIMER_SECS) * TIMER_CIRCUMF;
+  const timerArc        = (timeLeft / timerSecsRef.current) * TIMER_CIRCUMF;
   const isTimerDanger   = timeLeft <= 8;
   const isTimerWarning  = timeLeft <= 15 && !isTimerDanger;
   const answerKeys      = Object.keys(currentQuestion?.answers?.[0] ?? {}).filter(k => k.startsWith('answer_option'));
-
-  const timerColor = isTimerDanger ? '#ff3b30' : isTimerWarning ? '#ff9500' : '#5c47ff';
+  const timerColor      = isTimerDanger ? '#ff3b30' : isTimerWarning ? '#ff9500' : '#5c47ff';
 
   /* ── answer handler ── */
   const handleSelectAnswer = async (index) => {
     if (isValidated) return;
     clearInterval(timerRef.current);
 
-    const isTimeout    = index === null;
-    const correctOpt   = Number(currentQuestion.answers[0]?.correct_option);
-    const isCorrect    = !isTimeout && (index + 1) === correctOpt;
+    const isTimeout  = index === null;
+    const correctOpt = Number(currentQuestion.answers[0]?.correct_option);
+    const isCorrect  = !isTimeout && (index + 1) === correctOpt;
 
     setSelectedAnswer(isTimeout ? -1 : index);
     setIsValidated(true);
 
-    const newStreak  = isCorrect ? streak + 1 : 0;
+    const newStreak = isCorrect ? streak + 1 : 0;
     setStreak(newStreak);
 
     if (!isCorrect) {
       const newHearts = hearts - 1;
       setHearts(newHearts);
       if (newHearts <= 0) {
+        gameCooldownService.activate().catch(() => {});
         setTimeout(() => setGameOver(true), 1000);
       }
     }
@@ -215,15 +332,14 @@ const QuizComponent = () => {
       setTimeout(() => setShowXp(false), 1000);
     }
 
-    // Find correct answer text for feedback
     const correctKey = `answer_option_${correctOpt}`;
     setCorrectText(currentQuestion.answers[0]?.[correctKey] || '');
-    setFeedback(isCorrect ? 'correct' : isTimeout ? 'wrong' : 'wrong');
+    setFeedback(isCorrect ? 'correct' : 'wrong');
 
     const selectedOriginal = isTimeout ? 0 : (Array.isArray(currentQuestion?.answer_order)
       ? Number(currentQuestion.answer_order[index]) : index + 1);
 
-    const scoreNext   = score + (isCorrect ? 1 : 0);
+    const scoreNext    = score + (isCorrect ? 1 : 0);
     setScore(scoreNext);
     const answeredNext = [...answered, { questionId: currentQuestion.question_id, selectedOption: selectedOriginal }];
     setAnswered(answeredNext);
@@ -239,10 +355,18 @@ const QuizComponent = () => {
         if (result?.sent > 0) window.dispatchEvent(new CustomEvent('points:updated'));
       } catch (e) { console.error(e?.message); }
       setTimeout(() => {
-        openPopup('result', { sessionId, score: computeCorrectCount(answeredNext), total: totalQuestions, thematicTitle, subTitle, userId, playedAt: new Date().toISOString() });
+        openPopup('result', {
+          sessionId, score: computeCorrectCount(answeredNext),
+          total: totalQuestions, thematicTitle, subTitle, userId,
+          playedAt: new Date().toISOString(),
+        });
       }, 600);
     }
   };
+
+  // Met à jour le ref APRÈS chaque render → le setTimeout dans le timer appelle toujours
+  // la version avec les bonnes valeurs de state (pas une closure périmée).
+  onTimeoutRef.current = () => { if (!isValidated) handleSelectAnswer(null); };
 
   const goNext = () => {
     setFeedback(null);
@@ -253,6 +377,15 @@ const QuizComponent = () => {
 
   const handleQuit = async () => {
     try { await saveProgress(answered, score, currentIndex, false); } catch {}
+    if (gameOver) {
+      try {
+        const data = await gameCooldownService.check();
+        if (data.blocked && data.cooldown_until) {
+          setBlockedUntil(new Date(data.cooldown_until).getTime());
+          return;
+        }
+      } catch {}
+    }
     navigate('/');
   };
 
@@ -274,21 +407,13 @@ const QuizComponent = () => {
         </div>
 
         <div className="gm-topbar-right">
-          {/* Streak */}
-          {streak >= 2 && (
-            <div className="gm-streak" key={streak}>🔥 {streak}</div>
-          )}
-          {/* Combo */}
-          {streak >= 3 && (
-            <div className="gm-combo" key={`c${streak}`}>×{streak >= 5 ? 3 : streak >= 3 ? 2 : 1}</div>
-          )}
-          {/* Hearts */}
+          {streak >= 2 && <div className="gm-streak" key={streak}>🔥 {streak}</div>}
+          {streak >= 3 && <div className="gm-combo" key={`c${streak}`}>×{streak >= 5 ? 3 : 2}</div>}
           <div className="gm-hearts">
-            {Array.from({ length: MAX_HEARTS }).map((_, i) => (
+            {Array.from({ length: maxHeartsUI }).map((_, i) => (
               <span key={i} className={`gm-heart ${i >= hearts ? 'lost' : ''}`}>❤️</span>
             ))}
           </div>
-          {/* Score */}
           <div className="gm-score-pill">⭐ {score}</div>
         </div>
       </div>
@@ -336,9 +461,9 @@ const QuizComponent = () => {
         {answerKeys.length > 0 ? (
           <div className="gm-answers-grid">
             {answerKeys.map((key, i) => {
-              const correctOpt    = Number(currentQuestion?.answers?.[0]?.correct_option);
-              const isCorrectAns  = (i + 1) === correctOpt;
-              const isSelected    = selectedAnswer === i;
+              const correctOpt   = Number(currentQuestion?.answers?.[0]?.correct_option);
+              const isCorrectAns = (i + 1) === correctOpt;
+              const isSelected   = selectedAnswer === i;
               let stateClass = '';
               if (isValidated) {
                 if (isCorrectAns) stateClass = 'correct';
@@ -361,7 +486,10 @@ const QuizComponent = () => {
             })}
           </div>
         ) : (
-          <button onClick={() => { setCurrentIndex(p => p + 1); setSelectedAnswer(null); setIsValidated(false); }} className="gm-continue-btn">
+          <button
+            onClick={() => { setCurrentIndex(p => p + 1); setSelectedAnswer(null); setIsValidated(false); }}
+            className="gm-continue-btn"
+          >
             Continuer →
           </button>
         )}
@@ -402,10 +530,27 @@ const QuizComponent = () => {
               Tu as répondu correctement à {score} question{score > 1 ? 's' : ''} sur {totalQuestions}.
               Ta progression a été sauvegardée.
             </p>
+            {replaysLeft > 0 && (
+              <p className="gm-gameover-replays">
+                Continue restante{replaysLeft > 1 ? 's' : ''} : {replaysLeft}
+              </p>
+            )}
             <div className="gm-gameover-actions">
-              <button className="gm-gameover-retry" onClick={() => { setHearts(MAX_HEARTS); setGameOver(false); setFeedback(null); }}>
-                Continuer quand même
-              </button>
+              {replaysLeft > 0 ? (
+                <button
+                  className="gm-gameover-retry"
+                  onClick={() => {
+                    setHearts(maxHeartsRef.current);
+                    setReplaysLeft(prev => prev - 1);
+                    setGameOver(false);
+                    setFeedback(null);
+                  }}
+                >
+                  Continuer quand même
+                </button>
+              ) : (
+                <p className="gm-gameover-no-retry">Plus de continues disponibles.</p>
+              )}
               <button className="gm-gameover-quit" onClick={handleQuit}>
                 Quitter la partie
               </button>

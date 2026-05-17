@@ -659,6 +659,55 @@
   cursor: pointer; transition: all .2s;
 }
 .gm-gameover-quit:hover { border-color: #d1d5db; color: #4b5563; }
+.gm-gameover-replays {
+  font-size: 13px; font-weight: 700; color: #7c3aed;
+  background: #f5f3ff; border: 1.5px solid #ede9fe;
+  border-radius: 10px; padding: 7px 14px; margin-bottom: 4px; text-align: center;
+}
+.gm-gameover-no-retry {
+  padding: 14px; border-radius: 16px; border: 1.5px solid #fee2e2;
+  background: #fef2f2; color: #ef4444;
+  font-size: 14px; font-weight: 700; text-align: center;
+}
+
+/* ── COOLDOWN SCREEN ── */
+@keyframes gmCooldownPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.12); }
+}
+@keyframes gmCooldownGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(92,71,255,.25); }
+  50%       { box-shadow: 0 0 40px 12px rgba(92,71,255,.18); }
+}
+.gm-cooldown-wrap {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #f0f0ff 0%, #fff 60%, #f0fff4 100%);
+}
+.gm-cooldown-card {
+  background: #fff; border-radius: 32px; padding: 52px 40px 44px;
+  text-align: center; max-width: 400px; width: 92%;
+  box-shadow: 0 24px 64px rgba(92,71,255,.12), 0 4px 16px rgba(0,0,0,.06);
+  animation: gmCooldownGlow 3s ease-in-out infinite;
+}
+.gm-cooldown-icon {
+  font-size: 60px; margin-bottom: 18px;
+  display: inline-block;
+  animation: gmCooldownPulse 2s ease-in-out infinite;
+}
+.gm-cooldown-title {
+  font-size: 26px; font-weight: 900; color: #1e293b; margin: 0 0 10px;
+}
+.gm-cooldown-sub {
+  font-size: 15px; color: #64748b; line-height: 1.6; margin: 0 0 28px;
+}
+.gm-cooldown-countdown {
+  font-size: 54px; font-weight: 900; letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #5c47ff, #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 36px; line-height: 1;
+}
 
 /* ══════════════════════════════
    QUIT DIALOG

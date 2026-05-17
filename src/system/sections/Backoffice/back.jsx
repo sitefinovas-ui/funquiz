@@ -16,7 +16,10 @@ import Settings from './assets/sections/Settings/Settings.jsx';
 import ModeratorActions from './assets/sections/Moderation/ModeratorActions.jsx';
 import RolePermissions from './assets/sections/Moderation/RolePermissions.jsx';
 import ThemeSwitcherAdminPage from './../../components/ThemeSwitcher/theme-switcher.jsx';
-import PubliciteManagement from './assets/sections/Publicites/PubliciteManagement.jsx';
+import OffresManagement from './assets/sections/Offres/OffresManagement.jsx';
+import GameConfigManagement from './assets/sections/GameConfig/GameConfigManagement.jsx';
+import StorageManagement from './assets/sections/Storage/StorageManagement.jsx';
+import MaintenanceControl from './assets/sections/MaintenanceControl/MaintenanceControl.jsx';
 
 function BackofficeMain() {
   return (
@@ -38,7 +41,10 @@ function BackofficeMain() {
           <Route path="global-settings" element={<Settings />} />
           <Route path="moderation" element={<ModeratorActions />} />
           <Route path="permissions" element={<RolePermissions />} />
-          <Route path="publicites" element={<PubliciteManagement />} />
+          <Route path="publicites" element={<OffresManagement />} />
+          <Route path="game-config" element={<GameConfigManagement />} />
+          <Route path="storage" element={<StorageManagement />} />
+          <Route path="maintenance" element={<MaintenanceControl />} />
         </Route>
       </Routes>
     </PopupProvider>

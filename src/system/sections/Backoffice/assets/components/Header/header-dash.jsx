@@ -19,6 +19,9 @@ import {
   FaUserShield,
   FaShieldAlt,
   FaBullhorn,
+  FaGamepad,
+  FaPhotoVideo,
+  FaPowerOff,
 } from 'react-icons/fa';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
@@ -36,6 +39,9 @@ const Sidebar = ({ isCollapsed, onToggleCollapse, onCloseMobile }) => {
     { id: 'newsletter', icon: FaEnvelopeOpen, label: 'Newsletter', link: '/dashboard/newsletter' },
     { id: 'quiz', icon: FaQuestionCircle, label: 'Quiz', link: '/dashboard/quiz' },
     { id: 'publicites', icon: FaBullhorn, label: 'Offres Spéciales', link: '/dashboard/publicites' },
+    { id: 'game-config', icon: FaGamepad, label: 'Paramètres du jeu', link: '/dashboard/game-config', adminOnly: true },
+    { id: 'storage',      icon: FaPhotoVideo, label: 'Médiathèque',   link: '/dashboard/storage',      adminOnly: true },
+    { id: 'maintenance',  icon: FaPowerOff,   label: 'Maintenance',  link: '/dashboard/maintenance',  adminOnly: true },
     { id: 'countries', icon: FaGlobeAfrica, label: 'Gestion des pays', link: '/dashboard/countries' },
     { id: 'about', icon: FaInfoCircle, label: 'Page À propos', link: '/dashboard/about' },
     { id: 'legal', icon: FaStar, label: 'Légal', link: '/dashboard/legal' },

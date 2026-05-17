@@ -1,5 +1,5 @@
 import './listThematic.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import thematicService from '../../configurations/Services/thematicServices.js';
 import countryServices from '../../configurations/Services/countryServices.js';
@@ -9,7 +9,8 @@ function Thematic({ closePopup, highlightThematicId }) {
   const [countries, setCountries] = useState([]);
   const [isClosing, setIsClosing] = useState(false);
   const [search, setSearch] = useState('');
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const gridRef   = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,7 +49,10 @@ function Thematic({ closePopup, highlightThematicId }) {
     });
   };
 
-  // Filter only active countries
+  const scrollCarousel = (dir) => {
+    gridRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  };
+
   const activeCountryCodes = countries.filter(c => c.is_active).map(c => c.code);
 
   const filtered = thematics.filter((t) => {
@@ -58,10 +62,10 @@ function Thematic({ closePopup, highlightThematicId }) {
     const isFromActiveCountry = codes.some(code => activeCountryCodes.includes(code));
     if (!isFromActiveCountry) return false;
 
-    const matchesSearch = t.thematic_title.toLowerCase().includes(search.toLowerCase()) ||
-      (t.sub_thematics || []).some((s) => s.title.toLowerCase().includes(search.toLowerCase()));
-    
-    return matchesSearch;
+    return (
+      t.thematic_title.toLowerCase().includes(search.toLowerCase()) ||
+      (t.sub_thematics || []).some((s) => s.title.toLowerCase().includes(search.toLowerCase()))
+    );
   });
 
   return (
@@ -100,61 +104,90 @@ function Thematic({ closePopup, highlightThematicId }) {
           </span>
         </div>
 
-        {/* Grid */}
+        {/* Body */}
         <div className="th-body">
           {filtered.length === 0 ? (
             <div className="th-empty">Aucune thématique pour « {search} »</div>
           ) : (
-            <div className="th-grid">
-              {filtered.map((thematic, idx) => (
-                <div
-                  key={thematic.thematic_id}
-                  id={`thematic-${thematic.thematic_id}`}
-                  className={`th-card ${highlightThematicId === thematic.thematic_id ? 'highlighted' : ''}`}
-                  style={{ '--card-color': thematic.color_code || '#9b34d3', animationDelay: `${idx * 0.04}s` }}
-                >
+            <div className="th-carousel-wrap">
+              {/* Prev */}
+              <button
+                className="th-nav-btn th-nav-prev"
+                onClick={() => scrollCarousel(-1)}
+                aria-label="Précédent"
+              >
+                ‹
+              </button>
+
+              {/* Cards */}
+              <div className="th-grid" ref={gridRef}>
+                {filtered.map((thematic, idx) => (
                   <div
-                    className="th-card-icon"
-                    style={{ background: thematic.color_code || '#9b34d3' }}
+                    key={thematic.thematic_id}
+                    id={`thematic-${thematic.thematic_id}`}
+                    className={`th-card ${highlightThematicId === thematic.thematic_id ? 'highlighted' : ''}`}
+                    style={{
+                      '--card-color': thematic.color_code || '#9b34d3',
+                      animationDelay: `${idx * 0.05}s`,
+                    }}
                   >
-                    <img
-                      src={thematic.icon_url}
-                      loading="lazy"
-                      decoding="async"
-                      fetchpriority="low"
-                      className="th-card-icon-img"
-                      alt={thematic.thematic_title}
-                    />
+                    {/* Image flottante au-dessus */}
+                    <div className="th-card-float">
+                      <img
+                        src={thematic.icon_url}
+                        loading="lazy"
+                        decoding="async"
+                        fetchpriority="low"
+                        alt={thematic.thematic_title}
+                      />
+                    </div>
+
+                    {/* Corps coloré */}
+                    <div className="th-card-body">
+                      <h4 className="th-card-title">{thematic.thematic_title}</h4>
+
+                      {thematic.sub_thematics?.length > 0 && (
+                        <span className="th-card-badge">
+                          Quiz · {thematic.sub_thematics.length}
+                        </span>
+                      )}
+
+                      <ul className="th-sub-list">
+                        {Array.isArray(thematic.sub_thematics) && thematic.sub_thematics.length > 0 ? (
+                          thematic.sub_thematics.map((sub) => (
+                            <li key={sub.sub_thematic_id}>
+                              <button
+                                className="th-sub-btn"
+                                onClick={() => {
+                                  handleSubThematicClick(sub, thematic);
+                                  closePopup?.();
+                                }}
+                              >
+                                <span className="th-sub-arrow">›</span>
+                                {sub.title}
+                              </button>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="th-sub-empty">Aucune sous-thématique</li>
+                        )}
+                      </ul>
+                    </div>
+
+                    {/* Glow coloré */}
+                    <div className="th-card-glow" />
                   </div>
+                ))}
+              </div>
 
-                  <h4 className="th-card-title">{thematic.thematic_title}</h4>
-
-                  {thematic.sub_thematics?.length > 0 && (
-                    <span className="th-card-badge">{thematic.sub_thematics.length} quiz</span>
-                  )}
-
-                  <ul className="th-sub-list">
-                    {Array.isArray(thematic.sub_thematics) && thematic.sub_thematics.length > 0 ? (
-                      thematic.sub_thematics.map((sub) => (
-                        <li key={sub.sub_thematic_id}>
-                          <button
-                            className="th-sub-btn"
-                            onClick={() => {
-                              handleSubThematicClick(sub, thematic);
-                              closePopup?.();
-                            }}
-                          >
-                            <span className="th-sub-arrow">›</span>
-                            {sub.title}
-                          </button>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="th-sub-empty">Aucune sous-thématique</li>
-                    )}
-                  </ul>
-                </div>
-              ))}
+              {/* Next */}
+              <button
+                className="th-nav-btn th-nav-next"
+                onClick={() => scrollCarousel(1)}
+                aria-label="Suivant"
+              >
+                ›
+              </button>
             </div>
           )}
         </div>
